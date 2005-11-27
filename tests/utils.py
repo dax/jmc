@@ -21,80 +21,75 @@
 ##
 
 import xml.dom.minidom
-
-#document = "<stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' id='4258238724' from='localhost'>"
-# document = """\
-# <slideshow attr='value'>
-# <title>Demo slideshow</title>
-# <slide><title>Slide title</title>
-# <point>This is a demo</point>
-# <point>Of a program for processing slides</point>
-# </slide>
-
-# <slide><title>Another demo slide</title>
-# <point>It is important</point>
-# <point>To have more than</point>
-# <point>one slide</point>
-# </slide>
-# </slideshow>
-# """
-
-# document1 = """\
-# <slideshow attr='value'>
-# <title>Demo slideshow</title>
-# <slide><title>Slide title</title>
-# <point>This is a demo</point>
-# <point>Of a program for processing slides</point>
-# </slide>
-
-# <slide><title>Another demo slide</title>
-# <point>It is important1</point>
-# <point>To have more than</point>
-# <point>one slide</point>
-# </slide>
-# </slideshow>
-# """
-
-#dom = xml.dom.minidom.parseString(document)
-#dom1 = xml.dom.minidom.parseString(document)
-
-# def getText(nodelist):
-#     rc = ""
-#     for node in nodelist:
-#         if node.nodeType == node.TEXT_NODE:
-#             rc = rc + node.data
-#     return rc
+import re
 
 def xmldiff(node1, node2):
     if node1.nodeType == node1.TEXT_NODE:
         if not node2.nodeType == node2.TEXT_NODE \
-               or node1.data != node2.data:
-            return False
+               or re.compile(node2.data + "$").match(node1.data) is None:
+            raise Exception("data in text node " + node1.data + " does not match " + node2.data)
     elif node1.nodeType == node1.DOCUMENT_NODE:
         if not node2.nodeType == node2.DOCUMENT_NODE:
-            return False
+            raise Exception("node1 is Document but not node2 (" + node2.nodeType + ")")
     elif node1.tagName != node2.tagName:
-        return False
+        raise Exception("Different tag name : " + node1.tagName + " != " + node2.tagName)
     else:
         for attr in node1._get_attributes().keys():
             if not node2.hasAttribute(attr) \
                    or node1.getAttribute(attr) != node2.getAttribute(attr):
-                return False
+                raise Exception("(" + node1.tagName + ") Different attributes : " + node1.getAttribute(attr) + " != " + node2.getAttribute(attr))
+    if len(node1.childNodes) != len(node2.childNodes):
+        raise Exception("(" + node1.tagName + ") Different children number : " + str(len(node1.childNodes)) + " != " + str(len(node2.childNodes)))
     for i in range(len(node1.childNodes)):
-        if not xmldiff(node1.childNodes[i], node2.childNodes[i]):
-            return False
-    return True
+        xmldiff(node1.childNodes[i], node2.childNodes[i])
 
-#print xmldiff(dom, dom1)
+# def xmldiff(events1, events2):
+#     for (event1, node1) in events1:
+#         (event2, node2) = events2.next()
+#         print event1 + " " + str(node1)
+#         if not (event1 == event2) or not xml_diff_nodes(node1, node2):
+#             return False
+#     return True
 
-# def nodediff(node1, node2):
-#     if not node1.name == node2.name:
-#         return False
-#     for properties in node1.properties:
-#         if node2.hasAttribute(attr):
-
-# def xmldiff(xpath, node1, node2):
-#     if not nodediff(node1, node2):
-#         return False
-#     for child in node1.children:
+if __name__ == "__main__":
+    document1 = """\
+    <slideshow attr='value'>
+    <title>Demo slideshow</title>
+    <slide><title>Slide title</title>
+    <point>This is a demo</point>
+    <point>Of a program for processing slides</point>
+    </slide>
+    
+    <slide><title>Another demo slide</title>
+    <point>It is important</point>
+    <point>To have more than</point>
+    <point>one slide</point>
+    </slide>
+    </slideshow>
+    """
+    
+    document2 = """\
+    <slideshow attr='value'>
+    <title>Demo slideshow</title>
+    <slide><title>Slide title</title>
+    <point>This is a demo</point>
+    <point>Of a program for processing slides</point>
+    </slide>
+    
+    <slide><title>Another demo slide</title>
+    <point>It is important</point>
+    <point>To have more than</point>
+    <point>one slide</point>
+    </slide>
+    </slideshow>
+    """
+    
+    dom1 = xml.dom.minidom.parseString(document1)
+    dom2 = xml.dom.minidom.parseString(document2)
+    
+    try:
+        xmldiff(dom1, dom2)
+    except Exception, msg:
+        print msg
+        
     

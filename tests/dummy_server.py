@@ -24,6 +24,7 @@ import sys
 import time
 import traceback
 import re
+import os
 import socket
 import types
 import select
@@ -114,7 +115,7 @@ class XMLDummyServer(DummyServer):
                         # received size is based on the expected size in self.queries
                         data = conn.recv(1024 + len(self.queries[idx]))
                         if data:
-                            print "-----------RECEIVE " + data
+#                            print "-----------RECEIVE " + data
                             r = self._reader.feed(data)
                     except:
                         type, value, stack = sys.exc_info()
@@ -131,7 +132,7 @@ class XMLDummyServer(DummyServer):
                     else:
                         response = self.responses[idx]
                     if response is not None:
-                        print >>sys.stderr, '---------SENDING : ', response
+#                        print >>sys.stderr, '---------SENDING : ', response
                         conn.send(response)
                 conn.close()
         except:
@@ -143,15 +144,21 @@ class XMLDummyServer(DummyServer):
     def verify_queries(self):
         result = True
         queries_len = len(self.queries)
-        if queries_len == len(self.real_queries):
+        if queries_len == len(self.real_queries):            
+            full_real_queries = ""
+            full_recv_queries = ""
             for idx in range(queries_len):
-                real_query = xml.dom.minidom.parseString(self.real_queries[idx])
-                recv_query = xml.dom.minidom.parseString(self.queries[idx])
-                if not utils.xmldiff(real_query, recv_query):
-                    result = False
-                    print >>sys.stderr, "Unexpected query :\n" + \
-                          "Expected query : _" + self.queries[idx] + "_\n" + \
-                          "Receive query : _" + self.real_queries[idx] + "_\n"
+                full_real_queries += self.real_queries[idx].rstrip(os.linesep)
+                full_recv_queries += self.queries[idx].rstrip(os.linesep)
+            # Do not receive it but add it so that xml parsing can succeed
+            full_real_queries += "</stream:stream>"
+            real_query = xml.dom.minidom.parseString(full_real_queries)
+            recv_query = xml.dom.minidom.parseString(full_recv_queries)
+            try:
+                utils.xmldiff(real_query, recv_query)
+            except Exception, msg:
+                result = False
+                print >>sys.stderr, msg
         else:
             result = False
             print >>sys.stderr, "Expected " + str(queries_len) + \

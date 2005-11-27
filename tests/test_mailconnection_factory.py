@@ -22,6 +22,7 @@
 
 import unittest
 from jabber.mailconnection_factory import *
+from jabber import mailconnection
 
 class MailConnectionFactory_TestCase(unittest.TestCase):
     def test_new_mail_connection_imap(self):
@@ -41,56 +42,56 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc, mc)
 
     def test_str_to_mail_connection_imap(self):
-	mc = str_to_mail_connection("imap#login#passwd#host#193#nothing#nothing#nothing#nothing#retrieve#INBOX")
+	mc = str_to_mail_connection("imap#login#passwd#host#193#0#0#0#1#2#INBOX")
         self.assertEquals(mc.get_type(), "imap")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
         self.assertEquals(mc.host, "host")
         self.assertEquals(mc.port, 193)
         self.assertEquals(mc.mailbox, "INBOX")
-        self.assertEquals(mc.ffc_action, "nothing")
-        self.assertEquals(mc.online_action, "nothing")
-        self.assertEquals(mc.away_action, "nothing")
-        self.assertEquals(mc.ea_action, "nothing")
-        self.assertEquals(mc.offline_action, "retrieve")
+        self.assertEquals(mc.ffc_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.online_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.away_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.ea_action, mailconnection.DIGEST)
+        self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
 
     def test_str_to_mail_connection_imaps(self):
-	mc = str_to_mail_connection("imaps#login#passwd#host#993#nothing#nothing#nothing#nothing#retrieve#INBOX.SubDir")
+	mc = str_to_mail_connection("imaps#login#passwd#host#993#0#0#0#1#2#INBOX.SubDir")
         self.assertEquals(mc.get_type(), "imaps")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
         self.assertEquals(mc.host, "host")
         self.assertEquals(mc.port, 993)
         self.assertEquals(mc.mailbox, "INBOX.SubDir")
-        self.assertEquals(mc.ffc_action, "nothing")
-        self.assertEquals(mc.online_action, "nothing")
-        self.assertEquals(mc.away_action, "nothing")
-        self.assertEquals(mc.ea_action, "nothing")
-        self.assertEquals(mc.offline_action, "retrieve")
+        self.assertEquals(mc.ffc_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.online_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.away_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.ea_action, mailconnection.DIGEST)
+        self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
 
     def test_str_to_mail_connection_pop3(self):
-	mc = str_to_mail_connection("pop3#login#passwd#host#110#nothing#nothing#nothing#nothing#retrieve")
+	mc = str_to_mail_connection("pop3#login#passwd#host#110#0#0#0#1#2")
         self.assertEquals(mc.get_type(), "pop3")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
         self.assertEquals(mc.host, "host")
         self.assertEquals(mc.port, 110)
-        self.assertEquals(mc.ffc_action, "nothing")
-        self.assertEquals(mc.online_action, "nothing")
-        self.assertEquals(mc.away_action, "nothing")
-        self.assertEquals(mc.ea_action, "nothing")
-        self.assertEquals(mc.offline_action, "retrieve")
+        self.assertEquals(mc.ffc_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.online_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.away_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.ea_action, mailconnection.DIGEST)
+        self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
 
     def test_str_to_mail_connection_pop3s(self):
-	mc = str_to_mail_connection("pop3s#login#passwd#host#995#nothing#nothing#nothing#nothing#retrieve")
+	mc = str_to_mail_connection("pop3s#login#passwd#host#995#0#0#0#1#2")
         self.assertEquals(mc.get_type(), "pop3s")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
         self.assertEquals(mc.host, "host")
         self.assertEquals(mc.port, 995)
-        self.assertEquals(mc.ffc_action, "nothing")
-        self.assertEquals(mc.online_action, "nothing")
-        self.assertEquals(mc.away_action, "nothing")
-        self.assertEquals(mc.ea_action, "nothing")
-        self.assertEquals(mc.offline_action, "retrieve")
+        self.assertEquals(mc.ffc_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.online_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.away_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.ea_action, mailconnection.DIGEST)
+        self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
 

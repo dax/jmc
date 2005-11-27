@@ -213,7 +213,7 @@ class IMAPConnection_TestCase(unittest.TestCase):
             if core:
                 core(self)
             self.imap_connection.disconnect()
-            self.failUnless(self.server.verify_queries("Sended queries does not match expected queries."))
+            self.failUnless(self.server.verify_queries())
         return inner
             
     test_connection = make_test()

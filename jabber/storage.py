@@ -123,12 +123,12 @@ class DBMStorage(Storage):
 	    print >>sys.stderr, e
 
     def __setitem__(self, pk_tuple, obj):
-        print "Adding " + "#".join(pk_tuple) + " = " + str(obj)
+#        print "Adding " + "#".join(pk_tuple) + " = " + str(obj)
         self.__str_registered["#".join(pk_tuple)] = str(obj)
         self.sync()
 
     def __getitem__(self, pk_tuple):
-        print "Getting " + "#".join(pk_tuple)
+#        print "Getting " + "#".join(pk_tuple)
         if len(pk_tuple) == self.nb_pk_fields:
             return  mailconnection_factory.str_to_mail_connection(self.__str_registered["#".join(pk_tuple)])
         else:
@@ -139,7 +139,7 @@ class DBMStorage(Storage):
                     if regexp.search(key)]
 
     def __delitem__(self, pk_tuple):
-        print "Deleting " + "#".join(pk_tuple)
+#        print "Deleting " + "#".join(pk_tuple)
         del self.__str_registered["#".join(pk_tuple)]
         self.sync()
 

@@ -70,11 +70,8 @@ class MailComponent_TestCase_Basic(unittest.TestCase):
     def test_run(self):
         self.server.responses = ["<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' id='4258238724' from='localhost'>", \
                                  "<handshake/></stream:stream>"]
-        # TODO : concatenate all queries to parse xml
         self.server.queries = ["<?xml version='1.0' encoding='UTF-8'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' to='jmc.localhost' version='1.0'>", \
-                               "<handshake></handshake>"]
-#          self.server.queries = ["<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\s<stream:stream xmlns:stream=\"http://etherx.jabber.org/streams\" xmlns=\"jabber:component:accept\" to=\"jmc.localhost\" version=\"1.0\">", \
-#                                 "<handshake>\s*</handshake>"]
+                               "<handshake>[0-9abcdef]*</handshake></stream:stream>"]
         self.mail_component.run(1)
         self.failUnless(self.server.verify_queries())
         # TODO : more assertion
@@ -82,9 +79,9 @@ class MailComponent_TestCase_Basic(unittest.TestCase):
 class MailComponent_TestCase_NoReg(unittest.TestCase):
     def setUp(self):
         self.handler = TestStreamHandler()
-        logger = logging.getLogger()
-        logger.addHandler(logging.StreamHandler())
-        logger.setLevel(logging.DEBUG)
+#        logger = logging.getLogger()
+#        logger.addHandler(logging.StreamHandler())
+#        logger.setLevel(logging.DEBUG)
         self.mail_component = MailComponent(Config("tests/jmc-test.xml"))
         self.server = dummy_server.XMLDummyServer("localhost", 55555, None, self.handler)
         thread.start_new_thread(self.server.serve, ())
@@ -97,10 +94,10 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
         self.server.responses = ["<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' id='4258238724' from='localhost'>", \
                                  "<handshake/><iq type='get' to='jmc.localhost' id='aabca'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>", \
                                  "</stream:stream>"]
-        self.server.queries = ["<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\s?" + \
+        self.server.queries = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + \
                                "<stream:stream xmlns:stream=\"http://etherx.jabber.org/streams\" xmlns=\"jabber:component:accept\" to=\"jmc.localhost\" version=\"1.0\">", \
-                               "<handshake>\s*</handshake>", \
-                               "<iq from=\"jmc.localhost\" type=\"result\" id=\"aabca\"><query xmlns=\"http://jabber.org/protocol/disco\#info\"><feature var=\"jabber:iq:version\"/><feature var=\"jabber:iq:register\"/><identity name=\"Jabber Mail Component\" category=\"headline\" type=\"mail\"/></query></iq>"]
+                               "<handshake>[0-9abcdef]*</handshake>", \
+                               "<iq from=\"jmc.localhost\" type=\"result\" id=\"aabca\"><query xmlns=\"http://jabber.org/protocol/disco#info\"><feature var=\"jabber:iq:version\"/><feature var=\"jabber:iq:register\"/><identity name=\"Jabber Mail Component\" category=\"headline\" type=\"mail\"/></query></iq></stream:stream>"]
         self.mail_component.run(1)
         self.failUnless(self.server.verify_queries())
 
@@ -109,102 +106,103 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
         self.server.responses = ["<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' id='4258238724' from='localhost'>", \
                                  "<handshake/><iq type='get' to='jmc.localhost' from='test@localhost/test' id='aad9a'><query xmlns='jabber:iq:register'/></iq>", \
                                  "</stream:stream>"]
-        self.server.queries = ["<\?xml version=\"1.0\" encoding=\"UTF-8\"\?>\s?" + \
+        self.server.queries = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + \
                                "<stream:stream xmlns:stream=\"http://etherx.jabber.org/streams\" xmlns=\"jabber:component:accept\" to=\"jmc.localhost\" version=\"1.0\">", \
-                               "<handshake>\s*</handshake>", \
-                               "<iq from=\"jmc.localhost\" to=\"test@localhost/test\" type=\"result\" id=\"aad9a\">\s?" + \
-                               "<query xmlns=\"jabber:iq:register\">\s?" + \
-                               "<x xmlns=\"jabber:x:data\">\s?" + \
-                               "<title>Jabber Mail connection registration</title>\s?" + \
-                               "<instructions>Enter anything below</instructions>\s?" + \
-                               "<field type=\"text-single\" label=\"Connection name\" var=\"name\"/>\s?" + \
-                               "<field type=\"text-single\" label=\"Login\" var=\"login\"/>\s?" + \
-                               "<field type=\"text-private\" label=\"Password\" var=\"password\"/>\s?" + \
-                               "<field type=\"text-single\" label=\"Host\" var=\"host\"/>\s?" + \
-                               "<field type=\"text-single\" label=\"Port\" var=\"port\"/>\s?" + \
-                               "<field type=\"list-single\" label=\"Mailbox type\" var=\"type\">\s?" + \
-                               "<option label=\"POP3\">\s?" + \
-                               "<value>pop3</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"POP3S\">\s?" + \
-                               "<value>pop3s</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"IMAP\">\s?" + \
-                               "<value>imap</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"IMAPS\">\s?" + \
-                               "<value>imaps</value>\s?" + \
-                               "</option>\s?" + \
-                               "</field>\s?" + \
-                               "<field type=\"text-single\" label=\"Mailbox (IMAP)\" var=\"mailbox\">\s?" + \
-                               "<value>INBOX</value>\s?" + \
-                               "</field>\s?" + \
-                               "<field type=\"list-single\" label=\"Action when state is 'Free For Chat'\" var=\"ffc_action\">\s?" + \
-                               "<value>2</value>\s?" + \
-                               "<option label=\"Do nothing\">\s?" + \
-                               "<value>0</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Send mail digest\">\s?" + \
-                               "<value>1</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Retrieve mail\">\s?" + \
-                               "<value>2</value>\s?" + \
-                               "</option>\s?" + \
-                               "</field>\s?" + \
-                               "<field type=\"list-single\" label=\"Action when state is 'Online'\" var=\"online_action\">\s?" + \
-                               "<value>2</value>\s?" + \
-                               "<option label=\"Do nothing\">\s?" + \
-                               "<value>0</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Send mail digest\">\s?" + \
-                               "<value>1</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Retrieve mail\">\s?" + \
-                               "<value>2</value>\s?" + \
-                               "</option>\s?" + \
-                               "</field>\s?" + \
-                               "<field type=\"list-single\" label=\"Action when state is 'Away'\" var=\"away_action\">\s?" + \
-                               "<value>1</value>\s?" + \
-                               "<option label=\"Do nothing\">\s?" + \
-                               "<value>0</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Send mail digest\">\s?" + \
-                               "<value>1</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Retrieve mail\">\s?" + \
-                               "<value>2</value>\s?" + \
-                               "</option>\s?" + \
-                               "</field>\s?" + \
-                               "<field type=\"list-single\" label=\"Action when state is 'Extended Away'\" var=\"ea_action\">\s?" + \
-                               "<value>1</value>\s?" + \
-                               "<option label=\"Do nothing\">\s?" + \
-                               "<value>0</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Send mail digest\">\s?" + \
-                               "<value>1</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Retrieve mail\">\s?" + \
-                               "<value>2</value>\s?" + \
-                               "</option>\s?" + \
-                               "</field>\s?" + \
-                               "<field type=\"list-single\" label=\"Action when state is 'Offline'\" var=\"offline_action\">\s?" + \
-                               "<value>0</value>\s?" + \
-                               "<option label=\"Do nothing\">\s?" + \
-                               "<value>0</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Send mail digest\">\s?" + \
-                               "<value>1</value>\s?" + \
-                               "</option>\s?" + \
-                               "<option label=\"Retrieve mail\">\s?" + \
-                               "<value>2</value>\s?" + \
-                               "</option>\s?" + \
-                               "</field>\s?" + \
-                               "<field type=\"text-single\" label=\"Mail check interval (in minutes)\" var=\"interval\">\s?" + \
-                               "<value>5</value>\s?" + \
-                               "</field>\s?" + \
-                               "</x>\s?" + \
-                               "</query>\s?" + \
-                               "</iq>"]
+                               "<handshake>[0-9abcdef]*</handshake>", \
+                               "<iq from=\"jmc.localhost\" to=\"test@localhost/test\" type=\"result\" id=\"aad9a\">" + \
+                               "<query xmlns=\"jabber:iq:register\">" + \
+                               "<x xmlns=\"jabber:x:data\">" + \
+                               "<title>Jabber Mail connection registration</title>" + \
+                               "<instructions>Enter anything below</instructions>" + \
+                               "<field type=\"text-single\" label=\"Connection name\" var=\"name\"/>" + \
+                               "<field type=\"text-single\" label=\"Login\" var=\"login\"/>" + \
+                               "<field type=\"text-private\" label=\"Password\" var=\"password\"/>" + \
+                               "<field type=\"text-single\" label=\"Host\" var=\"host\"/>" + \
+                               "<field type=\"text-single\" label=\"Port\" var=\"port\"/>" + \
+                               "<field type=\"list-single\" label=\"Mailbox type\" var=\"type\">" + \
+                               "<option label=\"POP3\">" + \
+                               "<value>pop3</value>" + \
+                               "</option>" + \
+                               "<option label=\"POP3S\">" + \
+                               "<value>pop3s</value>" + \
+                               "</option>" + \
+                               "<option label=\"IMAP\">" + \
+                               "<value>imap</value>" + \
+                               "</option>" + \
+                               "<option label=\"IMAPS\">" + \
+                               "<value>imaps</value>" + \
+                               "</option>" + \
+                               "</field>" + \
+                               "<field type=\"text-single\" label=\"Mailbox (IMAP)\" var=\"mailbox\">" + \
+                               "<value>INBOX</value>" + \
+                               "</field>" + \
+                               "<field type=\"list-single\" label=\"Action when state is 'Free For Chat'\" var=\"ffc_action\">" + \
+                               "<value>2</value>" + \
+                               "<option label=\"Do nothing\">" + \
+                               "<value>0</value>" + \
+                               "</option>" + \
+                               "<option label=\"Send mail digest\">" + \
+                               "<value>1</value>" + \
+                               "</option>" + \
+                               "<option label=\"Retrieve mail\">" + \
+                               "<value>2</value>" + \
+                               "</option>" + \
+                               "</field>" + \
+                               "<field type=\"list-single\" label=\"Action when state is 'Online'\" var=\"online_action\">" + \
+                               "<value>2</value>" + \
+                               "<option label=\"Do nothing\">" + \
+                               "<value>0</value>" + \
+                               "</option>" + \
+                               "<option label=\"Send mail digest\">" + \
+                               "<value>1</value>" + \
+                               "</option>" + \
+                               "<option label=\"Retrieve mail\">" + \
+                               "<value>2</value>" + \
+                               "</option>" + \
+                               "</field>" + \
+                               "<field type=\"list-single\" label=\"Action when state is 'Away'\" var=\"away_action\">" + \
+                               "<value>1</value>" + \
+                               "<option label=\"Do nothing\">" + \
+                               "<value>0</value>" + \
+                               "</option>" + \
+                               "<option label=\"Send mail digest\">" + \
+                               "<value>1</value>" + \
+                               "</option>" + \
+                               "<option label=\"Retrieve mail\">" + \
+                               "<value>2</value>" + \
+                               "</option>" + \
+                               "</field>" + \
+                               "<field type=\"list-single\" label=\"Action when state is 'Extended Away'\" var=\"ea_action\">" + \
+                               "<value>1</value>" + \
+                               "<option label=\"Do nothing\">" + \
+                               "<value>0</value>" + \
+                               "</option>" + \
+                               "<option label=\"Send mail digest\">" + \
+                               "<value>1</value>" + \
+                               "</option>" + \
+                               "<option label=\"Retrieve mail\">" + \
+                               "<value>2</value>" + \
+                               "</option>" + \
+                               "</field>" + \
+                               "<field type=\"list-single\" label=\"Action when state is 'Offline'\" var=\"offline_action\">" + \
+                               "<value>0</value>" + \
+                               "<option label=\"Do nothing\">" + \
+                               "<value>0</value>" + \
+                               "</option>" + \
+                               "<option label=\"Send mail digest\">" + \
+                               "<value>1</value>" + \
+                               "</option>" + \
+                               "<option label=\"Retrieve mail\">" + \
+                               "<value>2</value>" + \
+                               "</option>" + \
+                               "</field>" + \
+                               "<field type=\"text-single\" label=\"Mail check interval (in minutes)\" var=\"interval\">" + \
+                               "<value>5</value>" + \
+                               "</field>" + \
+                               "</x>" + \
+                               "</query>" + \
+                               "</iq>" + \
+                               "</stream:stream>"]
         self.mail_component.run(1)
         self.failUnless(self.server.verify_queries())
         
