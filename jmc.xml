@@ -1,0 +1,18 @@
+<config>
+  <jabber>
+     <server>127.0.0.1</server> 
+     <port>5347</port> 
+     <secret>secret</secret>
+     <service>jmc.localhost</service>
+     <connectsleep>5</connectsleep>
+     <language>fr</language>
+     <vCard>
+         <FN>Jabber Mail Component</FN>
+         <DESC>A Jabber mail server component</DESC>
+         <URL>http://people.happycoders.org/dax/jabber/jmc/</URL>
+     </vCard>
+  </jabber>
+  <storage>DBM</storage>
+  <spooldir>/var/spool/jabber</spooldir>
+  <check_interval>1</check_interval> <!-- in minutes -->
+</config>

@@ -1,0 +1,25 @@
+Installation :
+
+- Get pyxmpp from http://pyxmpp.jabberstudio.org/ (work with snapshot pyxmpp-0.5.s20050506)
+
+- edit jmc.xml to match jabber server configuration :
+	- for jabberd2, port must match router.xml port
+	- for ejabberd, add new listening port :
+	  {5347, ejabberd_service, [{access, all},
+                            {host, "jmc.localhost",
+                             [{password, "secret"}]}]}
+
+- then run python jmc.py -c jmc.xml (-D to get debug)
+
+Usage :
+
+- Now you can register new mail server connection with your favorite
+jabber client.
+- all connection are then listed under your service browser and you
+can edit mail server parameters by registering on listed connection.
+
+Feedback :
+
+Send me feedback and comments to dax at happycoders dot org
+
+
