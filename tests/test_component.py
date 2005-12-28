@@ -102,7 +102,6 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
         self.failUnless(self.server.verify_queries())
 
     def test_get_register(self):
-        pass
         self.server.responses = ["<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' id='4258238724' from='localhost'>", \
                                  "<handshake/><iq type='get' to='jmc.localhost' from='test@localhost/test' id='aad9a'><query xmlns='jabber:iq:register'/></iq>", \
                                  "</stream:stream>"]
@@ -207,16 +206,78 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
         self.failUnless(self.server.verify_queries())
         
 
-        #self.mail_component.get_version()
+    def test_disco_get_info(self):
+        self.server.responses = ["<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' id='4258238724' from='localhost'>", \
+                                 "<handshake/><iq type='get' to='jmc.localhost' from='test@localhost/test' id='aad9a'><query xmlns='http://jabber.org/protocol/disco#info'/></iq>", \
+                                 "</stream:stream>"]
+        self.server.queries = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + \
+                               "<stream:stream xmlns:stream=\"http://etherx.jabber.org/streams\" xmlns=\"jabber:component:accept\" to=\"jmc.localhost\" version=\"1.0\">", \
+                               "<handshake>[0-9abcdef]*</handshake>", \
+                               "<iq from=\"jmc.localhost\" to=\"test@localhost/test\" type=\"result\" id=\"aad9a\">" + \
+                               "<query xmlns=\"http://jabber.org/protocol/disco#info\">" + \
+                               "<feature var=\"jabber:iq:version\"/>" + \
+                               "<feature var=\"jabber:iq:register\"/>" + \
+                               "<identity name=\"Jabber Mail Component\" category=\"headline\" type=\"mail\"/>" + \
+                               "</query></iq>" + \
+                               "</stream:stream>"]
+        self.mail_component.run(1)
+        self.failUnless(self.server.verify_queries())
 
-#     def test_disco_get_info(self):
-#         pass
-
-#     def test_get_register(self):
-#         pass
-
-#     def test_set_register(self):
-#         pass
+#    def test_set_register(self):
+#         self.server.responses = ["<?xml version='1.0'?><stream:stream xmlns:stream='http://etherx.jabber.org/streams' xmlns='jabber:component:accept' id='4258238724' from='localhost'>", \
+#                                  "<handshake/>" + \
+#                                  "<iq from='test@localhost/test' to='jmc.localhost' type='set' id='aacaa'>" + \
+#                                  "<query xmlns='jabber:iq:register'>" + \
+#                                  "<x xmlns='jabber:x:data' type='submit'>" + \
+#                                  "<field type='text-single' var='name'>" + \
+#                                  "<value>test</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='text-single' var='login'>" + \
+#                                  "<value>logintest</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='text-private' var='password'>" + \
+#                                  "<value>passtest</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='text-single' var='host'>" + \
+#                                  "<value>hosttest</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='text-single' var='port'>" + \
+#                                  "<value>993</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='list-single' var='type'>" + \
+#                                  "<value>imaps</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='text-single' var='mailbox'>" + \
+#                                  "<value>INBOX</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='list-single' var='ffc_action'>" + \
+#                                  "<value>2</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='list-single' var='online_action'>" + \
+#                                  "<value>2</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='list-single' var='away_action'>" + \
+#                                  "<value>1</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='list-single' var='ea_action'>" + \
+#                                  "<value>1</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='list-single' var='offline_action'>" + \
+#                                  "<value>0</value>" + \
+#                                  "</field>" + \
+#                                  "<field type='text-single' var='interval'>" + \
+#                                  "<value>5</value>" + \
+#                                  "</field>" + \
+#                                  "</x>" + \
+#                                  "</query></iq>" + \
+#                                  "<stream:stream>"]
+#         self.server.queries = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + \
+#                                "<stream:stream xmlns:stream=\"http://etherx.jabber.org/streams\" xmlns=\"jabber:component:accept\" to=\"jmc.localhost\" version=\"1.0\">", \
+#                                "<handshake>[0-9abcdef]*</handshake>", \
+#                                "<iq from=\"jmc.localhost\" to=\"test@localhost/Psi\" type=\"result\" id=\"aacaa\"/>",
+#                                "<stream:stream>"]
+#         self.mail_component.run(1)
+#         self.failUnless(self.server.verify_queries())
     
 class MailComponent_TestCase_Reg(unittest.TestCase):
     def setUp(self):

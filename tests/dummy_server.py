@@ -71,14 +71,14 @@ class DummyServer:
                 else:
                     response = self.responses[idx]
                 if response is not None:
-                    print >>sys.stderr, 'Sending : ', response
+#                    print >>sys.stderr, 'Sending : ', response
                     conn.send(response)
                 data = rfile.readline()
                 if not data:
                     break
                 else:
                     self.real_queries.append(data)
-                    print >>sys.stderr, 'Receive : ', data
+#                    print >>sys.stderr, 'Receive : ', data
         conn.close()
 
     def verify_queries(self):

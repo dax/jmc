@@ -426,7 +426,7 @@ class MailComponent(Component):
 					self.message)
     
     def stream_state_changed(self,state,arg):
-        print "*** State changed: %s %r ***" % (state,arg)
+        self.__logger.debug("*** State changed: %s %r ***" % (state,arg))
 
     """ Discovery get info handler """
     def disco_get_info(self, node, iq):
