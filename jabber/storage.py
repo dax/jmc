@@ -66,38 +66,29 @@ class DBMStorage(Storage):
     def __init__(self, nb_pk_fields = 1, spool_dir = "."):
 #        print "DBM INIT"
         Storage.__init__(self, nb_pk_fields, spool_dir)
-        self.__str_registered = anydbm.open(self.file, \
-                                            'c')
+        self.__registered = self.load()
         
     def __del__(self):
-#        print "DBM STOP"
-        self.__str_registered.close()
-
+        #        print "DBM STOP"
+        self.sync()
+        
     def load(self):
 #        print "DBM LOAD"
+        str_registered = anydbm.open(self.file, \
+                                     'c')
         result = {}
 	try:
-	    for pk in self.__str_registered.keys():
-                pk_list = pk.split('#')
-                obj = result
-                key = None
-                while pk_list:
-                    key = pk_list.pop(0)
-                    if pk_list:
-                        if not obj.has_key(key):
-                            obj[key] = {}
-                        obj = obj[key]
-                obj[key] = mailconnection_factory.str_to_mail_connection(self.__str_registered[pk])
+	    for pk in str_registered.keys():
+                result[pk] = mailconnection_factory.str_to_mail_connection(str_registered[pk])
 	except Exception, e:
 	    print >>sys.stderr, "Cannot load registered.db : "
 	    print >>sys.stderr, e
+        str_registered.close()
         return result
 
     def sync(self):
-#        print "DBM SYNC"
-        self.__str_registered.close()
-        self.__str_registered = anydbm.open(self.file, \
-                                            'c')
+        #        print "DBM SYNC"
+        self.store()
         
     def __store(self, nb_pk_fields, registered, pk):
         if nb_pk_fields > 0:
@@ -112,52 +103,68 @@ class DBMStorage(Storage):
             self.__str_registered[pk] = str(registered)
             print "STORING : " + pk + " = " + str(registered)
             
-    def store(self, registered):
+    def store(self):
 #        print "DBM STORE"
         try:
-            self.__store(self.nb_pk_fields, registered, "")
-            # Force file synchronisation
-            self.sync()
+            str_registered = anydbm.open(self.file, \
+                                         'c')
+            for pk in self.__registered.keys():
+                str_registered[pk] = str(self.__registered[pk])
 	except Exception, e:
 	    print >>sys.stderr, "Cannot save to registered.db : "
 	    print >>sys.stderr, e
-
+        str_registered.close()
+        
     def __setitem__(self, pk_tuple, obj):
 #        print "Adding " + "#".join(pk_tuple) + " = " + str(obj)
-        self.__str_registered["#".join(pk_tuple)] = str(obj)
+        self.__registered[str("#".join(pk_tuple))] = obj
         self.sync()
 
     def __getitem__(self, pk_tuple):
 #        print "Getting " + "#".join(pk_tuple)
         if len(pk_tuple) == self.nb_pk_fields:
-            return  mailconnection_factory.str_to_mail_connection(self.__str_registered["#".join(pk_tuple)])
+            return self.__registered[str("#".join(pk_tuple))]
         else:
-            partial_key = "#".join(pk_tuple)
+            partial_key = str("#".join(pk_tuple))
             regexp = re.compile(partial_key)
-            return [mailconnection_factory.str_to_mail_connection(self.__str_registered[key])
-                    for key in self.__str_registered.keys()
+            return [self.__registered[key]
+                    for key in self.__registered.keys()
                     if regexp.search(key)]
 
     def __delitem__(self, pk_tuple):
 #        print "Deleting " + "#".join(pk_tuple)
-        del self.__str_registered["#".join(pk_tuple)]
+        del self.__registered[str("#".join(pk_tuple))]
         self.sync()
 
     def has_key(self, pk_tuple):
-        return self.__str_registered.has_key("#".join(pk_tuple))
+        if len(pk_tuple) == self.nb_pk_fields:
+            return self.__registered.has_key(str("#".join(pk_tuple)))
+        else:
+            partial_key = str("#".join(pk_tuple))
+            regexp = re.compile("^" + partial_key)
+            for key in self.__registered.keys():
+                if regexp.search(key):
+                    return True
+            return False
 
     def keys(self, pk_tuple = None):
         if pk_tuple is None:
-            return [tuple(key.split("#")) for key in self.__str_registered.keys()]
+            return [tuple(key.split("#")) for key in self.__registered.keys()]
         else:
             level = len(pk_tuple)
-            partial_key = "#".join(pk_tuple)
+            partial_key = str("#".join(pk_tuple))
             regexp = re.compile("^" + partial_key)
             result = {}
-            for key in self.__str_registered.keys():
+            for key in self.__registered.keys():
                 if regexp.search(key):
                     result[key.split("#")[level]] = None
             return result.keys()
+
+    def dump(self):
+        print "dumping"
+        for pk in self.__registered.keys():
+            print pk + " = " + str(self.__registered[pk])
+            
         
 class SQLiteStorage(Storage):
     def __init__(self, nb_pk_fields = 1, spool_dir = "."):

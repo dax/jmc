@@ -32,8 +32,12 @@ from tests.test_component import *
 from tests.test_storage import *
 from test import test_support
 import jabber
+import logging
 
 if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler())
+    logger.setLevel(logging.INFO)
     mail_connection_suite = unittest.makeSuite(MailConnection_TestCase, \
                                                "test")
     pop3_connection_suite = unittest.makeSuite(POP3Connection_TestCase, \
@@ -59,7 +63,7 @@ if __name__ == '__main__':
                                     component2_suite, \
                                     storage_suite, \
                                     dbmstorage_suite))
-    test_support.run_suite(component2_suite)
+    test_support.run_suite(storage_suite)
 
 # coverage.stop()
 # coverage.analysis(jabber.mailconnection_factory)

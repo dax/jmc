@@ -65,7 +65,6 @@ class MailComponent(Component):
 	
 	self.__interval = int(config.get_content("config/check_interval"))
 	self.__config = config
-#	self.__registered = {}
         try:
             self.__storage = globals()[config.get_content("config/storage") + "Storage"]()
         except:
@@ -345,16 +344,17 @@ class MailComponent(Component):
         finally:
             ## TODO : for jid in self.__storage.keys(())
             ## for name in self.__storage.keys((jid,))
-# 	    for jid in self.__storage.keys(()):
-# 		p = Presence(from_jid = str(self.jid), to_jid = jid, \
-# 			     stanza_type = "unavailable")
-# 		self.stream.send(p)
-# 		for name in self.__registered[jid].keys():
-# 		    if self.__storage[(jid, name)].status != "offline":
-# 			p = Presence(from_jid = name + "@" + str(self.jid), \
-# 				     to_jid = jid, \
-# 				     stanza_type = "unavailable")
-# 			self.stream.send(p)
+            if self.stream:
+                for jid in self.__storage.keys(()):
+                    p = Presence(from_jid = str(self.jid), to_jid = jid, \
+                                 stanza_type = "unavailable")
+                    self.stream.send(p)
+                for jid, name in self.__storage.keys():
+                    if self.__storage[(jid, name)].status != "offline":
+                        p = Presence(from_jid = name + "@" + str(self.jid), \
+                                     to_jid = jid, \
+                                     stanza_type = "unavailable")
+                        self.stream.send(p)
             threads = threading.enumerate()
             for th in threads:
                 try:
@@ -367,7 +367,7 @@ class MailComponent(Component):
                 except:
                     pass
             self.disconnect()
-	    del self.__storage
+            del self.__storage
             self.__logger.debug("Exitting normally")
 
     """ Stop method handler """
@@ -392,10 +392,14 @@ class MailComponent(Component):
     def authenticated(self):
 	self.__logger.debug("AUTHENTICATED")
         Component.authenticated(self)
-# 	for jid in self.__registered.keys():
-# 	    p = Presence(from_jid = str(self.jid), \
-#                          to_jid = jid, stanza_type = "probe")
-#             self.stream.send(p)
+        for jid, name in self.__storage.keys():
+	    p = Presence(from_jid = name + "@" + str(self.jid), \
+                         to_jid = jid, stanza_type = "probe")
+            self.stream.send(p)
+	for jid in self.__storage.keys(()):
+	    p = Presence(from_jid = str(self.jid), \
+                         to_jid = jid, stanza_type = "probe")
+            self.stream.send(p)
 
         self.stream.set_iq_get_handler("query", "jabber:iq:version", \
 				       self.get_version)
@@ -445,9 +449,9 @@ class MailComponent(Component):
 	self.__logger.debug("DISCO_GET_ITEMS")
 	base_from_jid = str(iq.get_from().bare())
 	di = DiscoItems()
-	if not node and self.__registered.has_key(base_from_jid):
-	    for name in self.__registered[base_from_jid].keys():
-		account = self.__registered[base_from_jid][name]
+        if not node:
+            for jid, name in self.__storage.keys():
+		account = self.__storage[(jid, name)]
 		str_name = account.get_type() + " connection " + name
 		if account.get_type()[0:4] == "imap":
 		    str_name += " (" + account.mailbox + ")"
@@ -488,18 +492,16 @@ class MailComponent(Component):
         remove = iq.xpath_eval("r:query/r:remove", \
 			       {"r" : "jabber:iq:register"})
         if remove:
-	    if self.__registered.has_key(base_from_jid):
-		for name in self.__registered[base_from_jid].keys():
-		    p = Presence(from_jid = name + "@" + str(self.jid), \
-				 to_jid = from_jid, \
-				 stanza_type = "unsubscribe")
-		    self.stream.send(p)
-		    p = Presence(from_jid = name + "@" + str(self.jid), \
-				 to_jid = from_jid, \
-				 stanza_type = "unsubscribed")
-		    self.stream.send(p)
-		del self.__registered[base_from_jid]
-#                self.__storage.
+            for jid, name in self.__storage.keys():
+                p = Presence(from_jid = name + "@" + str(self.jid), \
+                             to_jid = from_jid, \
+                             stanza_type = "unsubscribe")
+                self.stream.send(p)
+                p = Presence(from_jid = name + "@" + str(self.jid), \
+                             to_jid = from_jid, \
+                             stanza_type = "unsubscribed")
+                self.stream.send(p)
+                del self.__storage[(jid, name)]
 	    p = Presence(from_jid = self.jid, to_jid = from_jid, \
 			 stanza_type = "unsubscribe")
 	    self.stream.send(p)
@@ -585,9 +587,8 @@ class MailComponent(Component):
         iq = iq.make_result_response()
         self.stream.send(iq)
 
-	if not self.__registered.has_key(base_from_jid):
-	    self.__registered[base_from_jid] = {}
-	    p = Presence(from_jid = self.jid, to_jid = from_jid.bare(), \
+	if not self.__storage.has_key((base_from_jid,)):
+	    p = Presence(from_jid = self.jid, to_jid = base_from_jid, \
 			 stanza_type="subscribe")
 	    self.stream.send(p)
 
@@ -596,7 +597,7 @@ class MailComponent(Component):
 	  socket = host + ":" + str(port)
 	else:
 	  socket = host
-	if self.__registered[base_from_jid].has_key(name):
+	if self.__storage.has_key((base_from_jid, name)):
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
 			stanza_type = "message", \
 			body = u"Updated %s connection '%s': Registered with "\
@@ -611,31 +612,28 @@ class MailComponent(Component):
 			% (type, name, login, password, socket))
 	    self.stream.send(m)
 	    p = Presence(from_jid = name + "@" + str(self.jid), \
-			 to_jid = from_jid.bare(), \
+			 to_jid = base_from_jid, \
 			 stanza_type="subscribe")
 	    self.stream.send(p)
 
- 	self.__registered[base_from_jid][name] = \
- 	    mailconnection_factory.get_new_mail_connection(type)
- 	self.__registered[base_from_jid][name].login = login
- 	self.__registered[base_from_jid][name].password = password
- 	self.__registered[base_from_jid][name].host = host
-        self.__registered[base_from_jid][name].ffc_action = ffc_action
-        self.__registered[base_from_jid][name].online_action = online_action
-        self.__registered[base_from_jid][name].away_action = away_action
-        self.__registered[base_from_jid][name].ea_action = ea_action
-        self.__registered[base_from_jid][name].offline_action = offline_action
+ 	self.__storage[(base_from_jid, name)] = account = \
+            mailconnection_factory.get_new_mail_connection(type)
+ 	account.login = login
+ 	account.password = password
+ 	account.host = host
+        account.ffc_action = ffc_action
+        account.online_action = online_action
+        account.away_action = away_action
+        account.ea_action = ea_action
+        account.offline_action = offline_action
+        account.interval = interval
 
 	if port:
-	    self.__registered[base_from_jid][name].port = port
-
-	if interval:
-	    self.__registered[base_from_jid][name].interval = interval
+	    account.port = port
 
  	if type[0:4] == "imap":
- 	    self.__registered[base_from_jid][name].mailbox = mailbox
+ 	    account.mailbox = mailbox
 
-	self.__storage.add([base_from_jid, name], self.__registered[base_from_jid][name])
         return 1
 
     """ Handle presence availability """
@@ -646,38 +644,28 @@ class MailComponent(Component):
 	name = stanza.get_to().node
 	show = stanza.get_show()
         self.__logger.debug("SHOW : " + str(show))
-	if self.__registered.has_key(base_from_jid):
-	    if not name:
-		p = Presence(from_jid = self.jid, \
-			     to_jid = from_jid, \
-			     status = \
-                             str(len(self.__registered[base_from_jid])) \
-			     + " accounts registered.", \
-			     show = show, \
-			     stanza_type = "available")
-		self.stream.send(p)
-		for name in self.__registered[base_from_jid].keys():
-		    account = self.__registered[base_from_jid][name]
-		    # Make available to receive mail only when online
-		    account.status = "offline" # TODO get real status available = (not show)
-		    p = Presence(from_jid = name + "@" + \
-				 str(self.jid), \
-				 to_jid = from_jid, \
-				 status = account.get_status(), \
-				 show = show, \
-				 stanza_type = "available")
-		    self.stream.send(p)
-	    elif self.__registered[base_from_jid].has_key(name):
-		account = self.__registered[base_from_jid][name]
-		# Make available to receive mail only when online
-		account.status = "offline" # TODO get real status = (not show)
-		p = Presence(from_jid = name + "@" + \
-			     str(self.jid), \
-			     to_jid = from_jid, \
-			     status = account.get_status(), \
-			     show = show, \
-			     stanza_type = "available")
-		self.stream.send(p)
+        if name:
+            self.__logger.debug("TO : " + name + " " + base_from_jid)
+        if not name and self.__storage.has_key((base_from_jid,)):
+            p = Presence(from_jid = self.jid, \
+                         to_jid = from_jid, \
+                         status = \
+                         str(len(self.__storage.keys((base_from_jid,)))) \
+                         + " accounts registered.", \
+                         show = show, \
+                         stanza_type = "available")
+            self.stream.send(p)
+        elif self.__storage.has_key((base_from_jid, name)):
+            account = self.__storage[(base_from_jid, name)]
+            # Make available to receive mail only when online
+            account.status = "online" # TODO get real status = (not show)
+            p = Presence(from_jid = name + "@" + \
+                         str(self.jid), \
+                         to_jid = from_jid, \
+                         status = account.get_status_msg(), \
+                         show = show, \
+                         stanza_type = "available")
+            self.stream.send(p)
         return 1
 
     """ handle presence unavailability """
@@ -685,10 +673,9 @@ class MailComponent(Component):
 	self.__logger.debug("PRESENCE_UNAVAILABLE")
 	from_jid = stanza.get_from()
         base_from_jid = str(from_jid.bare())
-	if stanza.get_to() == str(self.jid) \
-		and self.__registered.has_key(base_from_jid):
-	    for name in self.__registered[base_from_jid].keys():
-		self.__registered[base_from_jid][name].status = "offline" # TODO get real status
+        if stanza.get_to() == str(self.jid):
+	    for jid, name in self.__storage.keys():
+		self.__storage[(base_from_jid, name)].status = "offline" # TODO get real status
 		p = Presence(from_jid = name + "@" + str(self.jid), \
 			     to_jid = from_jid, \
 			     stanza_type = "unavailable")
@@ -712,12 +699,11 @@ class MailComponent(Component):
 	name = stanza.get_to().node
 	from_jid = stanza.get_from()
         base_from_jid = str(from_jid.bare())
-	if self.__registered.has_key(base_from_jid) \
-		and self.__registered[base_from_jid].has_key(name):
-            account = self.__registered[base_from_jid][name]
+        if name is not None and self.__storage.has_key((base_from_jid, name)):
+            account = self.__storage[(base_from_jid, name)]
             account.status = "online" # TODO retrieve real status
             p = Presence(from_jid = stanza.get_to(), to_jid = from_jid, \
-                         status = account.get_status(), \
+                         status = account.get_status_msg(), \
                          stanza_type = "available")
             self.stream.send(p)
         return 1
@@ -728,9 +714,8 @@ class MailComponent(Component):
 	name = stanza.get_to().node
 	from_jid = stanza.get_from()
         base_from_jid = str(from_jid.bare())
-	if self.__registered.has_key(base_from_jid) \
-		and self.__registered[base_from_jid].has_key(name):
-	    del self.__registered[base_from_jid][name]
+        if name is not None and self.__storage.has_key((base_from_jid, name)):
+	    del self.__storage[(base_from_jid, name)]
 	p = Presence(from_jid = stanza.get_to(), to_jid = from_jid, \
 		     stanza_type = "unsubscribe")
 	self.stream.send(p)
@@ -752,20 +737,20 @@ class MailComponent(Component):
 	self.__logger.debug("MESSAGE: " + message.get_body())
 	name = message.get_to().node
 	base_from_jid = str(message.get_from().bare())
-	if name and self.__registered.has_key(base_from_jid):
-	    body = message.get_body()
-	    cmd = body.split(' ')
-	    if cmd[0] == "check":
-		self.check_mail(base_from_jid, name)
-            elif cmd[0] == "dump":
-                body = ""
-                for jid in self.__registered.keys():
-                    for name in self.__registered[jid].keys():
-                        body += name + " for user " + jid
-                msg = Message(from_jid = self.jid, to_jid = base_from_jid, \
-                              stanza_type = "message", \
-                              body = body)
-                self.stream.send(msg)
+# 	if name and self.__registered.has_key(base_from_jid):
+# 	    body = message.get_body()
+# 	    cmd = body.split(' ')
+# 	    if cmd[0] == "check":
+# 		self.check_mail(base_from_jid, name)
+#             elif cmd[0] == "dump":
+#                 body = ""
+#                 for jid in self.__registered.keys():
+#                     for name in self.__registered[jid].keys():
+#                         body += name + " for user " + jid
+#                 msg = Message(from_jid = self.jid, to_jid = base_from_jid, \
+#                               stanza_type = "message", \
+#                               body = body)
+#                 self.stream.send(msg)
 	return 1
 
 #     """ Store registered sessions """
@@ -863,6 +848,7 @@ class MailComponent(Component):
     """ check mail handler """
     def check_all_mail(self):
 	self.__logger.debug("CHECK_ALL_MAIL")
-	for jid in self.__registered.keys():
-	    for name in self.__registered[jid].keys():
-		self.check_mail(jid, name)
+        ## TODO
+# 	for jid in self.__registered.keys():
+# 	    for name in self.__registered[jid].keys():
+# 		self.check_mail(jid, name)

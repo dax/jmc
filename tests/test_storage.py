@@ -97,8 +97,11 @@ class DBMStorage_TestCase(unittest.TestCase):
 
     def test_haskey(self):
         self._storage[("test@localhost", "account2")] = self._account2
-        self.assertTrue(self._storage.has_key(("test@localhost", "account2")))
+        self.assertTrue(self._storage.has_key((u"test@localhost", u"account2")))
 
+    def test_partial_haskey(self):
+        self._storage[("test@localhost", "account2")] = self._account2
+        self.assertTrue(self._storage.has_key((u"test@localhost",)))
 
     def test_get_filtered(self):
         self._storage[("test@localhost", "account1")] = self._account1
@@ -106,8 +109,8 @@ class DBMStorage_TestCase(unittest.TestCase):
         result = self._storage[("test@localhost",)]
         self.assertEquals(type(result), list)
         self.assertEquals(len(result), 2)
-        self.assertEquals(result[0], self._account1)
-        self.assertEquals(result[1], self._account2)
+        self.assertEquals(result[1], self._account1)
+        self.assertEquals(result[0], self._account2)
 
     def test_get_filtered2(self):
         self._storage[("test@localhost", "account1")] = self._account1
@@ -123,14 +126,14 @@ class DBMStorage_TestCase(unittest.TestCase):
         result = self._storage.keys()
         self.assertEquals(type(result), list)
         self.assertEquals(len(result), 2)
-        self.assertEquals(type(result[0]), tuple)
-        self.assertEquals(len(result[0]), 2)
-        self.assertEquals(result[0][0], "test@localhost")
-        self.assertEquals(result[0][1], "account1")
         self.assertEquals(type(result[1]), tuple)
         self.assertEquals(len(result[1]), 2)
         self.assertEquals(result[1][0], "test@localhost")
-        self.assertEquals(result[1][1], "account2")
+        self.assertEquals(result[1][1], "account1")
+        self.assertEquals(type(result[0]), tuple)
+        self.assertEquals(len(result[0]), 2)
+        self.assertEquals(result[0][0], "test@localhost")
+        self.assertEquals(result[0][1], "account2")
 
     def test_keys_filtered(self):
         self._storage[("test@localhost", "account1")] = self._account1

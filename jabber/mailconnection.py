@@ -156,6 +156,7 @@ class MailConnection(object):
         self.away_action = RETRIEVE
         self.ea_action = RETRIEVE
         self.offline_action = DO_NOTHING
+        self.interval = 5
         
     def __eq__(self, other):
         return self.get_type() == other.get_type() \
@@ -168,8 +169,9 @@ class MailConnection(object):
                and self.online_action == other.online_action \
                and self.away_action == other.away_action \
                and self.ea_action == other.ea_action \
-               and self.offline_action == other.offline_action
-
+               and self.offline_action == other.offline_action \
+               and self.interval == other.interval
+    
     def __str__(self):
 	return self.get_type() + "#" + self.login + "#" + self.password + "#" \
 	    + self.host + "#" + str(self.port) + "#" + str(self.ffc_action) + "#" \
@@ -219,7 +221,7 @@ class MailConnection(object):
     def get_type(self):
 	return "UNKNOWN"
 
-    def get_status(self):
+    def get_status_msg(self):
 	return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
 	    str(self.port)
 
@@ -246,7 +248,7 @@ class MailConnection(object):
                    "offline": self.offline_action}
         if mapping.has_key(self.status):
             return mapping[self.status]
-        return "nothing"
+        return NOTHING
         
     action = property(get_action)
     

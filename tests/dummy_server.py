@@ -55,9 +55,6 @@ class DummyServer:
         self.queries = None
         self.real_queries = []
         
-    def __del__(self):
-        self.socket.close()
-        
     def serve(self):
         conn, addr = self.socket.accept()
         rfile = conn.makefile('rb', -1)
@@ -80,6 +77,8 @@ class DummyServer:
                     self.real_queries.append(data)
 #                    print >>sys.stderr, 'Receive : ', data
         conn.close()
+        self.socket.close()
+        self.socket = None
 
     def verify_queries(self):
         result = True
@@ -114,8 +113,10 @@ class XMLDummyServer(DummyServer):
                         # TODO : this approximation is not clean
                         # received size is based on the expected size in self.queries
                         data = conn.recv(1024 + len(self.queries[idx]))
+                        print "receive : " + data
                         if data:
-#                            print "-----------RECEIVE " + data
+                            ## TODO : without this log, test_set_register in test_component wait forever
+                            #print "-----------RECEIVE1 " + data
                             r = self._reader.feed(data)
                     except:
                         type, value, stack = sys.exc_info()
@@ -132,9 +133,16 @@ class XMLDummyServer(DummyServer):
                     else:
                         response = self.responses[idx]
                     if response is not None:
-#                        print >>sys.stderr, '---------SENDING : ', response
+                        print >>sys.stderr, '---------SENDING : ', response
                         conn.send(response)
+                data = conn.recv(1024)
+                if data:
+                    print "-----------RECEIVE2 " + data
+                    r = self._reader.feed(data)
+                    self.real_queries.append(data)
                 conn.close()
+                self.socket.close()
+                self.socket = None
         except:
             type, value, stack = sys.exc_info()
             print "".join (traceback.format_exception 
@@ -143,26 +151,21 @@ class XMLDummyServer(DummyServer):
 
     def verify_queries(self):
         result = True
-        queries_len = len(self.queries)
-        if queries_len == len(self.real_queries):            
-            full_real_queries = ""
-            full_recv_queries = ""
-            for idx in range(queries_len):
-                full_real_queries += self.real_queries[idx].rstrip(os.linesep)
-                full_recv_queries += self.queries[idx].rstrip(os.linesep)
-            # Do not receive it but add it so that xml parsing can succeed
-            full_real_queries += "</stream:stream>"
-            real_query = xml.dom.minidom.parseString(full_real_queries)
-            recv_query = xml.dom.minidom.parseString(full_recv_queries)
-            try:
-                utils.xmldiff(real_query, recv_query)
-            except Exception, msg:
-                result = False
-                print >>sys.stderr, msg
-        else:
+        full_real_queries = ""
+        full_recv_queries = ""
+        for idx in range(len(self.real_queries)):
+            full_real_queries += self.real_queries[idx].rstrip(os.linesep)
+            full_recv_queries += self.queries[idx].rstrip(os.linesep)
+        # Do not receive it but add it so that xml parsing can succeed
+        #full_real_queries += "</stream:stream>"
+        print full_real_queries
+        real_query = xml.dom.minidom.parseString(full_real_queries)
+        recv_query = xml.dom.minidom.parseString(full_recv_queries)
+        try:
+            utils.xmldiff(real_query, recv_query)
+        except Exception, msg:
             result = False
-            print >>sys.stderr, "Expected " + str(queries_len) + \
-                  " queries, got " + str(len(self.real_queries))
+            print >>sys.stderr, msg
         return result
 
 def test():
