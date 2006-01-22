@@ -346,12 +346,12 @@ class MailComponent(Component):
             ## for name in self.__storage.keys((jid,))
             if self.stream:
                 for jid in self.__storage.keys(()):
-                    p = Presence(from_jid = str(self.jid), to_jid = jid, \
+                    p = Presence(from_jid = unicode(self.jid), to_jid = jid, \
                                  stanza_type = "unavailable")
                     self.stream.send(p)
                 for jid, name in self.__storage.keys():
                     if self.__storage[(jid, name)].status != "offline":
-                        p = Presence(from_jid = name + "@" + str(self.jid), \
+                        p = Presence(from_jid = name + "@" + unicode(self.jid), \
                                      to_jid = jid, \
                                      stanza_type = "unavailable")
                         self.stream.send(p)
@@ -393,11 +393,11 @@ class MailComponent(Component):
 	self.__logger.debug("AUTHENTICATED")
         Component.authenticated(self)
         for jid, name in self.__storage.keys():
-	    p = Presence(from_jid = name + "@" + str(self.jid), \
+	    p = Presence(from_jid = name + "@" + unicode(self.jid), \
                          to_jid = jid, stanza_type = "probe")
             self.stream.send(p)
 	for jid in self.__storage.keys(()):
-	    p = Presence(from_jid = str(self.jid), \
+	    p = Presence(from_jid = unicode(self.jid), \
                          to_jid = jid, stanza_type = "probe")
             self.stream.send(p)
 
@@ -447,7 +447,7 @@ class MailComponent(Component):
     """ Discovery get nested nodes handler """
     def disco_get_items(self, node, iq):
 	self.__logger.debug("DISCO_GET_ITEMS")
-	base_from_jid = str(iq.get_from().bare())
+	base_from_jid = unicode(iq.get_from().bare())
 	di = DiscoItems()
         if not node:
             for jid, name in self.__storage.keys():
@@ -455,7 +455,7 @@ class MailComponent(Component):
 		str_name = account.get_type() + " connection " + name
 		if account.get_type()[0:4] == "imap":
 		    str_name += " (" + account.mailbox + ")"
-		DiscoItem(di, JID(name + "@" + str(self.jid)), \
+		DiscoItem(di, JID(name + "@" + unicode(self.jid)), \
 			  name, str_name)
 	return di
 
@@ -472,7 +472,7 @@ class MailComponent(Component):
     """ Send back register form to user """
     def get_register(self, iq):
 	self.__logger.debug("GET_REGISTER")
-	base_from_jid = str(iq.get_from().bare())
+	base_from_jid = unicode(iq.get_from().bare())
         to = iq.get_to()
         iq = iq.make_result_response()
         q = iq.new_query("jabber:iq:register")
@@ -488,16 +488,16 @@ class MailComponent(Component):
 	self.__logger.debug("SET_REGISTER")
         to = iq.get_to()
 	from_jid = iq.get_from()
-        base_from_jid = str(from_jid.bare())
+        base_from_jid = unicode(from_jid.bare())
         remove = iq.xpath_eval("r:query/r:remove", \
 			       {"r" : "jabber:iq:register"})
         if remove:
             for jid, name in self.__storage.keys():
-                p = Presence(from_jid = name + "@" + str(self.jid), \
+                p = Presence(from_jid = name + "@" + unicode(self.jid), \
                              to_jid = from_jid, \
                              stanza_type = "unsubscribe")
                 self.stream.send(p)
-                p = Presence(from_jid = name + "@" + str(self.jid), \
+                p = Presence(from_jid = name + "@" + unicode(self.jid), \
                              to_jid = from_jid, \
                              stanza_type = "unsubscribed")
                 self.stream.send(p)
@@ -611,7 +611,7 @@ class MailComponent(Component):
 			"username '%s' and password '%s' on '%s'" \
 			% (type, name, login, password, socket))
 	    self.stream.send(m)
-	    p = Presence(from_jid = name + "@" + str(self.jid), \
+	    p = Presence(from_jid = name + "@" + unicode(self.jid), \
 			 to_jid = base_from_jid, \
 			 stanza_type="subscribe")
 	    self.stream.send(p)
@@ -640,7 +640,7 @@ class MailComponent(Component):
     def presence_available(self, stanza):
 	self.__logger.debug("PRESENCE_AVAILABLE")
 	from_jid = stanza.get_from()
-        base_from_jid = str(from_jid.bare())
+        base_from_jid = unicode(from_jid.bare())
 	name = stanza.get_to().node
 	show = stanza.get_show()
         self.__logger.debug("SHOW : " + str(show))
@@ -660,7 +660,7 @@ class MailComponent(Component):
             # Make available to receive mail only when online
             account.status = "online" # TODO get real status = (not show)
             p = Presence(from_jid = name + "@" + \
-                         str(self.jid), \
+                         unicode(self.jid), \
                          to_jid = from_jid, \
                          status = account.get_status_msg(), \
                          show = show, \
@@ -672,11 +672,11 @@ class MailComponent(Component):
     def presence_unavailable(self, stanza):
 	self.__logger.debug("PRESENCE_UNAVAILABLE")
 	from_jid = stanza.get_from()
-        base_from_jid = str(from_jid.bare())
-        if stanza.get_to() == str(self.jid):
+        base_from_jid = unicode(from_jid.bare())
+        if stanza.get_to() == unicode(self.jid):
 	    for jid, name in self.__storage.keys():
 		self.__storage[(base_from_jid, name)].status = "offline" # TODO get real status
-		p = Presence(from_jid = name + "@" + str(self.jid), \
+		p = Presence(from_jid = name + "@" + unicode(self.jid), \
 			     to_jid = from_jid, \
 			     stanza_type = "unavailable")
 		self.stream.send(p)
@@ -698,7 +698,7 @@ class MailComponent(Component):
 	self.__logger.debug("PRESENCE_SUBSCRIBED")
 	name = stanza.get_to().node
 	from_jid = stanza.get_from()
-        base_from_jid = str(from_jid.bare())
+        base_from_jid = unicode(from_jid.bare())
         if name is not None and self.__storage.has_key((base_from_jid, name)):
             account = self.__storage[(base_from_jid, name)]
             account.status = "online" # TODO retrieve real status
@@ -713,7 +713,7 @@ class MailComponent(Component):
 	self.__logger.debug("PRESENCE_UNSUBSCRIBE")
 	name = stanza.get_to().node
 	from_jid = stanza.get_from()
-        base_from_jid = str(from_jid.bare())
+        base_from_jid = unicode(from_jid.bare())
         if name is not None and self.__storage.has_key((base_from_jid, name)):
 	    del self.__storage[(base_from_jid, name)]
 	p = Presence(from_jid = stanza.get_to(), to_jid = from_jid, \
@@ -736,7 +736,7 @@ class MailComponent(Component):
     def message(self, message):
 	self.__logger.debug("MESSAGE: " + message.get_body())
 	name = message.get_to().node
-	base_from_jid = str(message.get_from().bare())
+	base_from_jid = unicode(message.get_from().bare())
 # 	if name and self.__registered.has_key(base_from_jid):
 # 	    body = message.get_body()
 # 	    cmd = body.split(' ')
@@ -819,7 +819,7 @@ class MailComponent(Component):
                     while account.lastcheck < num:
                         body = account.get_mail(int(mail_list[account.lastcheck]))
                         mesg = Message(from_jid = name + "@" + \
-                                       str(self.jid), \
+                                       unicode(self.jid), \
                                        to_jid = jid, \
                                        stanza_type = "message", \
                                        body = body)
@@ -834,7 +834,7 @@ class MailComponent(Component):
                         account.lastcheck += 1
                     if body != "":
                         mesg = Message(from_jid = name + "@" + \
-                                       str(self.jid), \
+                                       unicode(self.jid), \
                                        to_jid = jid, \
                                        stanza_type = "headline", \
                                        body = body)

@@ -273,8 +273,6 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
                                  "</x>" + \
                                  "</query></iq>",
                                  lambda x: None,
-                                 lambda x: None,
-                                 lambda x: None,
                                  "</stream:stream>"]
         self.server.queries = ["<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + \
                                "<stream:stream xmlns:stream=\"http://etherx.jabber.org/streams\" xmlns=\"jabber:component:accept\" to=\"jmc.localhost\" version=\"1.0\">", \

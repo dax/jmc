@@ -113,7 +113,7 @@ class XMLDummyServer(DummyServer):
                         # TODO : this approximation is not clean
                         # received size is based on the expected size in self.queries
                         data = conn.recv(1024 + len(self.queries[idx]))
-                        print "receive : " + data
+#                        print "receive : " + data
                         if data:
                             ## TODO : without this log, test_set_register in test_component wait forever
                             #print "-----------RECEIVE1 " + data
@@ -133,11 +133,11 @@ class XMLDummyServer(DummyServer):
                     else:
                         response = self.responses[idx]
                     if response is not None:
-                        print >>sys.stderr, '---------SENDING : ', response
+#                        print >>sys.stderr, '---------SENDING : ', response
                         conn.send(response)
                 data = conn.recv(1024)
                 if data:
-                    print "-----------RECEIVE2 " + data
+#                    print "-----------RECEIVE2 " + data
                     r = self._reader.feed(data)
                     self.real_queries.append(data)
                 conn.close()
@@ -155,10 +155,10 @@ class XMLDummyServer(DummyServer):
         full_recv_queries = ""
         for idx in range(len(self.real_queries)):
             full_real_queries += self.real_queries[idx].rstrip(os.linesep)
+        for idx in range(len(self.queries)):
             full_recv_queries += self.queries[idx].rstrip(os.linesep)
         # Do not receive it but add it so that xml parsing can succeed
         #full_real_queries += "</stream:stream>"
-        print full_real_queries
         real_query = xml.dom.minidom.parseString(full_real_queries)
         recv_query = xml.dom.minidom.parseString(full_recv_queries)
         try:
