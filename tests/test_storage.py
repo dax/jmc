@@ -45,7 +45,8 @@ class SQLiteStorage_TestCase(unittest.TestCase):
 
 class DBMStorage_TestCase(unittest.TestCase):
     def setUp(self):
-        self._storage = DBMStorage(nb_pk_fields = 2)
+        spool_dir = "./spool/test"
+        self._storage = DBMStorage(nb_pk_fields = 2, spool_dir = spool_dir)
         self._account1 = IMAPConnection(login = "login1",
                                         password = "password1",
                                         host = "host1",
@@ -58,6 +59,7 @@ class DBMStorage_TestCase(unittest.TestCase):
         self._account1.xa_action = mailconnection.DO_NOTHING
         self._account1.dnd_action = mailconnection.DO_NOTHING
         self._account1.offline_action = mailconnection.DO_NOTHING
+        self._account1.interval = 4
         self._account2 = IMAPConnection(login = "login2",
                                         password = "password2",
                                         host = "host2",
@@ -70,6 +72,7 @@ class DBMStorage_TestCase(unittest.TestCase):
         self._account2.xa_action = mailconnection.DO_NOTHING
         self._account2.dnd_action = mailconnection.DO_NOTHING
         self._account2.offline_action = mailconnection.DO_NOTHING
+        self._account2.interval = 4
 
     def tearDown(self):
         os.remove(self._storage.file)
@@ -84,7 +87,7 @@ class DBMStorage_TestCase(unittest.TestCase):
     def test_set_sync_get(self):
         self._storage[("test@localhost", "account1")] = self._account1
         self._storage[("test@localhost", "account2")] = self._account2
-        loaded_storage = DBMStorage(nb_pk_fields = 2)
+        loaded_storage = DBMStorage(nb_pk_fields = 2, spool_dir = "./spool/test")
         self.assertEquals(loaded_storage[("test@localhost", "account1")], self._account1)
         self.assertEquals(loaded_storage[("test@localhost", "account2")], self._account2)
 

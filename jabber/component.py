@@ -23,10 +23,12 @@
 import re
 import signal
 import threading
+import thread
 import logging
 import sys
 import anydbm
 import os
+import time
 
 import mailconnection
 from mailconnection import *
@@ -77,8 +79,9 @@ class MailComponent(Component):
         self.__storage.nb_pk_fields = 2
 	self.__reg_form = None
 	self.__reg_form_init = None
-	# dump registered accounts (save) at least every hour
-	self.__count = 60 / self.__interval
+	# dump registered accounts (save) every hour
+	self.__count = 60
+        self.running = False
 
     def __del__(self):
         logging.shutdown()
@@ -352,8 +355,8 @@ class MailComponent(Component):
     """ Looping method """
     def run(self, timeout):
         self.connect()
-	# Set check mail timer
-        threading.Timer(self.__interval * 60, self.time_handler)
+        self.running = True
+        thread.start_new_thread(self.time_handler, ())
         try:
             while (not self.__shutdown and self.stream
 		   and not self.stream.eof and self.stream.socket is not None):
@@ -367,6 +370,7 @@ class MailComponent(Component):
         finally:
             ## TODO : for jid in self.__storage.keys(())
             ## for name in self.__storage.keys((jid,))
+            self.running = False
             if self.stream:
                 for jid in self.__storage.keys(()):
                     p = Presence(from_jid = unicode(self.jid), to_jid = jid, \
@@ -399,28 +403,29 @@ class MailComponent(Component):
         self.__shutdown = 1
 
     """ SIGALRM signal handler """
-    def time_handler(self, signum, frame):
-        self.__logger.debug("Signal %i received, checking mail..." % (signum,))
-	self.check_all_mail()
-	self.__logger.debug("Resetting alarm signal")
-	threading.Timer(self.__interval * 60, self.time_handler)
-	if self.__count == 0:
-	    self.__logger.debug("Dumping registered accounts Database")
-	    self.__storage.sync()
-	    self.__count = 60 / self.__interval
-	else:
-	    self.__count -= 1
+    def time_handler(self):
+        self.__logger.debug("Check mail thread started...")
+        while self.running:
+            self.check_all_mail()
+            self.__logger.debug("Resetting alarm signal")
+            if self.__count == 0:
+                self.__logger.debug("Dumping registered accounts Database")
+                self.__storage.sync()
+                self.__count = 60
+            else:
+                self.__count -= 1
+            time.sleep(60)
 
     """ Component authentication handler """
     def authenticated(self):
 	self.__logger.debug("AUTHENTICATED")
         Component.authenticated(self)
-        for jid, name in self.__storage.keys():
-	    p = Presence(from_jid = name + "@" + unicode(self.jid), \
-                         to_jid = jid, stanza_type = "probe")
-            self.stream.send(p)
 	for jid in self.__storage.keys(()):
 	    p = Presence(from_jid = unicode(self.jid), \
+                         to_jid = jid, stanza_type = "probe")
+            self.stream.send(p)
+        for jid, name in self.__storage.keys():
+	    p = Presence(from_jid = name + "@" + unicode(self.jid), \
                          to_jid = jid, stanza_type = "probe")
             self.stream.send(p)
 
@@ -473,8 +478,8 @@ class MailComponent(Component):
 	base_from_jid = unicode(iq.get_from().bare())
 	di = DiscoItems()
         if not node:
-            for jid, name in self.__storage.keys():
-		account = self.__storage[(jid, name)]
+            for name in self.__storage.keys((base_from_jid,)):
+		account = self.__storage[(base_from_jid, name)]
 		str_name = account.get_type() + " connection " + name
 		if account.get_type()[0:4] == "imap":
 		    str_name += " (" + account.mailbox + ")"
@@ -687,7 +692,10 @@ class MailComponent(Component):
         elif self.__storage.has_key((base_from_jid, name)):
             account = self.__storage[(base_from_jid, name)]
             # Make available to receive mail only when online
-            account.status = "online" # TODO get real status = (not show)
+            if show is None:
+                account.status = "online" # TODO get real status = (not show)
+            else:
+                account.status = show
             p = Presence(from_jid = name + "@" + \
                          unicode(self.jid), \
                          to_jid = from_jid, \
@@ -704,7 +712,7 @@ class MailComponent(Component):
         base_from_jid = unicode(from_jid.bare())
         if stanza.get_to() == unicode(self.jid):
 	    for jid, name in self.__storage.keys():
-		self.__storage[(base_from_jid, name)].status = "offline" # TODO get real status
+		self.__storage[(base_from_jid, name)].status = "offline"
 		p = Presence(from_jid = name + "@" + unicode(self.jid), \
 			     to_jid = from_jid, \
 			     stanza_type = "unavailable")
@@ -784,13 +792,12 @@ class MailComponent(Component):
 
     """ Check mail account """
     def check_mail(self, jid, name):
-	self.__logger.debug("CHECK_MAIL")
+	self.__logger.debug("CHECK_MAIL " + unicode(jid) + " " + name)
 	account = self.__storage[(jid, name)]
         action = account.action
-        if action != "nothing":
+        if action != mailconnection.DO_NOTHING:
             try:
-                self.__logger.debug("Checking " \
-                                    + name)
+                self.__logger.debug("Checking " + name)
                 self.__logger.debug("\t" + account.login \
                                     + "@" + account.host)
                 account.connect()
@@ -800,25 +807,26 @@ class MailComponent(Component):
                 else:
                     num = len(mail_list)
                 # unseen mails checked by external client
-                if num < account.lastcheck:
-                    account.lastcheck = 0
-                if action == "retrieve":
-                    while account.lastcheck < num:
-                        body = account.get_mail(int(mail_list[account.lastcheck]))
+                # TODO : better test to find
+                if num < account.lastmail:
+                    account.lastmail = 0
+                if action == mailconnection.RETRIEVE:
+                    while account.lastmail < num:
+                        body = account.get_mail(int(mail_list[account.lastmail]))
                         mesg = Message(from_jid = name + "@" + \
                                        unicode(self.jid), \
                                        to_jid = jid, \
                                        stanza_type = "message", \
                                        body = body)
                         self.stream.send(mesg)
-                        account.lastcheck += 1
+                        account.lastmail += 1
                 else:
                     body = ""
-                    while account.lastcheck < num:
+                    while account.lastmail < num:
                         body += \
-                             account.get_mail_summary(int(mail_list[account.lastcheck])) \
+                             account.get_mail_summary(int(mail_list[account.lastmail])) \
                              + "\n----------------------------------\n"
-                        account.lastcheck += 1
+                        account.lastmail += 1
                     if body != "":
                         mesg = Message(from_jid = name + "@" + \
                                        unicode(self.jid), \
@@ -826,7 +834,6 @@ class MailComponent(Component):
                                        stanza_type = "headline", \
                                        body = body)
                         self.stream.send(mesg)
-			
                 account.disconnect()
             except Exception,e:
                 self.__logger.debug("Error while checking mail : %s" \
@@ -835,7 +842,9 @@ class MailComponent(Component):
     """ check mail handler """
     def check_all_mail(self):
 	self.__logger.debug("CHECK_ALL_MAIL")
-        ## TODO
-# 	for jid in self.__registered.keys():
-# 	    for name in self.__registered[jid].keys():
-# 		self.check_mail(jid, name)
+        for jid, name in self.__storage.keys():
+            account = self.__storage[(jid, name)]
+            account.lastcheck += 1
+            if account.lastcheck == account.interval:
+                account.lastcheck = 0
+                self.check_mail(jid, name)

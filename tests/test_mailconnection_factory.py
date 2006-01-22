@@ -42,7 +42,7 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc, mc)
 
     def test_str_to_mail_connection_imap(self):
-	mc = str_to_mail_connection("imap#login#passwd#host#193#0#0#0#1#1#2#INBOX")
+	mc = str_to_mail_connection("imap#login#passwd#host#193#0#0#0#1#1#2#4#INBOX")
         self.assertEquals(mc.get_type(), "imap")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
@@ -55,9 +55,10 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.xa_action, mailconnection.DIGEST)
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.interval, 4)
 
     def test_str_to_mail_connection_imaps(self):
-	mc = str_to_mail_connection("imaps#login#passwd#host#993#0#0#0#1#1#2#INBOX.SubDir")
+	mc = str_to_mail_connection("imaps#login#passwd#host#993#0#0#0#1#1#2#4#INBOX.SubDir")
         self.assertEquals(mc.get_type(), "imaps")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
@@ -70,9 +71,10 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.xa_action, mailconnection.DIGEST)
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.interval, 4)
 
     def test_str_to_mail_connection_pop3(self):
-	mc = str_to_mail_connection("pop3#login#passwd#host#110#0#0#0#1#1#2")
+	mc = str_to_mail_connection("pop3#login#passwd#host#110#0#0#0#1#1#2#4")
         self.assertEquals(mc.get_type(), "pop3")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
@@ -84,9 +86,10 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.xa_action, mailconnection.DIGEST)
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.interval, 4)
 
     def test_str_to_mail_connection_pop3s(self):
-	mc = str_to_mail_connection("pop3s#login#passwd#host#995#0#0#0#1#1#2")
+	mc = str_to_mail_connection("pop3s#login#passwd#host#995#0#0#0#1#1#2#4")
         self.assertEquals(mc.get_type(), "pop3s")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
@@ -98,4 +101,5 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.xa_action, mailconnection.DIGEST)
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.interval, 4)
 

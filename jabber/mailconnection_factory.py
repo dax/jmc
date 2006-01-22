@@ -68,6 +68,7 @@ def str_to_mail_connection(connection_string):
     xa_action = int(arg_list.pop())
     dnd_action = int(arg_list.pop())
     offline_action = int(arg_list.pop())
+    interval = int(arg_list.pop())
     result = None
     if type == "imap":
         mailbox = arg_list.pop()
@@ -105,6 +106,7 @@ def str_to_mail_connection(connection_string):
     result.xa_action = xa_action
     result.dnd_action = dnd_action
     result.offline_action = offline_action
+    result.interval = interval
     return result
 
 

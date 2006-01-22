@@ -148,7 +148,7 @@ class MailConnection(object):
 	self.host = host
 	self.port = port
 	self.ssl = ssl
-	self.lastcheck = 0
+        self.lastmail = 0
         self.status = "offline"
 	self.connection = None
         self.chat_action = RETRIEVE
@@ -158,6 +158,7 @@ class MailConnection(object):
         self.dnd_action = RETRIEVE
         self.offline_action = DO_NOTHING
         self.interval = 5
+	self.lastcheck = 0
         
     def __eq__(self, other):
         return self.get_type() == other.get_type() \
@@ -178,7 +179,7 @@ class MailConnection(object):
 	return self.get_type() + "#" + self.login + "#" + self.password + "#" \
 	    + self.host + "#" + str(self.port) + "#" + str(self.chat_action) + "#" \
             + str(self.online_action) + "#" + str(self.away_action) + "#" + \
-            str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action)
+            str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action) + "#" + str(self.interval)
  
     def get_decoded_part(self, part):
         content_charset = part.get_content_charset()
@@ -251,7 +252,7 @@ class MailConnection(object):
                    "offline": self.offline_action}
         if mapping.has_key(self.status):
             return mapping[self.status]
-        return NOTHING
+        return DO_NOTHING
         
     action = property(get_action)
     

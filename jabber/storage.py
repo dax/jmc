@@ -73,7 +73,7 @@ class DBMStorage(Storage):
         self.sync()
         
     def load(self):
-#        print "DBM LOAD"
+        #        print "DBM LOAD"
         str_registered = anydbm.open(self.file, \
                                      'c')
         result = {}
@@ -101,7 +101,7 @@ class DBMStorage(Storage):
                                 registered[key], key)
         else:
             self.__str_registered[pk] = str(registered)
-            print "STORING : " + pk + " = " + str(registered)
+#            print "STORING : " + pk + " = " + str(registered)
             
     def store(self):
 #        print "DBM STORE"
@@ -161,7 +161,7 @@ class DBMStorage(Storage):
             return result.keys()
 
     def dump(self):
-        print "dumping"
+#        print "dumping"
         for pk in self.__registered.keys():
             print pk + " = " + str(self.__registered[pk])
             
