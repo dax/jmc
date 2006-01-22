@@ -151,10 +151,11 @@ class MailConnection(object):
 	self.lastcheck = 0
         self.status = "offline"
 	self.connection = None
-        self.ffc_action = RETRIEVE
+        self.chat_action = RETRIEVE
         self.online_action = RETRIEVE
         self.away_action = RETRIEVE
-        self.ea_action = RETRIEVE
+        self.xa_action = RETRIEVE
+        self.dnd_action = RETRIEVE
         self.offline_action = DO_NOTHING
         self.interval = 5
         
@@ -165,18 +166,19 @@ class MailConnection(object):
                and self.host == other.host \
                and self.port == other.port \
                and self.ssl == other.ssl \
-               and self.ffc_action == other.ffc_action \
+               and self.chat_action == other.chat_action \
                and self.online_action == other.online_action \
                and self.away_action == other.away_action \
-               and self.ea_action == other.ea_action \
+               and self.xa_action == other.xa_action \
+               and self.dnd_action == other.dnd_action \
                and self.offline_action == other.offline_action \
                and self.interval == other.interval
     
     def __str__(self):
 	return self.get_type() + "#" + self.login + "#" + self.password + "#" \
-	    + self.host + "#" + str(self.port) + "#" + str(self.ffc_action) + "#" \
+	    + self.host + "#" + str(self.port) + "#" + str(self.chat_action) + "#" \
             + str(self.online_action) + "#" + str(self.away_action) + "#" + \
-            str(self.ea_action) + "#" + str(self.offline_action)
+            str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action)
  
     def get_decoded_part(self, part):
         content_charset = part.get_content_charset()
@@ -242,9 +244,10 @@ class MailConnection(object):
 
     def get_action(self):
         mapping = {"online": self.online_action,
-                   "ffc": self.ffc_action,
+                   "chat": self.chat_action,
                    "away": self.away_action,
-                   "ea": self.ea_action,
+                   "xa": self.xa_action,
+                   "dnd": self.dnd_action,
                    "offline": self.offline_action}
         if mapping.has_key(self.status):
             return mapping[self.status]

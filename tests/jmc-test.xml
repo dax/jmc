@@ -1,7 +1,7 @@
 <config>
   <jabber>
      <server>127.0.0.1</server> 
-     <port>55555</port> 
+     <port>5347</port> 
      <secret>secret</secret>
      <service>jmc.localhost</service>
      <connectsleep>5</connectsleep>

@@ -137,7 +137,7 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
                                "<field type=\"text-single\" label=\"Mailbox (IMAP)\" var=\"mailbox\">" + \
                                "<value>INBOX</value>" + \
                                "</field>" + \
-                               "<field type=\"list-single\" label=\"Action when state is 'Free For Chat'\" var=\"ffc_action\">" + \
+                               "<field type=\"list-single\" label=\"Action when state is 'Free For Chat'\" var=\"chat_action\">" + \
                                "<value>2</value>" + \
                                "<option label=\"Do nothing\">" + \
                                "<value>0</value>" + \
@@ -173,7 +173,19 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
                                "<value>2</value>" + \
                                "</option>" + \
                                "</field>" + \
-                               "<field type=\"list-single\" label=\"Action when state is 'Extended Away'\" var=\"ea_action\">" + \
+                               "<field type=\"list-single\" label=\"Action when state is 'Not Available'\" var=\"xa_action\">" + \
+                               "<value>1</value>" + \
+                               "<option label=\"Do nothing\">" + \
+                               "<value>0</value>" + \
+                               "</option>" + \
+                               "<option label=\"Send mail digest\">" + \
+                               "<value>1</value>" + \
+                               "</option>" + \
+                               "<option label=\"Retrieve mail\">" + \
+                               "<value>2</value>" + \
+                               "</option>" + \
+                               "</field>" + \
+                               "<field type=\"list-single\" label=\"Action when state is 'Do not Disturb'\" var=\"dnd_action\">" + \
                                "<value>1</value>" + \
                                "<option label=\"Do nothing\">" + \
                                "<value>0</value>" + \
@@ -252,7 +264,7 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
                                  "<field type='text-single' var='mailbox'>" + \
                                  "<value>INBOX</value>" + \
                                  "</field>" + \
-                                 "<field type='list-single' var='ffc_action'>" + \
+                                 "<field type='list-single' var='chat_action'>" + \
                                  "<value>2</value>" + \
                                  "</field>" + \
                                  "<field type='list-single' var='online_action'>" + \
@@ -261,7 +273,10 @@ class MailComponent_TestCase_NoReg(unittest.TestCase):
                                  "<field type='list-single' var='away_action'>" + \
                                  "<value>1</value>" + \
                                  "</field>" + \
-                                 "<field type='list-single' var='ea_action'>" + \
+                                 "<field type='list-single' var='xa_action'>" + \
+                                 "<value>1</value>" + \
+                                 "</field>" + \
+                                 "<field type='list-single' var='dnd_action'>" + \
                                  "<value>1</value>" + \
                                  "</field>" + \
                                  "<field type='list-single' var='offline_action'>" + \

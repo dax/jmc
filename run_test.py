@@ -63,7 +63,7 @@ if __name__ == '__main__':
                                     component2_suite, \
                                     storage_suite, \
                                     dbmstorage_suite))
-    test_support.run_suite(storage_suite)
+    test_support.run_suite(dbmstorage_suite)
 
 # coverage.stop()
 # coverage.analysis(jabber.mailconnection_factory)

@@ -52,10 +52,11 @@ class DBMStorage_TestCase(unittest.TestCase):
                                         port = 993,
                                         ssl = True,
                                         mailbox = "INBOX.box1")
-        self._account1.ffc_action = mailconnection.DO_NOTHING
+        self._account1.chat_action = mailconnection.DO_NOTHING
         self._account1.onlline_action = mailconnection.DO_NOTHING
         self._account1.away_action = mailconnection.DO_NOTHING
-        self._account1.ea_action = mailconnection.DO_NOTHING
+        self._account1.xa_action = mailconnection.DO_NOTHING
+        self._account1.dnd_action = mailconnection.DO_NOTHING
         self._account1.offline_action = mailconnection.DO_NOTHING
         self._account2 = IMAPConnection(login = "login2",
                                         password = "password2",
@@ -63,10 +64,11 @@ class DBMStorage_TestCase(unittest.TestCase):
                                         port = 1993,
                                         ssl = False,
                                         mailbox = "INBOX.box2")
-        self._account2.ffc_action = mailconnection.DO_NOTHING
+        self._account2.chat_action = mailconnection.DO_NOTHING
         self._account2.onlline_action = mailconnection.DO_NOTHING
         self._account2.away_action = mailconnection.DO_NOTHING
-        self._account2.ea_action = mailconnection.DO_NOTHING
+        self._account2.xa_action = mailconnection.DO_NOTHING
+        self._account2.dnd_action = mailconnection.DO_NOTHING
         self._account2.offline_action = mailconnection.DO_NOTHING
 
     def tearDown(self):

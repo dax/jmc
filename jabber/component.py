@@ -131,7 +131,7 @@ class MailComponent(Component):
             
 	    field = self.__reg_form.add_field(type = "list-single", \
                                               label = "Action when state is 'Free For Chat'", \
-                                              var = "ffc_action", \
+                                              var = "chat_action", \
                                               value = str(mailconnection.RETRIEVE))
 	    field.add_option(label = "Do nothing", \
 			     value = str(mailconnection.DO_NOTHING))
@@ -163,8 +163,19 @@ class MailComponent(Component):
 			     value = str(mailconnection.RETRIEVE))
 
 	    field = self.__reg_form.add_field(type = "list-single", \
-                                              label = "Action when state is 'Extended Away'", \
-                                              var = "ea_action", \
+                                              label = "Action when state is 'Not Available'", \
+                                              var = "xa_action", \
+                                              value = str(mailconnection.DIGEST))
+	    field.add_option(label = "Do nothing", \
+			     value = str(mailconnection.DO_NOTHING))
+	    field.add_option(label = "Send mail digest", \
+			     value = str(mailconnection.DIGEST))
+	    field.add_option(label = "Retrieve mail", \
+			     value = str(mailconnection.RETRIEVE))
+
+	    field = self.__reg_form.add_field(type = "list-single", \
+                                              label = "Action when state is 'Do not Disturb'", \
+                                              var = "dnd_action", \
                                               value = str(mailconnection.DIGEST))
 	    field.add_option(label = "Do nothing", \
 			     value = str(mailconnection.DO_NOTHING))
@@ -249,8 +260,8 @@ class MailComponent(Component):
             
 	    field = self.__reg_form_init.add_field(type = "list-single", \
                                                    label = "Action when state is 'Free For Chat'", \
-                                                   var = "ffc_action", \
-                                                   value = str(account.ffc_action))
+                                                   var = "chat_action", \
+                                                   value = str(account.chat_action))
 	    field.add_option(label = "Do nothing", \
 			     value = str(mailconnection.DO_NOTHING))
 	    field.add_option(label = "Send mail digest", \
@@ -281,9 +292,20 @@ class MailComponent(Component):
 			     value = str(mailconnection.RETRIEVE))
 
 	    field = self.__reg_form_init.add_field(type = "list-single", \
-                                                   label = "Action when state is 'Extended Away'", \
-                                                   var = "ea_action", \
-                                                   value = str(account.ea_action))
+                                                   label = "Action when state is 'Not Available'", \
+                                                   var = "xa_action", \
+                                                   value = str(account.xa_action))
+	    field.add_option(label = "Do nothing", \
+			     value = str(mailconnection.DO_NOTHING))
+	    field.add_option(label = "Send mail digest", \
+			     value = str(mailconnection.DIGEST))
+	    field.add_option(label = "Retrieve mail", \
+			     value = str(mailconnection.RETRIEVE))
+
+	    field = self.__reg_form_init.add_field(type = "list-single", \
+                                                   label = "Action when state is 'Do not Disturb'", \
+                                                   var = "dnd_action", \
+                                                   value = str(account.dnd_action))
 	    field.add_option(label = "Do nothing", \
 			     value = str(mailconnection.DO_NOTHING))
 	    field.add_option(label = "Send mail digest", \
@@ -312,10 +334,11 @@ class MailComponent(Component):
 	    self.__reg_form_init.fields["host"].value = account.host
 	    self.__reg_form_init.fields["port"].value = str(account.port)
 	    self.__reg_form_init.fields["type"].value = account.get_type()
-	    self.__reg_form_init.fields["ffc_action"].value = str(account.ffc_action)
+	    self.__reg_form_init.fields["chat_action"].value = str(account.chat_action)
 	    self.__reg_form_init.fields["online_action"].value = str(account.online_action)
 	    self.__reg_form_init.fields["away_action"].value = str(account.away_action)
-	    self.__reg_form_init.fields["ea_action"].value = str(account.ea_action)
+	    self.__reg_form_init.fields["xa_action"].value = str(account.xa_action)
+	    self.__reg_form_init.fields["dnd_action"].value = str(account.dnd_action)
 	    self.__reg_form_init.fields["offline_action"].value = str(account.offline_action)
 	    self.__reg_form_init.fields["interval"].value = str(account.interval)
 
@@ -549,10 +572,10 @@ class MailComponent(Component):
 	else:
 	    port = None
 
-	if x.fields.has_key("ffc_action") and x.fields["ffc_action"].value != "":
-	    ffc_action = int(x.fields["ffc_action"].value)
+	if x.fields.has_key("chat_action") and x.fields["chat_action"].value != "":
+	    chat_action = int(x.fields["chat_action"].value)
 	else:
-	    ffc_action = mailconnection.DO_NOTHING
+	    chat_action = mailconnection.DO_NOTHING
 
 	if x.fields.has_key("online_action") and x.fields["online_action"].value != "":
 	    online_action = int(x.fields["online_action"].value)
@@ -564,10 +587,15 @@ class MailComponent(Component):
 	else:
 	    away_action = mailconnection.DO_NOTHING
 
-	if x.fields.has_key("ea_action") and x.fields["ea_action"].value != "":
-	    ea_action = int(x.fields["ea_action"].value)
+	if x.fields.has_key("xa_action") and x.fields["xa_action"].value != "":
+	    xa_action = int(x.fields["xa_action"].value)
 	else:
-	    ea_action = mailconnection.DO_NOTHING
+	    xa_action = mailconnection.DO_NOTHING
+
+	if x.fields.has_key("dnd_action") and x.fields["dnd_action"].value != "":
+	    dnd_action = int(x.fields["dnd_action"].value)
+	else:
+	    dnd_action = mailconnection.DO_NOTHING
 
 	if x.fields.has_key("offline_action") and x.fields["offline_action"].value != "":
 	    offline_action = int(x.fields["offline_action"].value)
@@ -579,10 +607,10 @@ class MailComponent(Component):
 	else:
 	    interval = None
 
-	self.__logger.debug(u"New Account: %s, %s, %s, %s, %s, %s, %s %i %i %i %i %i %i" \
+	self.__logger.debug(u"New Account: %s, %s, %s, %s, %s, %s, %s %i %i %i %i %i %i %i" \
 			    % (name, login, password, host, str(port), \
-                               mailbox, type, ffc_action, online_action, away_action, \
-                               ea_action, offline_action, interval))
+                               mailbox, type, chat_action, online_action, away_action, \
+                               xa_action, dnd_action, offline_action, interval))
 
         iq = iq.make_result_response()
         self.stream.send(iq)
@@ -621,10 +649,11 @@ class MailComponent(Component):
  	account.login = login
  	account.password = password
  	account.host = host
-        account.ffc_action = ffc_action
+        account.chat_action = chat_action
         account.online_action = online_action
         account.away_action = away_action
-        account.ea_action = ea_action
+        account.xa_action = xa_action
+        account.dnd_action = dnd_action
         account.offline_action = offline_action
         account.interval = interval
 
@@ -752,48 +781,6 @@ class MailComponent(Component):
 #                               body = body)
 #                 self.stream.send(msg)
 	return 1
-
-#     """ Store registered sessions """
-#     def store_registered(self):
-# 	self.__logger.debug("STORE_REGISTERED")
-# 	try:
-# 	    if not os.path.isdir(self.__spool_dir):
-# 		os.makedirs(self.__spool_dir)
-# 	    str_registered = anydbm.open(self.__spool_dir + "/registered.db", \
-#                                          'n')
-# 	    self.__logger.debug("Saving registered sessions")
-# 	    for jid in self.__registered.keys():
-# 		for name in self.__registered[jid].keys():
-#                     self.__logger.debug("\t" + jid + ", _" + name + "_")
-#                     str_registered[jid + '#' + name] = \
-#                                        str(self.__storage[(jid, name)])
-# 	    str_registered.close()
-# 	except Exception, e:
-# 	    print >>sys.stderr, "Cannot save to registered.db : "
-# 	    print >>sys.stderr, e
-
-#     """ Load previously registered sessions """
-#     def load_registered(self):
-# 	self.__logger.debug("LOAD_REGISTERED")
-# 	try:
-# 	    if not os.path.isdir(self.__spool_dir):
-# 		os.makedirs(self.__spool_dir)
-# 	    str_registered = anydbm.open(self.__spool_dir + "/registered.db", \
-#                                          'c')
-# 	    self.__logger.debug("Loading previously registered sessions")
-# 	    for key in str_registered.keys():
-# 		jid, name = key.split('#')
-# 		if not self.__registered.has_key(jid):
-# 		    self.__registered[jid] = {}
-# 		self.__storage[(jid, name)] = \
-# 		    mailconnection_factory.str_to_mail_connection(str_registered[key])
-# #		self.__storage[(jid, name)].name = name
-# 		self.__logger.debug("Loaded data for %s on %s :" % (jid, name))
-# 		self.__logger.debug("\t %s" % (self.__storage[(jid, name)])) 
-# 	    str_registered.close()
-# 	except Exception, e:
-# 	    print >>sys.stderr, "Cannot load registered.db : "
-# 	    print >>sys.stderr, e
 
     """ Check mail account """
     def check_mail(self, jid, name):

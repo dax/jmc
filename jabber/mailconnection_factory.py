@@ -62,10 +62,11 @@ def str_to_mail_connection(connection_string):
     password = arg_list.pop()
     host = arg_list.pop()
     port = int(arg_list.pop())
-    ffc_action = int(arg_list.pop())
+    chat_action = int(arg_list.pop())
     online_action = int(arg_list.pop())
     away_action = int(arg_list.pop())
-    ea_action = int(arg_list.pop())
+    xa_action = int(arg_list.pop())
+    dnd_action = int(arg_list.pop())
     offline_action = int(arg_list.pop())
     result = None
     if type == "imap":
@@ -98,10 +99,11 @@ def str_to_mail_connection(connection_string):
                                 ssl = True)
     if result is None:
         raise Exception, "Connection type \"" + type + "\" unknown"
-    result.ffc_action = ffc_action
+    result.chat_action = chat_action
     result.online_action = online_action
     result.away_action = away_action
-    result.ea_action = ea_action
+    result.xa_action = xa_action
+    result.dnd_action = dnd_action
     result.offline_action = offline_action
     return result
 
