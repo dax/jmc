@@ -31,6 +31,9 @@ from jabber.config import Config
 
 def main(config_file = "jmc.xml", isDebug = 0):
     try:
+        reload(sys)
+        sys.setdefaultencoding('utf-8')
+        del sys.setdefaultencoding
         logger = logging.getLogger()
         logger.addHandler(logging.StreamHandler())
         if isDebug > 0:

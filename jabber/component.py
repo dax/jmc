@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 ##
 ## component.py
 ## Login : David Rousselie <dax@happycoders.org>
@@ -18,7 +19,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##
+## 
 
 import re
 import signal
@@ -43,6 +44,8 @@ from pyxmpp.jid import JID
 from pyxmpp.jabber.disco import DiscoItems, DiscoItem, DiscoInfo, DiscoIdentity
 from pyxmpp.jabberd.component import Component
 
+from jabber.lang import Lang
+
 class ComponentFatalError(RuntimeError):
     pass
 
@@ -57,7 +60,8 @@ class MailComponent(Component):
                            disco_type = "headline")
  	self.__logger = logging.getLogger("jabber.Component")
 	self.__shutdown = 0
-
+        self.__default_lang = config.get_content("config/jabber/language")
+        
         # TODO : delete signals not known by Windows
 	signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGPIPE, self.signal_handler)
@@ -77,8 +81,6 @@ class MailComponent(Component):
                            config.get_content("config/jabber/service")
         self.__storage.spool_dir = self.__spool_dir
         self.__storage.nb_pk_fields = 2
-	self.__reg_form = None
-	self.__reg_form_init = None
 	# dump registered accounts (save) every hour
 	self.__count = 60
         self.running = False
@@ -86,271 +88,266 @@ class MailComponent(Component):
     def __del__(self):
         logging.shutdown()
         
+    def get_lang(self, node):
+        lang = node.getLang()
+        if lang is None:
+            self.__logger.debug("Using default lang " + self.__default_lang)
+            lang = self.__default_lang
+        return lang
+
+    def get_lang_class(self, lang):
+        return getattr(Lang, lang)
+    
     """ Register Form creator """
-    def get_reg_form(self):
-	if self.__reg_form == None:
-	    self.__reg_form = X()
-	    self.__reg_form.xmlns = "jabber:x:data"
-	    self.__reg_form.title = "Jabber Mail connection registration"
-            self.__reg_form.instructions = "Enter anything below"
-            self.__reg_form.type = "form"
-
-	    self.__reg_form.add_field(type = "text-single", \
-                                      label = "Connection name", \
-                                      var = "name")
-	    
-	    self.__reg_form.add_field(type = "text-single", \
-                                      label = "Login", \
-                                      var = "login")
-	    
-	    self.__reg_form.add_field(type = "text-private", \
-                                      label = "Password", \
-                                      var = "password")
-	    
-	    self.__reg_form.add_field(type = "text-single", \
-                                      label = "Host", \
-                                      var = "host")
-            
-	    self.__reg_form.add_field(type = "text-single", \
-                                      label = "Port", \
-                                      var = "port")
+    def get_reg_form(self, lang_class):
+        reg_form = X()
+        reg_form.xmlns = "jabber:x:data"
+        reg_form.title = lang_class.register_title
+        reg_form.instructions = lang_class.register_instructions
+        reg_form.type = "form"
         
-	    field = self.__reg_form.add_field(type = "list-single", \
-                                              label = "Mailbox type", \
-                                              var = "type")
-	    field.add_option(label = "POP3", \
-			     value = "pop3")
-	    field.add_option(label = "POP3S", \
-			     value = "pop3s")
-	    field.add_option(label = "IMAP", \
-			     value = "imap")
-	    field.add_option(label = "IMAPS", \
-			     value = "imaps")
-            
-	    self.__reg_form.add_field(type = "text-single", \
-                                      label = "Mailbox (IMAP)", \
-                                      var = "mailbox", \
-                                      value = "INBOX")
-            
-	    field = self.__reg_form.add_field(type = "list-single", \
-                                              label = "Action when state is 'Free For Chat'", \
-                                              var = "chat_action", \
-                                              value = str(mailconnection.RETRIEVE))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form.add_field(type = "list-single", \
-                                              label = "Action when state is 'Online'", \
-                                              var = "online_action", \
-                                              value = str(mailconnection.RETRIEVE))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form.add_field(type = "list-single", \
-                                              label = "Action when state is 'Away'", \
-                                              var = "away_action", \
-                                              value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form.add_field(type = "list-single", \
-                                              label = "Action when state is 'Not Available'", \
-                                              var = "xa_action", \
-                                              value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form.add_field(type = "list-single", \
-                                              label = "Action when state is 'Do not Disturb'", \
-                                              var = "dnd_action", \
-                                              value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form.add_field(type = "list-single", \
-                                              label = "Action when state is 'Offline'", \
-                                              var = "offline_action", \
-                                              value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-            # default interval in config file
-	    self.__reg_form.add_field(type = "text-single", \
-                                      label = "Mail check interval (in minutes)", \
-                                      var = "interval", \
-                                      value = "5")
-
-	return self.__reg_form
+        reg_form.add_field(type = "text-single", \
+                           label = lang_class.account_name, \
+                           var = "name")
+        
+        reg_form.add_field(type = "text-single", \
+                           label = lang_class.account_login, \
+                           var = "login")
+        
+        reg_form.add_field(type = "text-private", \
+                           label = lang_class.account_password, \
+                           var = "password")
+        
+        reg_form.add_field(type = "text-single", \
+                           label = lang_class.account_host, \
+                           var = "host")
+        
+        reg_form.add_field(type = "text-single", \
+                           label = lang_class.account_port, \
+                           var = "port")
+        
+        field = reg_form.add_field(type = "list-single", \
+                                   label = lang_class.account_type, \
+                                   var = "type")
+        field.add_option(label = "POP3", \
+                         value = "pop3")
+        field.add_option(label = "POP3S", \
+                         value = "pop3s")
+        field.add_option(label = "IMAP", \
+                         value = "imap")
+        field.add_option(label = "IMAPS", \
+                         value = "imaps")
+        
+        reg_form.add_field(type = "text-single", \
+                           label = lang_class.account_mailbox, \
+                           var = "mailbox", \
+                           value = "INBOX")
+        
+        field = reg_form.add_field(type = "list-single", \
+                                   label = lang_class.account_ffc_action, \
+                                   var = "chat_action", \
+                                   value = str(mailconnection.RETRIEVE))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form.add_field(type = "list-single", \
+                                   label = lang_class.account_online_action, \
+                                   var = "online_action", \
+                                   value = str(mailconnection.RETRIEVE))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form.add_field(type = "list-single", \
+                                   label = lang_class.account_away_action, \
+                                   var = "away_action", \
+                                   value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form.add_field(type = "list-single", \
+                                   label = lang_class.account_xa_action, \
+                                   var = "xa_action", \
+                                   value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form.add_field(type = "list-single", \
+                                   label = lang_class.account_dnd_action, \
+                                   var = "dnd_action", \
+                                   value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form.add_field(type = "list-single", \
+                                   label = lang_class.account_offline_action, \
+                                   var = "offline_action", \
+                                   value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        # default interval in config file
+        reg_form.add_field(type = "text-single", \
+                           label = lang_class.account_check_interval, \
+                           var = "interval", \
+                           value = "5")
+        
+	return reg_form
 
     """ Register Form modifier for existing accounts """
-    def get_reg_form_init(self, jid, name):
+    def get_reg_form_init(self, lang_class, jid, name):
 	if not self.__storage.has_key((jid, name)):
 	    return None
 	account = self.__storage[(jid, name)]
-	if self.__reg_form_init == None:
-	    self.__reg_form_init = X()
-	    self.__reg_form_init.xmlns = "jabber:x:data"
-	    self.__reg_form_init.title = "Jabber mail connection Modifier"
-            self.__reg_form_init.instructions = "Modifier for connection " + \
-                                              name
-            self.__reg_form_init.type = "form"
-
-	    self.__reg_form_init.add_field(type = "fixed", \
-                                           label = "Connection name", \
-                                           var = "name", \
-                                           value = name)
-	    
-	    self.__reg_form_init.add_field(type = "text-single", \
-                                           label = "Login", \
-                                           var = "login", \
-                                           value = account.login)
-	    
-	    self.__reg_form_init.add_field(type = "text-private", \
-                                           label = "Password", \
-                                           var = "password", \
-                                           value = account.password)
-	    
-	    self.__reg_form_init.add_field(type = "text-single", \
-                                           label = "Host", \
-                                           var = "host", \
-                                           value = account.host)
-            
-	    self.__reg_form_init.add_field(type = "text-single", \
-                                           label = "Port", \
-                                           var = "port", \
-                                           value = str(account.port))
-	    
-	    field = self.__reg_form_init.add_field(type = "list-single", \
-                                                   label = "Mailbox type", \
-                                                   var = "type", \
-                                                   value = account.get_type())
-	    field.add_option(label = "POP3", \
-			     value = "pop3")
-	    field.add_option(label = "POP3S", \
-			     value = "pop3s")
-	    field.add_option(label = "IMAP", \
-			     value = "imap")
-	    field.add_option(label = "IMAPS", \
-			     value = "imaps")
-            
-	    self.__reg_form_init.add_field(type = "text-single", \
-                                           label = "Mailbox (IMAP)", \
-                                           var = "mailbox")
-            
-	    field = self.__reg_form_init.add_field(type = "list-single", \
-                                                   label = "Action when state is 'Free For Chat'", \
-                                                   var = "chat_action", \
-                                                   value = str(account.chat_action))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form_init.add_field(type = "list-single", \
-                                                   label = "Action when state is 'Online'", \
-                                                   var = "online_action", \
-                                                   value = str(account.online_action))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form_init.add_field(type = "list-single", \
-                                                   label = "Action when state is 'Away'", \
-                                                   var = "away_action", \
-                                                   value = str(account.away_action))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form_init.add_field(type = "list-single", \
-                                                   label = "Action when state is 'Not Available'", \
-                                                   var = "xa_action", \
-                                                   value = str(account.xa_action))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form_init.add_field(type = "list-single", \
-                                                   label = "Action when state is 'Do not Disturb'", \
-                                                   var = "dnd_action", \
-                                                   value = str(account.dnd_action))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    field = self.__reg_form_init.add_field(type = "list-single", \
-                                                   label = "Action when state is 'Offline'", \
-                                                   var = "offline_action", \
-                                                   value = str(account.offline_action))
-	    field.add_option(label = "Do nothing", \
-			     value = str(mailconnection.DO_NOTHING))
-	    field.add_option(label = "Send mail digest", \
-			     value = str(mailconnection.DIGEST))
-	    field.add_option(label = "Retrieve mail", \
-			     value = str(mailconnection.RETRIEVE))
-
-	    self.__reg_form_init.add_field(type = "text-single", \
-                                           label = "Mail check interval (in minutes)", \
-                                           var = "interval", \
-                                           value = str(account.interval))
-	else:
-	    self.__reg_form_init.fields["login"].value = account.login
-	    self.__reg_form_init.fields["password"].value = account.password
-	    self.__reg_form_init.fields["host"].value = account.host
-	    self.__reg_form_init.fields["port"].value = str(account.port)
-	    self.__reg_form_init.fields["type"].value = account.get_type()
-	    self.__reg_form_init.fields["chat_action"].value = str(account.chat_action)
-	    self.__reg_form_init.fields["online_action"].value = str(account.online_action)
-	    self.__reg_form_init.fields["away_action"].value = str(account.away_action)
-	    self.__reg_form_init.fields["xa_action"].value = str(account.xa_action)
-	    self.__reg_form_init.fields["dnd_action"].value = str(account.dnd_action)
-	    self.__reg_form_init.fields["offline_action"].value = str(account.offline_action)
-	    self.__reg_form_init.fields["interval"].value = str(account.interval)
-
+        reg_form_init = X()
+        reg_form_init.xmlns = "jabber:x:data"
+        reg_form_init.title = lang_class.update_title
+        reg_form_init.instructions = lang_class.update_instructions + \
+                                     name
+        reg_form_init.type = "form"
+        
+        reg_form_init.add_field(type = "fixed", \
+                                label = lang_class.account_name, \
+                                var = "name", \
+                                value = name)
+        
+        reg_form_init.add_field(type = "text-single", \
+                                label = lang_class.account_login, \
+                                var = "login", \
+                                value = account.login)
+        
+        reg_form_init.add_field(type = "text-private", \
+                                label = lang_class.account_password, \
+                                var = "password", \
+                                value = account.password)
+        
+        reg_form_init.add_field(type = "text-single", \
+                                label = lang_class.account_host, \
+                                var = "host", \
+                                value = account.host)
+        
+        reg_form_init.add_field(type = "text-single", \
+                                label = lang_class.account_port, \
+                                var = "port", \
+                                value = unicode(account.port))
+        
+        field = reg_form_init.add_field(type = "list-single", \
+                                        label = lang_class.account_type, \
+                                        var = "type", \
+                                        value = account.get_type())
+        field.add_option(label = "POP3", \
+                         value = "pop3")
+        field.add_option(label = "POP3S", \
+                         value = "pop3s")
+        field.add_option(label = "IMAP", \
+                         value = "imap")
+        field.add_option(label = "IMAPS", \
+                         value = "imaps")
+        
+        reg_form_init.add_field(type = "text-single", \
+                                label = lang_class.account_mailbox, \
+                                var = "mailbox")
+        
+        field = reg_form_init.add_field(type = "list-single", \
+                                        label = lang_class.account_ffc_action, \
+                                        var = "chat_action", \
+                                        value = str(account.chat_action))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form_init.add_field(type = "list-single", \
+                                        label = lang_class.account_online_action, \
+                                        var = "online_action", \
+                                        value = str(account.online_action))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form_init.add_field(type = "list-single", \
+                                        label = lang_class.account_away_action, \
+                                        var = "away_action", \
+                                        value = str(account.away_action))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form_init.add_field(type = "list-single", \
+                                        label = lang_class.account_xa_action, \
+                                        var = "xa_action", \
+                                        value = str(account.xa_action))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form_init.add_field(type = "list-single", \
+                                        label = lang_class.account_dnd_action, \
+                                        var = "dnd_action", \
+                                        value = str(account.dnd_action))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        field = reg_form_init.add_field(type = "list-single", \
+                                        label = lang_class.account_offline_action, \
+                                        var = "offline_action", \
+                                        value = str(account.offline_action))
+        field.add_option(label = lang_class.action_nothing, \
+                         value = str(mailconnection.DO_NOTHING))
+        field.add_option(label = lang_class.action_digest, \
+                         value = str(mailconnection.DIGEST))
+        field.add_option(label = lang_class.action_retrieve, \
+                         value = str(mailconnection.RETRIEVE))
+        
+        reg_form_init.add_field(type = "text-single", \
+                                label = lang_class.account_check_interval, \
+                                var = "interval", \
+                                value = str(account.interval))
+        
 	if account.get_type()[0:4] == "imap":
-	    self.__reg_form_init.fields["mailbox"].value = account.mailbox
+	    reg_form_init.fields["mailbox"].value = account.mailbox
 	else:
-	    self.__reg_form_init.fields["mailbox"].value = "INBOX"
+	    reg_form_init.fields["mailbox"].value = u"INBOX"
 
-	return self.__reg_form_init
+	return reg_form_init
 
     """ Looping method """
     def run(self, timeout):
@@ -475,12 +472,13 @@ class MailComponent(Component):
     """ Discovery get nested nodes handler """
     def disco_get_items(self, node, iq):
 	self.__logger.debug("DISCO_GET_ITEMS")
+        lang_class = self.get_lang_class(self.get_lang(iq.get_node()))
 	base_from_jid = unicode(iq.get_from().bare())
 	di = DiscoItems()
         if not node:
             for name in self.__storage.keys((base_from_jid,)):
 		account = self.__storage[(base_from_jid, name)]
-		str_name = account.get_type() + " connection " + name
+		str_name = account.get_type() + lang_class.connection + name
 		if account.get_type()[0:4] == "imap":
 		    str_name += " (" + account.mailbox + ")"
 		DiscoItem(di, JID(name + "@" + unicode(self.jid)), \
@@ -500,20 +498,24 @@ class MailComponent(Component):
     """ Send back register form to user """
     def get_register(self, iq):
 	self.__logger.debug("GET_REGISTER")
+        lang_class = self.get_lang_class(self.get_lang(iq.get_node()))
 	base_from_jid = unicode(iq.get_from().bare())
         to = iq.get_to()
         iq = iq.make_result_response()
         q = iq.new_query("jabber:iq:register")
         if to and to != self.jid:
-	    self.get_reg_form_init(base_from_jid, to.node).attach_xml(q)
+	    self.get_reg_form_init(lang_class,
+                                   base_from_jid,
+                                   to.node).attach_xml(q)
 	else:
-	    self.get_reg_form().attach_xml(q)
+	    self.get_reg_form(lang_class).attach_xml(q)
 	self.stream.send(iq)
         return 1
 
     """ Handle user registration response """
     def set_register(self, iq):
 	self.__logger.debug("SET_REGISTER")
+        lang_class = self.get_lang_class(self.get_lang(iq.get_node()))
         to = iq.get_to()
 	from_jid = iq.get_from()
         base_from_jid = unicode(from_jid.bare())
@@ -633,15 +635,13 @@ class MailComponent(Component):
 	if self.__storage.has_key((base_from_jid, name)):
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
 			stanza_type = "message", \
-			body = u"Updated %s connection '%s': Registered with "\
-			"username '%s' and password '%s' on '%s'" \
+			body = lang_class.update_account_message \
 			% (type, name, login, password, socket))
 	    self.stream.send(m)
 	else:
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
 			stanza_type = "message", \
-			body = u"New %s connection '%s': Registered with " \
-			"username '%s' and password '%s' on '%s'" \
+			body = lang_class.new_account_message \
 			% (type, name, login, password, socket))
 	    self.stream.send(m)
 	    p = Presence(from_jid = name + "@" + unicode(self.jid), \
@@ -836,6 +836,7 @@ class MailComponent(Component):
                         self.stream.send(mesg)
                 account.disconnect()
             except Exception,e:
+                # TODO : Send error message to the user
                 self.__logger.debug("Error while checking mail : %s" \
                                     % (e))
 

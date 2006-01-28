@@ -1,5 +1,3 @@
-* Make real documentation
-
 * i18n support in the same way as ejabberd and
    PyMSNt, PyICQ-t and PyAIM-t: using xml:lang, but have an option in
    the config to set the default language to show, when the client do
@@ -7,38 +5,17 @@
 
 * Database backend (default SQLLite)
 
-* Checkbox and radio button options in the forms to set when and how
-   you like to get the messages (in offline, online, free for chat,
-   away,... presence). 
-   So:
-Online: <radio button for notifications> <radio button for retrieving
-   mails> <checkbox for digest (all new mails in 1 message)>
-Away:  <radio button for notifications> <radio button for retrieving
-   mails> <checkbox for digest (all new mails in 1 message)>
-Free for Chat:  <radio button for notifications> <radio button for
-   retrieving mails> <checkbox for digest (all new mails in 1
-   message)>
-Extended Away:  <radio button for notifications> <radio button for
-   retrieving mails> <checkbox for digest (all new mails in 1
-   message)>
-Offline:  <radio button for notifications> <radio button for
-   retrieving mails> <checkbox for digest (all new mails in 1
-   message)>
+* Support for attachements with size limit and file format limit
+   (e.g. only png, jpeg,... but no exe, bat,...).
 
-* Dropdown menu in the forms with configurable time-intervals. E.g.,
-   users can choose betwoon 1 minute, 2 minutes, 5 minutes, 15
-   minutes, 30 minutes, 60 minutes, 1 day. The admin can configure in
-   the configuration file of jmc which options are available.
+* make JMC run on windows
+
+* Make real documentation
 
 * Support for Ad Hoc Commands (see PyMSNt cvs, avatar
    branch). Interesting for statistics.
 
-* Support for attachements with size limit and file format limit
-   (e.g. only png, jpeg,... but no exe, bat,...).
-
 * Support for epoll, kpoll and kqueu (see PyMSNt cvs, avatar branch
    code).
-
-* make JMC run on windows
 
 

@@ -5,7 +5,7 @@
      <secret>secret</secret>
      <service>jmc.localhost</service>
      <connectsleep>5</connectsleep>
-     <language>fr</language>
+     <language>en</language>
      <vCard>
          <FN>Jabber Mail Component</FN>
          <DESC>A Jabber mail server component</DESC>
