@@ -54,7 +54,7 @@ class DBMStorage_TestCase(unittest.TestCase):
                                         ssl = True,
                                         mailbox = "INBOX.box1")
         self._account1.chat_action = mailconnection.DO_NOTHING
-        self._account1.onlline_action = mailconnection.DO_NOTHING
+        self._account1.online_action = mailconnection.DO_NOTHING
         self._account1.away_action = mailconnection.DO_NOTHING
         self._account1.xa_action = mailconnection.DO_NOTHING
         self._account1.dnd_action = mailconnection.DO_NOTHING
@@ -67,7 +67,7 @@ class DBMStorage_TestCase(unittest.TestCase):
                                         ssl = False,
                                         mailbox = "INBOX.box2")
         self._account2.chat_action = mailconnection.DO_NOTHING
-        self._account2.onlline_action = mailconnection.DO_NOTHING
+        self._account2.online_action = mailconnection.DO_NOTHING
         self._account2.away_action = mailconnection.DO_NOTHING
         self._account2.xa_action = mailconnection.DO_NOTHING
         self._account2.dnd_action = mailconnection.DO_NOTHING
@@ -156,3 +156,46 @@ class DBMStorage_TestCase(unittest.TestCase):
         self.assertEquals(len(result), 2)
         self.assertEquals(result[0], "account2")
         self.assertEquals(result[1], "account1")
+
+class SQLiteStorage_TestCase(DBMStorage_TestCase):
+    def setUp(self):
+        spool_dir = "./spool/test"
+        self._storage = SQLiteStorage(nb_pk_fields = 2, spool_dir = spool_dir)
+        self._account1 = IMAPConnection(login = "login1",
+                                        password = "password1",
+                                        host = "host1",
+                                        port = 993,
+                                        ssl = True,
+                                        mailbox = "INBOX.box1")
+        self._account1.chat_action = mailconnection.DIGEST
+        self._account1.online_action = mailconnection.DIGEST
+        self._account1.away_action = mailconnection.DO_NOTHING
+        self._account1.xa_action = mailconnection.DO_NOTHING
+        self._account1.dnd_action = mailconnection.DO_NOTHING
+        self._account1.offline_action = mailconnection.DO_NOTHING
+        self._account1.interval = 4
+        self._account2 = IMAPConnection(login = "login2",
+                                        password = "password2",
+                                        host = "host2",
+                                        port = 1993,
+                                        ssl = False,
+                                        mailbox = "INBOX.box2")
+        self._account2.chat_action = mailconnection.DO_NOTHING
+        self._account2.online_action = mailconnection.DO_NOTHING
+        self._account2.away_action = mailconnection.DO_NOTHING
+        self._account2.xa_action = mailconnection.DO_NOTHING
+        self._account2.dnd_action = mailconnection.DO_NOTHING
+        self._account2.offline_action = mailconnection.DO_NOTHING
+        self._account2.interval = 4
+
+#     def tearDown(self):
+#         os.remove(self._storage.file)
+#         self._storage = None
+
+
+    def test_set_sync_get(self):
+        self._storage[("test@localhost", "account1")] = self._account1
+        self._storage[("test@localhost", "account2")] = self._account2
+        loaded_storage = SQLiteStorage(nb_pk_fields = 2, spool_dir = "./spool/test")
+        self.assertEquals(loaded_storage[("test@localhost", "account1")], self._account1)
+        self.assertEquals(loaded_storage[("test@localhost", "account2")], self._account2)

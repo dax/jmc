@@ -221,9 +221,6 @@ class MailConnection(object):
     def format_message_summary(self, email_msg):
         return self.format_message(email_msg, False)
         
-    def get_type(self):
-	return "UNKNOWN"
-
     def get_status_msg(self):
 	return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
 	    unicode(self.port)
@@ -324,6 +321,8 @@ class IMAPConnection(MailConnection):
             return self.format_message_summary(email.message_from_string(data[0][1]))
 	return u"Error while fetching mail " + str(index)
 
+    type = property(get_type)
+
 class POP3Connection(MailConnection):
     def __init__(self, login = "", password = "", host = "", \
 		 port = None, ssl = False):
@@ -377,3 +376,5 @@ class POP3Connection(MailConnection):
 	if ret[0:3] == '+OK':
             return self.format_message_summary(email.message_from_string('\n'.join(data)))
 	return u"Error while fetching mail " + str(index)
+
+    type = property(get_type)

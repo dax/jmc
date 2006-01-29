@@ -27,6 +27,8 @@ import sys
 import anydbm
 import mailconnection_factory
 from UserDict import UserDict
+from pysqlite2 import dbapi2 as sqlite
+ 
 
 class Storage(UserDict):
     def __init__(self, nb_pk_fields = 1, spool_dir = "."):
@@ -35,39 +37,70 @@ class Storage(UserDict):
         self.set_spool_dir(spool_dir)
         self.nb_pk_fields = nb_pk_fields
         self.file = self._spool_dir + "/registered.db"
+        self._registered = self.load()
         
-    # return hash of hash (jid and name)
-    def load(self):
-        pass
+    def __setitem__(self, pk_tuple, obj):
+#        print "Adding " + "#".join(pk_tuple) + " = " + str(obj)
+        self._registered[str("#".join(pk_tuple))] = obj
 
-    def sync(self):
-        pass
-    
-    def store(self, nb_pk_fields, registered, pk):
-        pass
-    
-    def add(self, key_list, obj):
-        pass
+    def __getitem__(self, pk_tuple):
+#        print "Getting " + "#".join(pk_tuple)
+        if len(pk_tuple) == self.nb_pk_fields:
+            return self._registered[str("#".join(pk_tuple))]
+        else:
+            partial_key = str("#".join(pk_tuple))
+            regexp = re.compile(partial_key)
+            return [self._registered[key]
+                    for key in self._registered.keys()
+                    if regexp.search(key)]
 
-    def remove(self, key_list):
-        pass
-    
+    def __delitem__(self, pk_tuple):
+#        print "Deleting " + "#".join(pk_tuple)
+        del self._registered[str("#".join(pk_tuple))]
+
     def get_spool_dir(self):
         return self._spool_dir
 
     def set_spool_dir(self, spool_dir):
-        print "setting spool dir to " + spool_dir
         self._spool_dir = spool_dir
         if not os.path.isdir(self._spool_dir):
             os.makedirs(self._spool_dir)
         
     spool_dir = property(get_spool_dir, set_spool_dir)
-    
+
+    def has_key(self, pk_tuple):
+        if len(pk_tuple) == self.nb_pk_fields:
+            return self._registered.has_key(str("#".join(pk_tuple)))
+        else:
+            partial_key = str("#".join(pk_tuple))
+            regexp = re.compile("^" + partial_key)
+            for key in self._registered.keys():
+                if regexp.search(key):
+                    return True
+            return False
+
+    def keys(self, pk_tuple = None):
+        if pk_tuple is None:
+            return [tuple(key.split("#")) for key in self._registered.keys()]
+        else:
+            level = len(pk_tuple)
+            partial_key = str("#".join(pk_tuple))
+            regexp = re.compile("^" + partial_key)
+            result = {}
+            for key in self._registered.keys():
+                if regexp.search(key):
+                    result[key.split("#")[level]] = None
+            return result.keys()
+
+    def dump(self):
+        for pk in self._registered.keys():
+            print pk + " = " + str(self._registered[pk])
+
+
 class DBMStorage(Storage):
     def __init__(self, nb_pk_fields = 1, spool_dir = "."):
 #        print "DBM INIT"
         Storage.__init__(self, nb_pk_fields, spool_dir)
-        self.__registered = self.load()
         
     def __del__(self):
         #        print "DBM STOP"
@@ -109,80 +142,105 @@ class DBMStorage(Storage):
         try:
             str_registered = anydbm.open(self.file, \
                                          'c')
-            for pk in self.__registered.keys():
-                str_registered[pk] = str(self.__registered[pk])
+            for pk in self._registered.keys():
+                str_registered[pk] = str(self._registered[pk])
 	except Exception, e:
 	    print >>sys.stderr, "Cannot save to registered.db : "
 	    print >>sys.stderr, e
         str_registered.close()
-        
-    def __setitem__(self, pk_tuple, obj):
-#        print "Adding " + "#".join(pk_tuple) + " = " + str(obj)
-        self.__registered[str("#".join(pk_tuple))] = obj
-        self.sync()
 
-    def __getitem__(self, pk_tuple):
-#        print "Getting " + "#".join(pk_tuple)
-        if len(pk_tuple) == self.nb_pk_fields:
-            return self.__registered[str("#".join(pk_tuple))]
-        else:
-            partial_key = str("#".join(pk_tuple))
-            regexp = re.compile(partial_key)
-            return [self.__registered[key]
-                    for key in self.__registered.keys()
-                    if regexp.search(key)]
+    def __setitem__(self, pk_tuple, obj):
+        Storage.__setitem__(self, pk_tuple, obj)
+        self.sync()
 
     def __delitem__(self, pk_tuple):
-#        print "Deleting " + "#".join(pk_tuple)
-        del self.__registered[str("#".join(pk_tuple))]
+        Storage.__delitem__(self, pk_tuple)
         self.sync()
-
-    def has_key(self, pk_tuple):
-        if len(pk_tuple) == self.nb_pk_fields:
-            return self.__registered.has_key(str("#".join(pk_tuple)))
-        else:
-            partial_key = str("#".join(pk_tuple))
-            regexp = re.compile("^" + partial_key)
-            for key in self.__registered.keys():
-                if regexp.search(key):
-                    return True
-            return False
-
-    def keys(self, pk_tuple = None):
-        if pk_tuple is None:
-            return [tuple(key.split("#")) for key in self.__registered.keys()]
-        else:
-            level = len(pk_tuple)
-            partial_key = str("#".join(pk_tuple))
-            regexp = re.compile("^" + partial_key)
-            result = {}
-            for key in self.__registered.keys():
-                if regexp.search(key):
-                    result[key.split("#")[level]] = None
-            return result.keys()
-
-    def dump(self):
-#        print "dumping"
-        for pk in self.__registered.keys():
-            print pk + " = " + str(self.__registered[pk])
             
         
 class SQLiteStorage(Storage):
     def __init__(self, nb_pk_fields = 1, spool_dir = "."):
-        pass
+        self.__connection = None
+        Storage.__init__(self, nb_pk_fields, spool_dir)
 
-    def load(self):
-        pass
+    def create(self):
+#         print "creating new Table"
+        cursor = self.__connection.cursor()
+        cursor.execute("""
+        create table account(
+          jid STRING,
+          name STRING,
+          type STRING,
+          login STRING,
+          password STRING,
+          host STRING,
+          port INTEGER,
+          chat_action INTEGER,
+          online_action INTEGER,
+          away_action INTEGER,
+          xa_action INTEGER,
+          dnd_action INTEGER,
+          offline_action INTEGER,
+          interval INTEGER,
+          mailbox STRING,
+          PRIMARY KEY(jid, name)
+        )
+        """)
+        self.__connection.commit()
+        cursor.close()
+
+    def __del__(self):
+        self.__connection.close()
 
     def sync(self):
         pass
-    
-    def store(self, nb_pk_fields, registered, pk):
-        pass
-    
-    def add(self, key_list, obj):
-        pass
 
-    def remove(self, key_list):
-        pass
+    def load(self):
+        if not os.path.exists(self.file):
+            self.__connection = sqlite.connect(self.file)
+            self.create()
+        else:
+            self.__connection = sqlite.connect(self.file)
+        cursor = self.__connection.cursor()
+        cursor.execute("""select * from account""")
+        result = {}
+        for row in cursor.fetchall():
+#             print "Creating new " + row[self.nb_pk_fields] + " connection."
+            account = result["#".join(row[0:self.nb_pk_fields])] = mailconnection_factory.get_new_mail_connection(row[self.nb_pk_fields])
+            for field_index in range(self.nb_pk_fields + 1, len(row)):
+#                 print "\tSetting " + str(cursor.description[field_index][0]) + \
+#                       " to " + str(row[field_index])
+                setattr(account,
+                        cursor.description[field_index][0],
+                        row[field_index])
+        cursor.close()
+        return result
     
+    def __setitem__(self, pk_tuple, obj):
+        Storage.__setitem__(self, pk_tuple, obj)
+        cursor = self.__connection.cursor()
+        cursor.execute("""
+        insert or replace into account values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+                       (pk_tuple[0],
+                        pk_tuple[1],
+                        obj.type,
+                        obj.login,
+                        obj.password,
+                        obj.host,
+                        obj.port,
+                        obj.chat_action,
+                        obj.online_action,
+                        obj.away_action,
+                        obj.xa_action,
+                        obj.dnd_action,
+                        obj.offline_action,
+                        obj.interval,
+                        obj.mailbox))
+        self.__connection.commit()
+        cursor.close()
+        
+    def __delitem__(self, pk_tuple):
+        Storage.__delitem__(self, pk_tuple)
+

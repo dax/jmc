@@ -54,6 +54,8 @@ if __name__ == '__main__':
                                           "test")
     dbmstorage_suite = unittest.makeSuite(DBMStorage_TestCase, \
                                           "test")
+    sqlitestorage_suite = unittest.makeSuite(SQLiteStorage_TestCase, \
+                                             "test")
 
     jmc_suite = unittest.TestSuite((mail_connection_suite, \
                                     pop3_connection_suite, \
@@ -62,8 +64,9 @@ if __name__ == '__main__':
                                     component_suite, \
                                     component2_suite, \
                                     storage_suite, \
-                                    dbmstorage_suite))
-    test_support.run_suite(mc_factory_suite)
+                                    dbmstorage_suite, \
+                                    sqlitestorage_suite))
+    test_support.run_suite(sqlitestorage_suite)
 
 # coverage.stop()
 # coverage.analysis(jabber.mailconnection_factory)

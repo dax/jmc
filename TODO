@@ -1,8 +1,3 @@
-* i18n support in the same way as ejabberd and
-   PyMSNt, PyICQ-t and PyAIM-t: using xml:lang, but have an option in
-   the config to set the default language to show, when the client do
-   not support xml:lang.i18n support (use xml:lang + default)
-
 * Database backend (default SQLLite)
 
 * Support for attachements with size limit and file format limit
