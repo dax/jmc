@@ -20,6 +20,7 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
+import mailconnection
 from mailconnection import IMAPConnection, POP3Connection
 
 """ Static method to return an empty MailConnection object of given type
@@ -62,42 +63,57 @@ def str_to_mail_connection(connection_string):
     password = arg_list.pop()
     host = arg_list.pop()
     port = int(arg_list.pop())
-    chat_action = int(arg_list.pop())
-    online_action = int(arg_list.pop())
-    away_action = int(arg_list.pop())
-    xa_action = int(arg_list.pop())
-    dnd_action = int(arg_list.pop())
-    offline_action = int(arg_list.pop())
-    interval = int(arg_list.pop())
-    result = None
-    if type == "imap":
+    chat_action = None
+    online_action = None
+    away_action = None
+    xa_action = None
+    dnd_action = None
+    offline_action = None
+    interval = None
+    if type[0:4] == "imap":
+        if len(arg_list) == 8:
+            chat_action = int(arg_list.pop())
+            online_action = int(arg_list.pop())
+            away_action = int(arg_list.pop())
+            xa_action = int(arg_list.pop())
+            dnd_action = int(arg_list.pop())
+            offline_action = int(arg_list.pop())
+            interval = int(arg_list.pop())
+        else:
+            retrieve = bool(arg_list.pop() == "True")
+            if retrieve:
+                chat_action = online_action = away_action = xa_action = dnd_action = mailconnection.RETRIEVE
+            else:
+                chat_action = online_action = away_action = xa_action = dnd_action = mailconnection.DIGEST                
+            offline_action = mailconnection.DO_NOTHING
         mailbox = arg_list.pop()
         result = IMAPConnection(login = login, \
                                 password = password, \
                                 host = host, \
-                                ssl = False, \
+                                ssl = (len(type) == 5), \
                                 port = port, \
                                 mailbox = mailbox)
-    elif type == "imaps":
-        mailbox = arg_list.pop()
-        result = IMAPConnection(login = login, \
-                                password = password, \
-                                host = host, \
-                                port = port, \
-                                ssl = True, \
-                                mailbox = mailbox)
-    elif type == "pop3":
+    else:
+        if len(arg_list) == 7:
+            chat_action = int(arg_list.pop())
+            online_action = int(arg_list.pop())
+            away_action = int(arg_list.pop())
+            xa_action = int(arg_list.pop())
+            dnd_action = int(arg_list.pop())
+            offline_action = int(arg_list.pop())
+            interval = int(arg_list.pop())
+        else:
+            retrieve = bool(arg_list.pop() == "True")
+            if retrieve:
+                chat_action = online_action = away_action = xa_action = dnd_action = mailconnection.RETRIEVE
+            else:
+                chat_action = online_action = away_action = xa_action = dnd_action = mailconnection.DIGEST                
+            offline_action = mailconnection.DO_NOTHING
         result = POP3Connection(login = login, \
                                 password = password, \
                                 host = host, \
                                 port = port, \
-                                ssl = False)
-    elif type == "pop3s":
-        result = POP3Connection(login = login, \
-                                password = password, \
-                                host = host, \
-                                port = port, \
-                                ssl = True)
+                                ssl = (len(type) == 5))
     if result is None:
         raise Exception, "Connection type \"" + type + "\" unknown"
     result.chat_action = chat_action
@@ -106,7 +122,8 @@ def str_to_mail_connection(connection_string):
     result.xa_action = xa_action
     result.dnd_action = dnd_action
     result.offline_action = offline_action
-    result.interval = interval
+    if interval is not None:
+        result.interval = interval
     return result
 
 

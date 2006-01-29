@@ -71,16 +71,15 @@ class MailComponent(Component):
 	
 	self.__interval = int(config.get_content("config/check_interval"))
 	self.__config = config
+        spool_dir = config.get_content("config/spooldir") + "/" + \
+                    config.get_content("config/jabber/service")
         try:
-            self.__storage = globals()[config.get_content("config/storage") + "Storage"]()
+            self.__storage = globals()[config.get_content("config/storage") \
+                                       + "Storage"](2, spool_dir = spool_dir)
         except:
             print >>sys.stderr, "Cannot find " \
                   + config.get_content("config/storage") + "Storage class"
             exit(1)
-	self.__spool_dir = config.get_content("config/spooldir") + "/" + \
-                           config.get_content("config/jabber/service")
-        self.__storage.spool_dir = self.__spool_dir
-        self.__storage.nb_pk_fields = 2
 	# dump registered accounts (save) every hour
 	self.__count = 60
         self.running = False

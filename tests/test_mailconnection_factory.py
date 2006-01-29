@@ -41,6 +41,37 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
 	mc = get_new_mail_connection("pop3s")
         self.assertEquals(mc, mc)
 
+    def test_str_to_mail_connection_imap_v01_v02(self):
+	mc = str_to_mail_connection("imap#login#passwd#host#193#True#INBOX")
+        self.assertEquals(mc.get_type(), "imap")
+        self.assertEquals(mc.login, "login")
+        self.assertEquals(mc.password, "passwd")
+        self.assertEquals(mc.host, "host")
+        self.assertEquals(mc.port, 193)
+        self.assertEquals(mc.mailbox, "INBOX")
+        self.assertEquals(mc.chat_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.online_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.away_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.xa_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.dnd_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.offline_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.interval, 5)
+
+    def test_str_to_mail_connection_pop3_v01_v02(self):
+	mc = str_to_mail_connection("pop3#login#passwd#host#110#False")
+        self.assertEquals(mc.get_type(), "pop3")
+        self.assertEquals(mc.login, "login")
+        self.assertEquals(mc.password, "passwd")
+        self.assertEquals(mc.host, "host")
+        self.assertEquals(mc.port, 110)
+        self.assertEquals(mc.chat_action, mailconnection.DIGEST)
+        self.assertEquals(mc.online_action, mailconnection.DIGEST)
+        self.assertEquals(mc.away_action, mailconnection.DIGEST)
+        self.assertEquals(mc.xa_action, mailconnection.DIGEST)
+        self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
+        self.assertEquals(mc.offline_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.interval, 5)
+        
     def test_str_to_mail_connection_imap(self):
 	mc = str_to_mail_connection("imap#login#passwd#host#193#0#0#0#1#1#2#4#INBOX")
         self.assertEquals(mc.get_type(), "imap")

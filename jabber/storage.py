@@ -56,6 +56,7 @@ class Storage(UserDict):
         return self._spool_dir
 
     def set_spool_dir(self, spool_dir):
+        print "setting spool dir to " + spool_dir
         self._spool_dir = spool_dir
         if not os.path.isdir(self._spool_dir):
             os.makedirs(self._spool_dir)
