@@ -1,11 +1,11 @@
-# -*- coding: iso-8859-15 -*-
+# -*- coding: utf-8 -*-
 ##
 ## mailconnection_test.py
-## Login : <adro8400@claralinux>
-## Started on  Fri May 13 11:32:51 2005 adro8400
-## $Id: test_mailconnection.py,v 1.2 2005/09/18 20:24:07 dax Exp $
+## Login : David Rousselie <david.rousselie@happycoders.org>
+## Started on  Fri May 13 11:32:51 2005 David Rousselie
+## $Id: test_mailconnection.py,v 1.2 2005/09/18 20:24:07 David Rousselie Exp $
 ## 
-## Copyright (C) 2005 adro8400
+## Copyright (C) 2005 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -54,7 +54,7 @@ class MailConnection_TestCase(unittest.TestCase):
     test_get_decoded_part_encoded = \
         make_test((True, False, False), \
                   lambda self, email: self.connection.get_decoded_part(email), \
-                  u"Encoded single part with 'iso-8859-15' charset (éàê)")
+                  u"Encoded single part with 'iso-8859-15' charset (Ã©Ã Ãª)")
 
     test_format_message_summary_not_encoded = \
         make_test((False, False, True), \
@@ -64,8 +64,8 @@ class MailConnection_TestCase(unittest.TestCase):
     test_format_message_summary_encoded = \
         make_test((True, False, True), \
                   lambda self, email: self.connection.format_message_summary(email), \
-                  u"From : encoded from (éàê)\nSubject : encoded subject " + \
-                  u"(éàê)\n\n")
+                  u"From : encoded from (Ã©Ã Ãª)\nSubject : encoded subject " + \
+                  u"(Ã©Ã Ãª)\n\n")
 
     test_format_message_summary_partial_encoded = \
         make_test((True, False, True), \
@@ -77,8 +77,8 @@ class MailConnection_TestCase(unittest.TestCase):
                                        "\"" + str(email["From"]) \
                                        + "\" not encoded part") or \
                   self.connection.format_message_summary(email), \
-                  u"From : \"encoded from (éàê)\" not encoded part\nSubject " + \
-                  u": \"encoded subject (éàê)\" not encoded part\n\n")
+                  u"From : \"encoded from (Ã©Ã Ãª)\" not encoded part\nSubject " + \
+                  u": \"encoded subject (Ã©Ã Ãª)\" not encoded part\n\n")
 
     test_format_message_single_not_encoded = \
         make_test((False, False, True), \
@@ -89,9 +89,9 @@ class MailConnection_TestCase(unittest.TestCase):
     test_format_message_single_encoded = \
         make_test((True, False, True), \
                   lambda self, email: self.connection.format_message(email), \
-                  u"From : encoded from (éàê)\nSubject : encoded subject " + \
-                  u"(éàê)\n\nEncoded single part with 'iso-8859-15' charset" + \
-                  u" (\xe9\xe0\xea)\n")
+                  u"From : encoded from (Ã©Ã Ãª)\nSubject : encoded subject " + \
+                  u"(Ã©Ã Ãª)\n\nEncoded single part with 'iso-8859-15' charset" + \
+                  u" (Ã©Ã Ãª)\n")
 
     test_format_message_multi_not_encoded = \
         make_test((False, True, True), \
@@ -102,9 +102,9 @@ class MailConnection_TestCase(unittest.TestCase):
     test_format_message_multi_encoded = \
         make_test((True, True, True), \
                   lambda self, email: self.connection.format_message(email), \
-                  u"From : encoded from (éàê)\nSubject : encoded subject (éà" + \
-                  u"ê)\n\nEncoded multipart1 with 'iso-8859-15' charset (éàê" + \
-                  u")\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n")
+                  u"From : encoded from (Ã©Ã Ãª)\nSubject : encoded subject (Ã©Ã " + \
+                  u"Ãª)\n\nEncoded multipart1 with 'iso-8859-15' charset (Ã©Ã Ãª" + \
+                  u")\nEncoded multipart2 with 'iso-8859-15' charset (Ã©Ã Ãª)\n")
 
 
 class POP3Connection_TestCase(unittest.TestCase):

@@ -1,10 +1,10 @@
 ##
-## test.py
-## Login : <adro8400@claralinux>
-## Started on  Wed May 18 13:33:03 2005 adro8400
-## $Id: run_test.py,v 1.2 2005/09/18 20:24:07 dax Exp $
+## run_test.py
+## Login : <david.rousselie@happycoders.org>
+## Started on  Wed May 18 13:33:03 2005 David Rousselie
+## $Id: run_test.py,v 1.2 2005/09/18 20:24:07 David Rousselie Exp $
 ## 
-## Copyright (C) 2005 adro8400
+## Copyright (C) 2005 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -63,7 +63,7 @@ if __name__ == '__main__':
                                     component2_suite, \
                                     storage_suite, \
                                     dbmstorage_suite))
-    test_support.run_suite(dbmstorage_suite)
+    test_support.run_suite(mail_connection_suite)
 
 # coverage.stop()
 # coverage.analysis(jabber.mailconnection_factory)

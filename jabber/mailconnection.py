@@ -193,19 +193,19 @@ class MailConnection(object):
         result = u"From : "
         for i in range(len(from_decoded)):
             if from_decoded[i][1]:
-                result += from_decoded[i][0].decode(from_decoded[i][1])
+                result += unicode(from_decoded[i][0].decode(from_decoded[i][1]))
             else:
-                result += from_decoded[i][0]
+                result += unicode(from_decoded[i][0])
         result += "\n"
 
         subject_decoded = email.Header.decode_header(email_msg["Subject"])
         result += u"Subject : "
         for i in range(len(subject_decoded)):
             if subject_decoded[i][1]:
-                result += subject_decoded[i][0].decode(subject_decoded[i][1])
+                result += unicode(subject_decoded[i][0].decode(subject_decoded[i][1]))
             else:
-                result += subject_decoded[i][0]
-        result += "\n\n"
+                result += unicode(subject_decoded[i][0])
+        result += u"\n\n"
 
         if include_body:
             action = {
@@ -215,7 +215,7 @@ class MailConnection(object):
             for part in email_msg.walk():
                 content_type = part.get_content_type()
                 if action.has_key(content_type):
-                    result += action[content_type](part) + '\n'
+                    result += unicode(action[content_type](part)) + u'\n'
         return result
 
     def format_message_summary(self, email_msg):
@@ -226,7 +226,7 @@ class MailConnection(object):
 
     def get_status_msg(self):
 	return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
-	    str(self.port)
+	    unicode(self.port)
 
     def connect(self):
 	pass
