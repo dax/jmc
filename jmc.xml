@@ -14,5 +14,6 @@
   </jabber>
   <storage>DBM</storage>
   <spooldir>/var/spool/jabber</spooldir>
-  <check_interval>1</check_interval> <!-- in minutes -->
+  <!-- default check interval in minutes -->
+  <check_interval>5</check_interval>
 </config>

@@ -1,6 +1,6 @@
 ##
 ## storage.py
-## Login : <dax@happycoders.org>
+## Login : David Rousselie <dax@happycoders.org>
 ## Started on  Wed Jul 20 20:26:53 2005 dax
 ## $Id: storage.py,v 1.1 2005/09/18 20:24:07 dax Exp $
 ## 

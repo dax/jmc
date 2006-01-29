@@ -1,6 +1,6 @@
 ##
 ## utils.py
-## Login : <dax@happycoders.org>
+## Login : David Rousselie <dax@happycoders.org>
 ## Started on  Mon Oct 24 21:44:43 2005 dax
 ## $Id$
 ## 

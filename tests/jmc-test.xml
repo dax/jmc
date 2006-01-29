@@ -14,5 +14,5 @@
   </jabber>
   <storage>DBM</storage>
   <spooldir>.</spooldir>
-  <check_interval>1</check_interval> <!-- in minutes -->
+  <check_interval>5</check_interval> <!-- in minutes -->
 </config>

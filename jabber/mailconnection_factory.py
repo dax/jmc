@@ -1,10 +1,10 @@
 ##
 ## mailconnection_factory.py
-## Login : <adro8400@claralinux>
-## Started on  Fri May 20 10:41:46 2005 adro8400
+## Login : David Rousselie <david.rousselie@happycoders.org>
+## Started on  Fri May 20 10:41:46 2005 David Rousselie
 ## $Id: mailconnection_factory.py,v 1.2 2005/09/18 20:24:07 dax Exp $
 ## 
-## Copyright (C) 2005 adro8400
+## Copyright (C) 2005 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or

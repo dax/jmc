@@ -2,7 +2,7 @@
 ##
 ## Jabber Mail Component
 ## jmc.py
-## Login : David Rousselie <dax@happycoders.org>
+## Login : David Rousselie <david.rousselie@happycoders.org>
 ## Started on  Fri Jan  7 11:06:42 2005 
 ## $Id: jmc.py,v 1.3 2005/07/11 20:39:31 dax Exp $
 ## 

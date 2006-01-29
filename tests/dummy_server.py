@@ -1,10 +1,10 @@
 ##
 ## dummy_server.py
-## Login : <adro8400@claralinux>
-## Started on  Fri May 13 12:53:17 2005 adro8400
+## Login : David Rousselie <david.rousselie@happycoders.org>
+## Started on  Fri May 13 12:53:17 2005 
 ## $Id: dummy_server.py,v 1.1 2005/07/11 20:39:31 dax Exp $
 ## 
-## Copyright (C) 2005 adro8400
+## Copyright (C) 2005 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or

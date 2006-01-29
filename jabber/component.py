@@ -213,7 +213,7 @@ class MailComponent(Component):
         reg_form.add_field(type = "text-single", \
                            label = lang_class.account_check_interval, \
                            var = "interval", \
-                           value = "5")
+                           value = unicode(self.__interval))
         
 	return reg_form
 
@@ -225,11 +225,11 @@ class MailComponent(Component):
         reg_form_init = X()
         reg_form_init.xmlns = "jabber:x:data"
         reg_form_init.title = lang_class.update_title
-        reg_form_init.instructions = lang_class.update_instructions + \
-                                     name
+        reg_form_init.instructions = lang_class.update_instructions % \
+                                     (name,)
         reg_form_init.type = "form"
         
-        reg_form_init.add_field(type = "fixed", \
+        reg_form_init.add_field(type = "hidden", \
                                 label = lang_class.account_name, \
                                 var = "name", \
                                 value = name)
@@ -258,18 +258,21 @@ class MailComponent(Component):
                                         label = lang_class.account_type, \
                                         var = "type", \
                                         value = account.get_type())
-        field.add_option(label = "POP3", \
-                         value = "pop3")
-        field.add_option(label = "POP3S", \
-                         value = "pop3s")
-        field.add_option(label = "IMAP", \
-                         value = "imap")
-        field.add_option(label = "IMAPS", \
-                         value = "imaps")
-        
-        reg_form_init.add_field(type = "text-single", \
-                                label = lang_class.account_mailbox, \
-                                var = "mailbox")
+        if account.get_type()[0:4] == "imap":
+            field.add_option(label = "IMAP", \
+                             value = "imap")
+            field.add_option(label = "IMAPS", \
+                             value = "imaps")
+            field = reg_form_init.add_field(type = "text-single", \
+                                            label = lang_class.account_mailbox, \
+                                            var = "mailbox")
+	    field.value = account.mailbox
+        else:
+            field.add_option(label = "POP3", \
+                             value = "pop3")
+            field.add_option(label = "POP3S", \
+                             value = "pop3s")
+            
         
         field = reg_form_init.add_field(type = "list-single", \
                                         label = lang_class.account_ffc_action, \
@@ -341,12 +344,6 @@ class MailComponent(Component):
                                 label = lang_class.account_check_interval, \
                                 var = "interval", \
                                 value = str(account.interval))
-        
-	if account.get_type()[0:4] == "imap":
-	    reg_form_init.fields["mailbox"].value = account.mailbox
-	else:
-	    reg_form_init.fields["mailbox"].value = u"INBOX"
-
 	return reg_form_init
 
     """ Looping method """
@@ -478,7 +475,7 @@ class MailComponent(Component):
         if not node:
             for name in self.__storage.keys((base_from_jid,)):
 		account = self.__storage[(base_from_jid, name)]
-		str_name = account.get_type() + lang_class.connection + name
+		str_name = lang_class.connection_label % (account.get_type().upper(), name)
 		if account.get_type()[0:4] == "imap":
 		    str_name += " (" + account.mailbox + ")"
 		DiscoItem(di, JID(name + "@" + unicode(self.jid)), \
@@ -491,7 +488,7 @@ class MailComponent(Component):
         iq = iq.make_result_response()
         q = iq.new_query("jabber:iq:version")
         q.newTextChild(q.ns(), "name", "Jabber Mail Component")
-        q.newTextChild(q.ns(), "version", "0.1")
+        q.newTextChild(q.ns(), "version", "0.2")
         self.stream.send(iq)
         return 1
 

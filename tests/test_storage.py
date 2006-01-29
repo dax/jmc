@@ -1,6 +1,6 @@
 ##
 ## test_storage.py
-## Login : <dax@happycoders.org>
+## Login : David Rousselie <dax@happycoders.org>
 ## Started on  Fri May 20 10:46:58 2005 dax
 ## $Id: test_component.py,v 1.1 2005/07/11 20:39:31 dax Exp $
 ## 

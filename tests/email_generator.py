@@ -1,11 +1,11 @@
 ##
 # -*- coding: iso-8859-1 -*-
 ## email_generator.py
-## Login : <adro8400@claralinux>
-## Started on  Tue May 17 15:33:35 2005 adro8400
+## Login : David Rousselie <david.rousselie@happycoders.org>
+## Started on  Tue May 17 15:33:35 2005
 ## $Id: email_generator.py,v 1.1 2005/07/11 20:39:31 dax Exp $
 ## 
-## Copyright (C) 2005 adro8400
+## Copyright (C) 2005 
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
