@@ -60,12 +60,11 @@ class DBMStorage_TestCase(unittest.TestCase):
         self._account1.dnd_action = mailconnection.DO_NOTHING
         self._account1.offline_action = mailconnection.DO_NOTHING
         self._account1.interval = 4
-        self._account2 = IMAPConnection(login = "login2",
+        self._account2 = POP3Connection(login = "login2",
                                         password = "password2",
                                         host = "host2",
-                                        port = 1993,
-                                        ssl = False,
-                                        mailbox = "INBOX.box2")
+                                        port = 1110,
+                                        ssl = False)
         self._account2.chat_action = mailconnection.DO_NOTHING
         self._account2.online_action = mailconnection.DO_NOTHING
         self._account2.away_action = mailconnection.DO_NOTHING
@@ -75,21 +74,26 @@ class DBMStorage_TestCase(unittest.TestCase):
         self._account2.interval = 4
 
     def tearDown(self):
-        os.remove(self._storage.file)
+        db_file = self._storage.file
         self._storage = None
+        os.remove(db_file)
 
     def test_set_get(self):
         self._storage[("test@localhost", "account1")] = self._account1
         self._storage[("test@localhost", "account2")] = self._account2
-        self.assertEquals(self._storage[("test@localhost", "account1")], self._account1)
-        self.assertEquals(self._storage[("test@localhost", "account2")], self._account2)
+        self.assertEquals(self._storage[("test@localhost", "account1")],
+                          self._account1)
+        self.assertEquals(self._storage[("test@localhost", "account2")],
+                          self._account2)
 
     def test_set_sync_get(self):
         self._storage[("test@localhost", "account1")] = self._account1
         self._storage[("test@localhost", "account2")] = self._account2
         loaded_storage = DBMStorage(nb_pk_fields = 2, spool_dir = "./spool/test")
-        self.assertEquals(loaded_storage[("test@localhost", "account1")], self._account1)
-        self.assertEquals(loaded_storage[("test@localhost", "account2")], self._account2)
+        self.assertEquals(loaded_storage[("test@localhost", "account1")],
+                          self._account1)
+        self.assertEquals(loaded_storage[("test@localhost", "account2")],
+                          self._account2)
 
     def test_set_del_get(self):
         self._storage[("test@localhost", "account2")] = self._account2
@@ -174,12 +178,11 @@ class SQLiteStorage_TestCase(DBMStorage_TestCase):
         self._account1.dnd_action = mailconnection.DO_NOTHING
         self._account1.offline_action = mailconnection.DO_NOTHING
         self._account1.interval = 4
-        self._account2 = IMAPConnection(login = "login2",
+        self._account2 = POP3Connection(login = "login2",
                                         password = "password2",
                                         host = "host2",
                                         port = 1993,
-                                        ssl = False,
-                                        mailbox = "INBOX.box2")
+                                        ssl = False)
         self._account2.chat_action = mailconnection.DO_NOTHING
         self._account2.online_action = mailconnection.DO_NOTHING
         self._account2.away_action = mailconnection.DO_NOTHING
@@ -197,5 +200,7 @@ class SQLiteStorage_TestCase(DBMStorage_TestCase):
         self._storage[("test@localhost", "account1")] = self._account1
         self._storage[("test@localhost", "account2")] = self._account2
         loaded_storage = SQLiteStorage(nb_pk_fields = 2, spool_dir = "./spool/test")
-        self.assertEquals(loaded_storage[("test@localhost", "account1")], self._account1)
-        self.assertEquals(loaded_storage[("test@localhost", "account2")], self._account2)
+        self.assertEquals(loaded_storage[("test@localhost", "account1")],
+                          self._account1)
+        self.assertEquals(loaded_storage[("test@localhost", "account2")],
+                          self._account2)

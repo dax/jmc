@@ -31,12 +31,17 @@ from pysqlite2 import dbapi2 as sqlite
  
 
 class Storage(UserDict):
-    def __init__(self, nb_pk_fields = 1, spool_dir = "."):
+    def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
         UserDict.__init__(self)
-        self._spool_dir = ""
-        self.set_spool_dir(spool_dir)
         self.nb_pk_fields = nb_pk_fields
-        self.file = self._spool_dir + "/registered.db"
+        if db_file is None:
+            self._spool_dir = ""
+            self.set_spool_dir(spool_dir)
+            self.file = self._spool_dir + "/registered.db"
+        else:
+            spool_dir = os.path.dirname(db_file) or "."
+            self.set_spool_dir(spool_dir)
+            self.file = db_file
         self._registered = self.load()
         
     def __setitem__(self, pk_tuple, obj):
@@ -98,9 +103,9 @@ class Storage(UserDict):
 
 
 class DBMStorage(Storage):
-    def __init__(self, nb_pk_fields = 1, spool_dir = "."):
+    def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
 #        print "DBM INIT"
-        Storage.__init__(self, nb_pk_fields, spool_dir)
+        Storage.__init__(self, nb_pk_fields, spool_dir, db_file)
         
     def __del__(self):
         #        print "DBM STOP"
@@ -159,9 +164,9 @@ class DBMStorage(Storage):
             
         
 class SQLiteStorage(Storage):
-    def __init__(self, nb_pk_fields = 1, spool_dir = "."):
+    def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
         self.__connection = None
-        Storage.__init__(self, nb_pk_fields, spool_dir)
+        Storage.__init__(self, nb_pk_fields, spool_dir, db_file)
 
     def create(self):
 #         print "creating new Table"
@@ -219,6 +224,9 @@ class SQLiteStorage(Storage):
     def __setitem__(self, pk_tuple, obj):
         Storage.__setitem__(self, pk_tuple, obj)
         cursor = self.__connection.cursor()
+        mailbox = None
+        if obj.type[0:4] == "imap":
+            mailbox = obj.mailbox
         cursor.execute("""
         insert or replace into account values
         (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -237,10 +245,10 @@ class SQLiteStorage(Storage):
                         obj.dnd_action,
                         obj.offline_action,
                         obj.interval,
-                        obj.mailbox))
+                        mailbox))
         self.__connection.commit()
         cursor.close()
         
     def __delitem__(self, pk_tuple):
         Storage.__delitem__(self, pk_tuple)
-
+        # TODO

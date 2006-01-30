@@ -1,6 +1,6 @@
 Installation :
 
-- Get pyxmpp from http://pyxmpp.jabberstudio.org/ (work with snapshot pyxmpp-0.5.s20050506)
+- Get pyxmpp from http://pyxmpp.jabberstudio.org/ (version 1.0)
 
 - edit jmc.xml to match jabber server configuration :
 	- for jabberd2, port must match router.xml port
@@ -21,5 +21,30 @@ can edit mail server parameters by registering on listed connection.
 Feedback :
 
 Send me feedback and comments to dax at happycoders dot org
+
+Utils :
+- backend_converter.py convert from one storage type to another.
+
+$ python utils/backend_converter.py 
+
+give you the list of supported types.
+example of usage :
+
+$ python utils/backend_converter.py \
+  DBM \
+  registered.db \
+  SQLite \
+  registered.sqlite
+
+converts a DBM file (registered.db) to a SQLite file
+(registered.sqlite). Once converted, the new file copied in
+${spool_dir}/${service}/registered.db where ${spool_dir} and
+${service} are defined in jmc.xml configuration file.
+
+- backend_dump.py dump a db file. example :
+
+$ python utils/backend_dump.py DBM registered.db
+
+
 
 

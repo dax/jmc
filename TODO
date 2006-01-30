@@ -1,5 +1,3 @@
-* Database backend (default SQLLite)
-
 * Support for attachements with size limit and file format limit
    (e.g. only png, jpeg,... but no exe, bat,...).
 

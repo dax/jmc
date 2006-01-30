@@ -79,7 +79,7 @@ class MailComponent(Component):
         except:
             print >>sys.stderr, "Cannot find " \
                   + config.get_content("config/storage") + "Storage class"
-            exit(1)
+            sys.exit(1)
 	# dump registered accounts (save) every hour
 	self.__count = 60
         self.running = False
