@@ -62,12 +62,8 @@ class MailComponent(Component):
 	self.__shutdown = 0
         self.__default_lang = config.get_content("config/jabber/language")
         
-        # TODO : delete signals not known by Windows
 	signal.signal(signal.SIGINT, self.signal_handler)
-        signal.signal(signal.SIGPIPE, self.signal_handler)
-        signal.signal(signal.SIGHUP, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
-        signal.signal(signal.SIGALRM, self.time_handler)
 	
 	self.__interval = int(config.get_content("config/check_interval"))
 	self.__config = config
