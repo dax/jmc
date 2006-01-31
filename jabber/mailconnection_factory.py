@@ -61,6 +61,11 @@ def str_to_mail_connection(connection_string):
     type = arg_list.pop()
     login = arg_list.pop()
     password = arg_list.pop()
+    if password == "/\\":
+        password = None
+        store_password = False
+    else:
+        store_password = True
     host = arg_list.pop()
     port = int(arg_list.pop())
     chat_action = None
@@ -116,6 +121,7 @@ def str_to_mail_connection(connection_string):
                                 ssl = (len(type) == 5))
     if result is None:
         raise Exception, "Connection type \"" + type + "\" unknown"
+    result.store_password = store_password
     result.chat_action = chat_action
     result.online_action = online_action
     result.away_action = away_action

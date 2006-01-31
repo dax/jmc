@@ -112,7 +112,12 @@ class MailComponent(Component):
         reg_form.add_field(type = "text-private", \
                            label = lang_class.account_password, \
                            var = "password")
-        
+
+        reg_form.add_field(type = "boolean", \
+                           label = lang_class.account_password_store, \
+                           var = "store_password",
+                           value = "True")
+
         reg_form.add_field(type = "text-single", \
                            label = lang_class.account_host, \
                            var = "host")
@@ -239,6 +244,11 @@ class MailComponent(Component):
                                 var = "password", \
                                 value = account.password)
         
+        reg_form_init.add_field(type = "boolean", \
+                                label = lang_class.account_password_store, \
+                                var = "store_password", \
+                                value = str(account.store_password).lower())
+
         reg_form_init.add_field(type = "text-single", \
                                 label = lang_class.account_host, \
                                 var = "host", \
@@ -551,6 +561,9 @@ class MailComponent(Component):
 	else:
 	    password = u""
 
+	store_password = x.fields.has_key("store_password") \
+                         and (x.fields["store_password"].value == "1")
+
 	if x.fields.has_key("host"):
 	    host = x.fields["host"].value
 	else:
@@ -606,8 +619,8 @@ class MailComponent(Component):
 	else:
 	    interval = None
 
-	self.__logger.debug(u"New Account: %s, %s, %s, %s, %s, %s, %s %i %i %i %i %i %i %i" \
-			    % (name, login, password, host, str(port), \
+	self.__logger.debug(u"New Account: %s, %s, %s, %s, %s, %s, %s, %s %i %i %i %i %i %i %i" \
+			    % (name, login, password, str(store_password), host, str(port), \
                                mailbox, type, chat_action, online_action, away_action, \
                                xa_action, dnd_action, offline_action, interval))
 
@@ -645,6 +658,7 @@ class MailComponent(Component):
             mailconnection_factory.get_new_mail_connection(type)
  	account.login = login
  	account.password = password
+        account.store_password = store_password
  	account.host = host
         account.chat_action = chat_action
         account.online_action = online_action
@@ -667,6 +681,7 @@ class MailComponent(Component):
 	self.__logger.debug("PRESENCE_AVAILABLE")
 	from_jid = stanza.get_from()
         base_from_jid = unicode(from_jid.bare())
+        lang_class = self.get_lang_class(self.get_lang(stanza.get_node()))
 	name = stanza.get_to().node
 	show = stanza.get_show()
         self.__logger.debug("SHOW : " + str(show))
@@ -683,6 +698,8 @@ class MailComponent(Component):
             self.stream.send(p)
         elif self.__storage.has_key((base_from_jid, name)):
             account = self.__storage[(base_from_jid, name)]
+            account.default_lang_class = lang_class
+            old_status = account.status
             # Make available to receive mail only when online
             if show is None:
                 account.status = "online" # TODO get real status = (not show)
@@ -695,7 +712,22 @@ class MailComponent(Component):
                          show = show, \
                          stanza_type = "available")
             self.stream.send(p)
+            if account.store_password == False \
+                   and old_status == "offline":
+                self.__ask_password(name, from_jid, lang_class, account)
         return 1
+
+    def __ask_password(self, name, from_jid, lang_class, account):
+        if not account.waiting_password_reply \
+               and account.status != "offline":
+            account.waiting_password_reply = True
+            msg = Message(from_jid = name + "@" + unicode(self.jid), \
+                          to_jid = from_jid, \
+                          stanza_type = "message", \
+                          subject = u"[PASSWORD] " + lang_class.ask_password_subject, \
+                          body = lang_class.ask_password_body % \
+                          (account.host, account.login))
+            self.stream.send(msg)
 
     """ handle presence unavailability """
     def presence_unavailable(self, stanza):
@@ -704,7 +736,12 @@ class MailComponent(Component):
         base_from_jid = unicode(from_jid.bare())
         if stanza.get_to() == unicode(self.jid):
 	    for jid, name in self.__storage.keys():
-		self.__storage[(base_from_jid, name)].status = "offline"
+                account = self.__storage[(base_from_jid, name)]
+                account.status = "offline"
+                account.waiting_password_reply = False
+                if account.store_password == False:
+                    self.__logger.debug("Forgetting password")
+                    account.password = None
 		p = Presence(from_jid = name + "@" + unicode(self.jid), \
 			     to_jid = from_jid, \
 			     stanza_type = "unavailable")
@@ -764,28 +801,29 @@ class MailComponent(Component):
     """ Handle new message """
     def message(self, message):
 	self.__logger.debug("MESSAGE: " + message.get_body())
+        lang_class = self.get_lang_class(self.get_lang(message.get_node()))
 	name = message.get_to().node
 	base_from_jid = unicode(message.get_from().bare())
-# 	if name and self.__registered.has_key(base_from_jid):
-# 	    body = message.get_body()
-# 	    cmd = body.split(' ')
-# 	    if cmd[0] == "check":
-# 		self.check_mail(base_from_jid, name)
-#             elif cmd[0] == "dump":
-#                 body = ""
-#                 for jid in self.__registered.keys():
-#                     for name in self.__registered[jid].keys():
-#                         body += name + " for user " + jid
-#                 msg = Message(from_jid = self.jid, to_jid = base_from_jid, \
-#                               stanza_type = "message", \
-#                               body = body)
-#                 self.stream.send(msg)
+        if re.compile("\[PASSWORD\]").search(message.get_subject()) is not None \
+               and self.__storage.has_key((base_from_jid, name)):
+            account = self.__storage[(base_from_jid, name)]
+            account.password = message.get_body()
+            account.waiting_password_reply = False
+            msg = Message(from_jid = name + "@" + unicode(self.jid), \
+                          to_jid = message.get_from(), \
+                          stanza_type = "message", \
+                          subject = lang_class.password_saved_for_session, \
+                          body = lang_class.password_saved_for_session)
+            self.stream.send(msg)
 	return 1
 
     """ Check mail account """
     def check_mail(self, jid, name):
 	self.__logger.debug("CHECK_MAIL " + unicode(jid) + " " + name)
 	account = self.__storage[(jid, name)]
+        if account.password is None:
+            self.__ask_password(name, jid, account.default_lang_class, account)
+            return
         action = account.action
         if action != mailconnection.DO_NOTHING:
             try:

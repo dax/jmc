@@ -29,6 +29,8 @@ import poplib
 import imaplib
 import socket
 
+from jabber.lang import Lang
+
 IMAP4_TIMEOUT = 10
 POP3_TIMEOUT = 10
 
@@ -145,6 +147,7 @@ class MailConnection(object):
 	- 'ssl': boolean"""
 	self.login = login
 	self.password = password
+        self.store_password = True
 	self.host = host
 	self.port = port
 	self.ssl = ssl
@@ -159,11 +162,15 @@ class MailConnection(object):
         self.offline_action = DO_NOTHING
         self.interval = 5
 	self.lastcheck = 0
+        self.default_lang_class = Lang.en
+        self.waiting_password_reply = False
+        self.in_error = False
         
     def __eq__(self, other):
         return self.get_type() == other.get_type() \
                and self.login == other.login \
                and self.password == other.password \
+               and self.store_password == other.store_password \
                and self.host == other.host \
                and self.port == other.port \
                and self.ssl == other.ssl \
@@ -176,10 +183,11 @@ class MailConnection(object):
                and self.interval == other.interval
     
     def __str__(self):
-	return self.get_type() + "#" + self.login + "#" + self.password + "#" \
-	    + self.host + "#" + str(self.port) + "#" + str(self.chat_action) + "#" \
-            + str(self.online_action) + "#" + str(self.away_action) + "#" + \
-            str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action) + "#" + str(self.interval)
+	return self.get_type() + "#" + self.login + "#" + \
+               (self.store_password and self.password or "/\\") + "#" \
+               + self.host + "#" + str(self.port) + "#" + str(self.chat_action) + "#" \
+               + str(self.online_action) + "#" + str(self.away_action) + "#" + \
+               str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action) + "#" + str(self.interval)
  
     def get_decoded_part(self, part):
         content_charset = part.get_content_charset()

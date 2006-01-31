@@ -29,6 +29,7 @@ class Lang:
         account_name = u"Connection name"
         account_login = u"Login"
         account_password = u"Password"
+        account_password_store = u"Store password on jabber server ?"
         account_host = u"Host"
         account_port = u"Port"
         account_type = u"Mail serveur type"
@@ -45,18 +46,27 @@ class Lang:
         action_digest = u"Send mail digest"
         update_title = u"Jabber mail connection update"
         update_instructions = u"Modifying connection '%s'"
-        connection_labels = u"%s connection '%s'"
+        connection_label = u"%s connection '%s'"
         update_account_message = u"Updated %s connection '%s': Registered with "\
                                  "username '%s' and password '%s' on '%s'"
         new_account_message = u"New %s connection '%s': Registered with " \
                               "username '%s' and password '%s' on '%s'"
-        
+        ask_password_subject = u"Password request"
+        ask_password_body = u"Reply to this message with the password " \
+                            "for the following account : \n" \
+                            "\thost = %s\n" \
+                            "\tlogin = %s\n"
+        password_saved_for_session = u"Password will be kept during your jabber session"
+        check_error_subject = u"Error while checking emails."
+        check_error_body = u"An error appears while checking emails :\n\t%s"
+
     class fr:
         register_title = u"Enregistrement d'une nouvelle connexion à un serveur email."
         register_instructions = u"Entrer les paramètres de connexion"
         account_name = u"Nom de la connexion"
         account_login = u"Nom d'utilisateur"
         account_password = u"Mot de passe"
+        account_password_store = u"Sauvegarder le mot de passe sur le serveur Jabber ?"
         account_host = u"Adresse du serveur email"
         account_port = u"Port du serveur email"
         account_type = u"Type du serveur email"
@@ -78,5 +88,14 @@ class Lang:
                                  "Nom d'utilisateur : '%s'\nMot de passe : '%s'\nsur : '%s'"
         new_account_message = u"La connexion %s '%s' a été créée : \n" \
                               "Nom d'utilisateur : '%s'\nMot de passe : '%s'\nsur : '%s'"
-
+        ask_password_subject = u"Demande de mot de passe"
+        ask_password_body = u"Répondre à ce message avec le mot de passe du " \
+                            "compte suivant : \n" \
+                            "\thost = %s\n" \
+                            "\tlogin = %s\n"
+        password_saved_for_session = u"Le mot de passe sera garder tout au " \
+                                     "long de la session Jabber."
+        check_error_subject = u"Erreur lors de la vérification des emails."
+        check_error_body = u"Une erreur est survenue lors de la vérification " \
+                           "des emails :\n\t%s"
     

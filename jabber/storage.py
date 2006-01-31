@@ -45,23 +45,23 @@ class Storage(UserDict):
         self._registered = self.load()
         
     def __setitem__(self, pk_tuple, obj):
-#        print "Adding " + "#".join(pk_tuple) + " = " + str(obj)
-        self._registered[str("#".join(pk_tuple))] = obj
+#        print "Adding " + "#".join(map(str, pk_tuple)) + " = " + str(obj)
+        self._registered[str("#".join(map(str, pk_tuple)))] = obj
 
     def __getitem__(self, pk_tuple):
-#        print "Getting " + "#".join(pk_tuple)
+#        print "Getting " + "#".join(map(str, pk_tuple))
         if len(pk_tuple) == self.nb_pk_fields:
-            return self._registered[str("#".join(pk_tuple))]
+            return self._registered[str("#".join(map(str, pk_tuple)))]
         else:
-            partial_key = str("#".join(pk_tuple))
+            partial_key = str("#".join(map(str, pk_tuple)))
             regexp = re.compile(partial_key)
             return [self._registered[key]
                     for key in self._registered.keys()
                     if regexp.search(key)]
 
     def __delitem__(self, pk_tuple):
-#        print "Deleting " + "#".join(pk_tuple)
-        del self._registered[str("#".join(pk_tuple))]
+#        print "Deleting " + "#".join(map(str, pk_tuple))
+        del self._registered[str("#".join(map(str, pk_tuple)))]
 
     def get_spool_dir(self):
         return self._spool_dir
@@ -75,9 +75,9 @@ class Storage(UserDict):
 
     def has_key(self, pk_tuple):
         if len(pk_tuple) == self.nb_pk_fields:
-            return self._registered.has_key(str("#".join(pk_tuple)))
+            return self._registered.has_key(str("#".join(map(str, pk_tuple))))
         else:
-            partial_key = str("#".join(pk_tuple))
+            partial_key = str("#".join(map(str, pk_tuple)))
             regexp = re.compile("^" + partial_key)
             for key in self._registered.keys():
                 if regexp.search(key):
@@ -89,7 +89,7 @@ class Storage(UserDict):
             return [tuple(key.split("#")) for key in self._registered.keys()]
         else:
             level = len(pk_tuple)
-            partial_key = str("#".join(pk_tuple))
+            partial_key = str("#".join(map(str, pk_tuple)))
             regexp = re.compile("^" + partial_key)
             result = {}
             for key in self._registered.keys():
@@ -101,6 +101,8 @@ class Storage(UserDict):
         for pk in self._registered.keys():
             print pk + " = " + str(self._registered[pk])
 
+    def load(self):
+        pass
 
 class DBMStorage(Storage):
     def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
@@ -112,7 +114,6 @@ class DBMStorage(Storage):
         self.sync()
         
     def load(self):
-        #        print "DBM LOAD"
         str_registered = anydbm.open(self.file, \
                                      'c')
         result = {}

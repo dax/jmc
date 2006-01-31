@@ -27,6 +27,7 @@ from jabber import mailconnection
 class MailConnectionFactory_TestCase(unittest.TestCase):
     def test_new_mail_connection_imap(self):
 	mc = get_new_mail_connection("imap")
+        # TODO
         self.assertEquals(mc, mc)
 
     def test_new_mail_connection_imaps(self):
@@ -46,6 +47,7 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.get_type(), "imap")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
+        self.assertEquals(mc.store_password, True)
         self.assertEquals(mc.host, "host")
         self.assertEquals(mc.port, 193)
         self.assertEquals(mc.mailbox, "INBOX")
@@ -62,6 +64,7 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.get_type(), "pop3")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
+        self.assertEquals(mc.store_password, True)
         self.assertEquals(mc.host, "host")
         self.assertEquals(mc.port, 110)
         self.assertEquals(mc.chat_action, mailconnection.DIGEST)
@@ -77,6 +80,23 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.get_type(), "imap")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
+        self.assertEquals(mc.host, "host")
+        self.assertEquals(mc.port, 193)
+        self.assertEquals(mc.mailbox, "INBOX")
+        self.assertEquals(mc.chat_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.online_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.away_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.xa_action, mailconnection.DIGEST)
+        self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
+        self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.interval, 4)
+
+    def test_str_to_mail_connection_no_password(self):
+	mc = str_to_mail_connection("imap#login#/\\#host#193#0#0#0#1#1#2#4#INBOX")
+        self.assertEquals(mc.get_type(), "imap")
+        self.assertEquals(mc.login, "login")
+        self.assertEquals(mc.password, None)
+        self.assertEquals(mc.store_password, False)
         self.assertEquals(mc.host, "host")
         self.assertEquals(mc.port, 193)
         self.assertEquals(mc.mailbox, "INBOX")
