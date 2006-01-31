@@ -865,8 +865,17 @@ class MailComponent(Component):
                                        body = body)
                         self.stream.send(mesg)
                 account.disconnect()
+                account.in_error = False
             except Exception,e:
-                # TODO : Send error message to the user
+                if account.in_error == False:
+                    account.in_error = True
+                    msg = Message(from_jid = name + "@" + unicode(self.jid), \
+                                  to_jid = jid, \
+                                  stanza_type = "error", \
+                                  subject = account.default_lang_class.check_error_subject, \
+                                  body = account.default_lang_class.check_error_body \
+                                  % (e))
+                    self.stream.send(msg)
                 self.__logger.debug("Error while checking mail : %s" \
                                     % (e))
 
