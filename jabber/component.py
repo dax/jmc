@@ -653,14 +653,18 @@ class MailComponent(Component):
 	if self.__storage.has_key((base_from_jid, name)):
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
 			stanza_type = "message", \
-			body = lang_class.update_account_message \
-			% (type, name, login, password, socket))
+                        subject = lang_class.update_account_message_subject \
+                        % (type, name), \
+			body = lang_class.update_account_message_body \
+			% (login, password, socket))
 	    self.stream.send(m)
 	else:
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
 			stanza_type = "message", \
-			body = lang_class.new_account_message \
-			% (type, name, login, password, socket))
+                        subject = lang_class.new_account_message_subject \
+			% (type, name), \
+			body = lang_class.new_account_message_body \
+			% (login, password, socket))
 	    self.stream.send(m)
 	    p = Presence(from_jid = name + "@" + unicode(self.jid), \
 			 to_jid = base_from_jid, \
