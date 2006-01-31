@@ -72,6 +72,8 @@ class DBMStorage_TestCase(unittest.TestCase):
         self._account2.dnd_action = mailconnection.DO_NOTHING
         self._account2.offline_action = mailconnection.DO_NOTHING
         self._account2.interval = 4
+        self._account2.store_password = False
+        self._account2.live_email_only = True
 
     def tearDown(self):
         db_file = self._storage.file
@@ -190,6 +192,8 @@ class SQLiteStorage_TestCase(DBMStorage_TestCase):
         self._account2.dnd_action = mailconnection.DO_NOTHING
         self._account2.offline_action = mailconnection.DO_NOTHING
         self._account2.interval = 4
+        self._account2.store_password = False
+        self._account2.live_email_only = True
 
 #     def tearDown(self):
 #         os.remove(self._storage.file)
@@ -199,6 +203,7 @@ class SQLiteStorage_TestCase(DBMStorage_TestCase):
     def test_set_sync_get(self):
         self._storage[("test@localhost", "account1")] = self._account1
         self._storage[("test@localhost", "account2")] = self._account2
+        self._account2.password = None
         loaded_storage = SQLiteStorage(nb_pk_fields = 2, spool_dir = "./spool/test")
         self.assertEquals(loaded_storage[("test@localhost", "account1")],
                           self._account1)

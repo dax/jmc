@@ -12,7 +12,7 @@
          <URL>http://people.happycoders.org/dax/jabber/jmc/</URL>
      </vCard>
   </jabber>
-  <storage>DBM</storage>
+  <storage>SQLite</storage>
   <spooldir>.</spooldir>
   <check_interval>5</check_interval> <!-- in minutes -->
 </config>

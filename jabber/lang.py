@@ -41,6 +41,7 @@ class Lang:
         account_dnd_action = u"Action when state is 'Do not Disturb'"
         account_offline_action = u"Action when state is 'Offline'"
         account_check_interval = u"Mail check interval (in minutes)"
+        account_live_email_only = u"Reports only emails received while connected to Jabber"
         action_nothing = u"Do nothing"
         action_retrieve = u"Retrieve mail"
         action_digest = u"Send mail digest"
@@ -78,6 +79,8 @@ class Lang:
         account_dnd_action = u"Action lorsque l'état est 'Do not Disturb'"
         account_offline_action = u"Action lorsque l'état est 'Offline'"
         account_check_interval = u"Interval de vérification de nouveaux emails (en minutes)"
+        account_live_email_only = u"Vérifier les nouveaux emails seulement " \
+                                  "lorsqu'une session Jabber est ouverte"
         action_nothing = u"Ne rien faire"
         action_retrieve = u"Récupérer l'email"
         action_digest = u"Envoyer un résumé"
@@ -98,4 +101,3 @@ class Lang:
         check_error_subject = u"Erreur lors de la vérification des emails."
         check_error_body = u"Une erreur est survenue lors de la vérification " \
                            "des emails :\n\t%s"
-    

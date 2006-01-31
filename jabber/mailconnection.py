@@ -165,11 +165,13 @@ class MailConnection(object):
         self.default_lang_class = Lang.en
         self.waiting_password_reply = False
         self.in_error = False
+        self.live_email_only = False
+        self.first_check = True
         
     def __eq__(self, other):
         return self.get_type() == other.get_type() \
                and self.login == other.login \
-               and self.password == other.password \
+               and (not self.store_password or self.password == other.password) \
                and self.store_password == other.store_password \
                and self.host == other.host \
                and self.port == other.port \
@@ -180,14 +182,15 @@ class MailConnection(object):
                and self.xa_action == other.xa_action \
                and self.dnd_action == other.dnd_action \
                and self.offline_action == other.offline_action \
-               and self.interval == other.interval
+               and self.interval == other.interval \
+               and self.live_email_only == other.live_email_only
     
     def __str__(self):
 	return self.get_type() + "#" + self.login + "#" + \
                (self.store_password and self.password or "/\\") + "#" \
                + self.host + "#" + str(self.port) + "#" + str(self.chat_action) + "#" \
                + str(self.online_action) + "#" + str(self.away_action) + "#" + \
-               str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action) + "#" + str(self.interval)
+               str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action) + "#" + str(self.interval) + "#" + str(self.live_email_only)
  
     def get_decoded_part(self, part):
         content_charset = part.get_content_charset()

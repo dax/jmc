@@ -188,6 +188,7 @@ class SQLiteStorage(Storage):
           dnd_action INTEGER,
           offline_action INTEGER,
           interval INTEGER,
+          live_email_only BOOLEAN,
           mailbox STRING,
           PRIMARY KEY(jid, name)
         )
@@ -211,14 +212,33 @@ class SQLiteStorage(Storage):
         cursor.execute("""select * from account""")
         result = {}
         for row in cursor.fetchall():
-#             print "Creating new " + row[self.nb_pk_fields] + " connection."
-            account = result["#".join(row[0:self.nb_pk_fields])] = mailconnection_factory.get_new_mail_connection(row[self.nb_pk_fields])
-            for field_index in range(self.nb_pk_fields + 1, len(row)):
+            #             print "Creating new " + row[self.nb_pk_fields] + " connection."
+            account_type = row[self.nb_pk_fields]
+            account = result["#".join(row[0:self.nb_pk_fields])] = mailconnection_factory.get_new_mail_connection(account_type)
+            account.login = row[self.nb_pk_fields + 1]
+            account.password = row[self.nb_pk_fields + 2]
+            if account.password is None:
+                account.store_password = False
+            else:
+                account.store_password = True
+            account.host = row[self.nb_pk_fields + 3]
+            account.port = int(row[self.nb_pk_fields + 4])
+            account.chat_action = int(row[self.nb_pk_fields + 5])
+            account.online_action = int(row[self.nb_pk_fields + 6])
+            account.away_action = int(row[self.nb_pk_fields + 7])
+            account.xa_action = int(row[self.nb_pk_fields + 8])
+            account.dnd_action = int(row[self.nb_pk_fields + 9])
+            account.offline_action = int(row[self.nb_pk_fields + 10])
+            account.interval = int(row[self.nb_pk_fields + 11])
+            account.live_email_only = (row[self.nb_pk_fields + 12] == 1)
+            if account_type[0:4] == "imap":
+                account.mailbox = row[self.nb_pk_fields + 13]
+#            for field_index in range(self.nb_pk_fields + 1, len(row)):
 #                 print "\tSetting " + str(cursor.description[field_index][0]) + \
 #                       " to " + str(row[field_index])
-                setattr(account,
-                        cursor.description[field_index][0],
-                        row[field_index])
+#                setattr(account,
+#                        cursor.description[field_index][0],
+#                        row[field_index])
         cursor.close()
         return result
     
@@ -226,17 +246,20 @@ class SQLiteStorage(Storage):
         Storage.__setitem__(self, pk_tuple, obj)
         cursor = self.__connection.cursor()
         mailbox = None
+        password = None
         if obj.type[0:4] == "imap":
             mailbox = obj.mailbox
+        if obj.store_password == True:
+            password = obj.password
         cursor.execute("""
         insert or replace into account values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
                        (pk_tuple[0],
                         pk_tuple[1],
                         obj.type,
                         obj.login,
-                        obj.password,
+                        password,
                         obj.host,
                         obj.port,
                         obj.chat_action,
@@ -246,6 +269,7 @@ class SQLiteStorage(Storage):
                         obj.dnd_action,
                         obj.offline_action,
                         obj.interval,
+                        obj.live_email_only,
                         mailbox))
         self.__connection.commit()
         cursor.close()

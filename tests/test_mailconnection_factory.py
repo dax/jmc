@@ -58,6 +58,7 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.dnd_action, mailconnection.RETRIEVE)
         self.assertEquals(mc.offline_action, mailconnection.DO_NOTHING)
         self.assertEquals(mc.interval, 5)
+        self.assertEquals(mc.live_email_only, False)
 
     def test_str_to_mail_connection_pop3_v01_v02(self):
 	mc = str_to_mail_connection("pop3#login#passwd#host#110#False")
@@ -74,9 +75,10 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.DO_NOTHING)
         self.assertEquals(mc.interval, 5)
+        self.assertEquals(mc.live_email_only, False)
         
     def test_str_to_mail_connection_imap(self):
-	mc = str_to_mail_connection("imap#login#passwd#host#193#0#0#0#1#1#2#4#INBOX")
+	mc = str_to_mail_connection("imap#login#passwd#host#193#0#0#0#1#1#2#4#True#INBOX")
         self.assertEquals(mc.get_type(), "imap")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
@@ -90,9 +92,10 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
         self.assertEquals(mc.interval, 4)
+        self.assertEquals(mc.live_email_only, True)
 
     def test_str_to_mail_connection_no_password(self):
-	mc = str_to_mail_connection("imap#login#/\\#host#193#0#0#0#1#1#2#4#INBOX")
+	mc = str_to_mail_connection("imap#login#/\\#host#193#0#0#0#1#1#2#4#False#INBOX")
         self.assertEquals(mc.get_type(), "imap")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, None)
@@ -107,9 +110,10 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
         self.assertEquals(mc.interval, 4)
+        self.assertEquals(mc.live_email_only, False)
 
     def test_str_to_mail_connection_imaps(self):
-	mc = str_to_mail_connection("imaps#login#passwd#host#993#0#0#0#1#1#2#4#INBOX.SubDir")
+	mc = str_to_mail_connection("imaps#login#passwd#host#993#0#0#0#1#1#2#4#True#INBOX.SubDir")
         self.assertEquals(mc.get_type(), "imaps")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
@@ -123,9 +127,10 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
         self.assertEquals(mc.interval, 4)
+        self.assertEquals(mc.live_email_only, True)
 
     def test_str_to_mail_connection_pop3(self):
-	mc = str_to_mail_connection("pop3#login#passwd#host#110#0#0#0#1#1#2#4")
+	mc = str_to_mail_connection("pop3#login#passwd#host#110#0#0#0#1#1#2#4#False")
         self.assertEquals(mc.get_type(), "pop3")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
@@ -138,9 +143,10 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
         self.assertEquals(mc.interval, 4)
+        self.assertEquals(mc.live_email_only, False)
 
     def test_str_to_mail_connection_pop3s(self):
-	mc = str_to_mail_connection("pop3s#login#passwd#host#995#0#0#0#1#1#2#4")
+	mc = str_to_mail_connection("pop3s#login#passwd#host#995#0#0#0#1#1#2#4#True")
         self.assertEquals(mc.get_type(), "pop3s")
         self.assertEquals(mc.login, "login")
         self.assertEquals(mc.password, "passwd")
@@ -153,4 +159,5 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
         self.assertEquals(mc.interval, 4)
+        self.assertEquals(mc.live_email_only, True)
 

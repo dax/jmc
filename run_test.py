@@ -72,9 +72,9 @@ if __name__ == '__main__':
     #    test_support.run_suite(mc_factory_suite)
     #    test_support.run_suite(component_suite)
     #    test_support.run_suite(component2_suite)
-    #    test_support.run_suite(storage_suite)
-    #    test_support.run_suite(sqlitestorage_suite)
-    #    test_support.run_suite(dbmstorage_suite)
+    #test_support.run_suite(storage_suite)
+    #test_support.run_suite(sqlitestorage_suite)
+    #test_support.run_suite(dbmstorage_suite)
     test_support.run_suite(jmc_suite)
 
 # coverage.stop()

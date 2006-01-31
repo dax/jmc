@@ -75,8 +75,9 @@ def str_to_mail_connection(connection_string):
     dnd_action = None
     offline_action = None
     interval = None
+    live_email_only = False
     if type[0:4] == "imap":
-        if len(arg_list) == 8:
+        if len(arg_list) == 9:
             chat_action = int(arg_list.pop())
             online_action = int(arg_list.pop())
             away_action = int(arg_list.pop())
@@ -84,6 +85,7 @@ def str_to_mail_connection(connection_string):
             dnd_action = int(arg_list.pop())
             offline_action = int(arg_list.pop())
             interval = int(arg_list.pop())
+            live_email_only = (arg_list.pop().lower() == "true")
         else:
             retrieve = bool(arg_list.pop() == "True")
             if retrieve:
@@ -99,7 +101,7 @@ def str_to_mail_connection(connection_string):
                                 port = port, \
                                 mailbox = mailbox)
     else:
-        if len(arg_list) == 7:
+        if len(arg_list) == 8:
             chat_action = int(arg_list.pop())
             online_action = int(arg_list.pop())
             away_action = int(arg_list.pop())
@@ -107,6 +109,7 @@ def str_to_mail_connection(connection_string):
             dnd_action = int(arg_list.pop())
             offline_action = int(arg_list.pop())
             interval = int(arg_list.pop())
+            live_email_only = (arg_list.pop().lower() == "true")
         else:
             retrieve = bool(arg_list.pop() == "True")
             if retrieve:
@@ -130,6 +133,7 @@ def str_to_mail_connection(connection_string):
     result.offline_action = offline_action
     if interval is not None:
         result.interval = interval
+    result.live_email_only = live_email_only
     return result
 
 

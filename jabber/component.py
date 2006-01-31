@@ -214,6 +214,10 @@ class MailComponent(Component):
                            label = lang_class.account_check_interval, \
                            var = "interval", \
                            value = unicode(self.__interval))
+
+        reg_form.add_field(type = "boolean", \
+                           label = lang_class.account_live_email_only, \
+                           var = "live_email_only")
         
 	return reg_form
 
@@ -349,6 +353,12 @@ class MailComponent(Component):
                                 label = lang_class.account_check_interval, \
                                 var = "interval", \
                                 value = str(account.interval))
+
+        reg_form_init.add_field(type = "boolean", \
+                                label = lang_class.account_live_email_only, \
+                                var = "live_email_only", \
+                                value = str(account.live_email_only).lower())
+
 	return reg_form_init
 
     """ Looping method """
@@ -619,10 +629,13 @@ class MailComponent(Component):
 	else:
 	    interval = None
 
-	self.__logger.debug(u"New Account: %s, %s, %s, %s, %s, %s, %s, %s %i %i %i %i %i %i %i" \
+	live_email_only = x.fields.has_key("live_email_only") \
+                          and (x.fields["live_email_only"].value == "1")
+
+	self.__logger.debug(u"New Account: %s, %s, %s, %s, %s, %s, %s, %s %i %i %i %i %i %i %i %s" \
 			    % (name, login, password, str(store_password), host, str(port), \
                                mailbox, type, chat_action, online_action, away_action, \
-                               xa_action, dnd_action, offline_action, interval))
+                               xa_action, dnd_action, offline_action, interval, str(live_email_only)))
 
         iq = iq.make_result_response()
         self.stream.send(iq)
@@ -667,6 +680,7 @@ class MailComponent(Component):
         account.dnd_action = dnd_action
         account.offline_action = offline_action
         account.interval = interval
+        account.live_email_only = live_email_only
 
 	if port:
 	    account.port = port
@@ -821,12 +835,13 @@ class MailComponent(Component):
     def check_mail(self, jid, name):
 	self.__logger.debug("CHECK_MAIL " + unicode(jid) + " " + name)
 	account = self.__storage[(jid, name)]
-        if account.password is None:
-            self.__ask_password(name, jid, account.default_lang_class, account)
-            return
         action = account.action
+
         if action != mailconnection.DO_NOTHING:
             try:
+                if account.password is None:
+                    self.__ask_password(name, jid, account.default_lang_class, account)
+                    return
                 self.__logger.debug("Checking " + name)
                 self.__logger.debug("\t" + account.login \
                                     + "@" + account.host)
@@ -884,6 +899,33 @@ class MailComponent(Component):
 	self.__logger.debug("CHECK_ALL_MAIL")
         for jid, name in self.__storage.keys():
             account = self.__storage[(jid, name)]
+            if account.first_check and account.live_email_only:
+                account.first_check = False
+                print  "HERE"
+                if account.password is None:
+                    self.__ask_password(name, jid, account.default_lang_class, account)
+                    return
+                try:
+                    account.connect()
+                    mail_list = account.get_mail_list()
+                    if not mail_list or mail_list[0] == '':
+                        account.lastmail = 0
+                    else:
+                        account.lastmail = len(mail_list)
+                    account.disconnect()
+                    account.in_error = False
+                except Exception,e:
+                    if account.in_error == False:
+                        account.in_error = True
+                        msg = Message(from_jid = name + "@" + unicode(self.jid), \
+                                      to_jid = jid, \
+                                      stanza_type = "error", \
+                                      subject = account.default_lang_class.check_error_subject, \
+                                      body = account.default_lang_class.check_error_body \
+                                      % (e))
+                        self.stream.send(msg)
+                    self.__logger.debug("Error while checking mail : %s" \
+                                        % (e))
             account.lastcheck += 1
             if account.lastcheck == account.interval:
                 account.lastcheck = 0
