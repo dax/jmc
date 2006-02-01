@@ -155,6 +155,16 @@ class DBMStorage_TestCase(unittest.TestCase):
         self.assertEquals(result[0], "account2")
         self.assertEquals(result[1], "account1")
 
+    def test_del_sync_get(self):
+        self._storage[("test@localhost", "account1")] = self._account1
+        self._storage[("test@localhost", "account2")] = self._account2
+        del self._storage[("test@localhost", "account2")]
+        loaded_storage = DBMStorage(nb_pk_fields = 2, spool_dir = "./spool/test")
+        self.assertEquals(len(loaded_storage.keys()),
+                          1)
+        self.assertEquals(loaded_storage[("test@localhost", "account1")],
+                          self._account1)
+
 class SQLiteStorage_TestCase(DBMStorage_TestCase):
     def setUp(self):
         spool_dir = "./spool/test"

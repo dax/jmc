@@ -127,7 +127,7 @@ class DBMStorage(Storage):
         return result
 
     def sync(self):
-        #        print "DBM SYNC"
+        #print "DBM SYNC"
         self.store()
         
     def __store(self, nb_pk_fields, registered, pk):
@@ -147,7 +147,7 @@ class DBMStorage(Storage):
 #        print "DBM STORE"
         try:
             str_registered = anydbm.open(self.file, \
-                                         'c')
+                                         'n')
             for pk in self._registered.keys():
                 str_registered[pk] = str(self._registered[pk])
 	except Exception, e:
