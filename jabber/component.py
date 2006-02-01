@@ -652,7 +652,7 @@ class MailComponent(Component):
 	  socket = host
 	if self.__storage.has_key((base_from_jid, name)):
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
-			stanza_type = "message", \
+			stanza_type = "normal", \
                         subject = lang_class.update_account_message_subject \
                         % (type, name), \
 			body = lang_class.update_account_message_body \
@@ -660,7 +660,7 @@ class MailComponent(Component):
 	    self.stream.send(m)
 	else:
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
-			stanza_type = "message", \
+			stanza_type = "normal", \
                         subject = lang_class.new_account_message_subject \
 			% (type, name), \
 			body = lang_class.new_account_message_body \
@@ -741,7 +741,7 @@ class MailComponent(Component):
             account.waiting_password_reply = True
             msg = Message(from_jid = name + "@" + unicode(self.jid), \
                           to_jid = from_jid, \
-                          stanza_type = "message", \
+                          stanza_type = "normal", \
                           subject = u"[PASSWORD] " + lang_class.ask_password_subject, \
                           body = lang_class.ask_password_body % \
                           (account.host, account.login))
@@ -829,7 +829,7 @@ class MailComponent(Component):
             account.waiting_password_reply = False
             msg = Message(from_jid = name + "@" + unicode(self.jid), \
                           to_jid = message.get_from(), \
-                          stanza_type = "message", \
+                          stanza_type = "normal", \
                           subject = lang_class.password_saved_for_session, \
                           body = lang_class.password_saved_for_session)
             self.stream.send(msg)
@@ -865,7 +865,7 @@ class MailComponent(Component):
                         mesg = Message(from_jid = name + "@" + \
                                        unicode(self.jid), \
                                        to_jid = jid, \
-                                       stanza_type = "message", \
+                                       stanza_type = "normal", \
                                        body = body)
                         self.stream.send(mesg)
                         account.lastmail += 1
