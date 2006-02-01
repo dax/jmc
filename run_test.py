@@ -70,9 +70,9 @@ if __name__ == '__main__':
                                     storage_suite, \
                                     dbmstorage_suite, \
                                     sqlitestorage_suite))
-    #    test_support.run_suite(mail_connection_suite)
-    #    test_support.run_suite(pop3_connection_suite)
-    #    test_support.run_suite(imap_connection_suite)
+    #test_support.run_suite(mail_connection_suite)
+    #test_support.run_suite(pop3_connection_suite)
+    #test_support.run_suite(imap_connection_suite)
     #test_support.run_suite(mc_factory_suite)
     #test_support.run_suite(component_suite)
     #test_support.run_suite(component2_suite)

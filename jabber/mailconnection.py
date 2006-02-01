@@ -37,6 +37,8 @@ POP3_TIMEOUT = 10
 DO_NOTHING = 0
 DIGEST = 1
 RETRIEVE = 2
+default_encoding = "iso-8859-1"
+
 ## All MY* classes are implemented to add a timeout (settimeout)
 ## while connecting
 class MYIMAP4(imaplib.IMAP4):
@@ -192,41 +194,82 @@ class MailConnection(object):
                + str(self.online_action) + "#" + str(self.away_action) + "#" + \
                str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action) + "#" + str(self.interval) + "#" + str(self.live_email_only)
  
-    def get_decoded_part(self, part):
+    def get_decoded_part(self, part, charset_hint):
         content_charset = part.get_content_charset()
         if content_charset:
-            return part.get_payload(decode=True).decode(content_charset)
+            return unicode(part.get_payload(decode=True).decode(content_charset))
         else:
-            return part.get_payload(decode=True)
+            result = ""
+            try:
+                result = unicode(part.get_payload(decode=True))
+            except Exception, e:
+                try:
+                    result = unicode(part.get_payload(decode=True).decode("iso-8859-1"))
+                except Exception, e:
+                    try:
+                        result = unicode(part.get_payload(decode=True).decode(default_encoding))
+                    except Exception, e:
+                        if charset_hint is not None:
+                            try:
+                                result = unicode(part.get_payload(decode=True).decode(charset_hint))
+                            except Exception, e:
+                                print e
+            return result
             
     def format_message(self, email_msg, include_body = True):
         from_decoded = email.Header.decode_header(email_msg["From"])
+        charset_hint = None
         result = u"From : "
         for i in range(len(from_decoded)):
             if from_decoded[i][1]:
+                charset_hint = from_decoded[i][1]
                 result += unicode(from_decoded[i][0].decode(from_decoded[i][1]))
             else:
-                result += unicode(from_decoded[i][0])
+                try:
+                    result += unicode(from_decoded[i][0])
+                except Exception,e:
+                    try:
+                        result += unicode(from_decoded[i][0].decode("iso-8859-1"))
+                    except Exception, e:
+                        try:
+                            result += unicode(from_decoded[i][0].decode(default_encoding))
+                        except Exception, e:
+                            print e
         result += "\n"
 
         subject_decoded = email.Header.decode_header(email_msg["Subject"])
         result += u"Subject : "
         for i in range(len(subject_decoded)):
             if subject_decoded[i][1]:
+                charset_hint = subject_decoded[i][1]
                 result += unicode(subject_decoded[i][0].decode(subject_decoded[i][1]))
             else:
-                result += unicode(subject_decoded[i][0])
+                try:
+                    result += unicode(subject_decoded[i][0])
+                except Exception,e:
+                    try:
+                        result += unicode(subject_decoded[i][0].decode("iso-8859-1"))
+                    except Exception, e:
+                        try:
+                            result += unicode(subject_decoded[i][0].decode(default_encoding))
+                        except Exception, e:
+                            if charset_hint is not None:
+                                try:
+                                    result += unicode(subject_decoded[i][0].decode(charset_hint))
+                                except Exception, e:
+                                    print e
+                    
         result += u"\n\n"
 
         if include_body:
             action = {
-                "text/plain" : lambda part: self.get_decoded_part(part),
+                "text/plain" : lambda part: self.get_decoded_part(part, charset_hint),
                 "text/html" : lambda part: "\n<<<HTML part skipped>>>\n"
                 }
             for part in email_msg.walk():
                 content_type = part.get_content_type()
                 if action.has_key(content_type):
-                    result += unicode(action[content_type](part)) + u'\n'
+                    result += action[content_type](part) + u'\n'
         return result
 
     def format_message_summary(self, email_msg):

@@ -16,4 +16,5 @@
   <spooldir>/var/spool/jabber</spooldir>
   <!-- default check interval in minutes -->
   <check_interval>5</check_interval>
+  <mail_default_encoding>iso-8859-1</mail_default_encoding>
 </config>

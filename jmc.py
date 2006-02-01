@@ -26,6 +26,7 @@ import sys
 import os.path
 import logging
 
+from jabber import mailconnection
 from jabber.component import MailComponent, ComponentFatalError
 from jabber.config import Config
 
@@ -46,6 +47,7 @@ def main(config_file = "jmc.xml", isDebug = 0):
 		str(sys.exc_value)
             sys.exit(1)
 
+        mailconnection.default_encoding = config.get_content("config/mail_default_encoding")
         print "creating component..."
         mailcomp = MailComponent(config)
 

@@ -48,12 +48,12 @@ class MailConnection_TestCase(unittest.TestCase):
 
     test_get_decoded_part_not_encoded = \
         make_test((False, False, False), \
-                  lambda self, email: self.connection.get_decoded_part(email), \
+                  lambda self, email: self.connection.get_decoded_part(email, None), \
                   u"Not encoded single part")
 
     test_get_decoded_part_encoded = \
         make_test((True, False, False), \
-                  lambda self, email: self.connection.get_decoded_part(email), \
+                  lambda self, email: self.connection.get_decoded_part(email, None), \
                   u"Encoded single part with 'iso-8859-15' charset (éàê)")
 
     test_format_message_summary_not_encoded = \
@@ -104,7 +104,8 @@ class MailConnection_TestCase(unittest.TestCase):
                   lambda self, email: self.connection.format_message(email), \
                   u"From : encoded from (éàê)\nSubject : encoded subject (éà" + \
                   u"ê)\n\nutf-8 multipart1 with no charset (éàê)" + \
-                  u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n")
+                  u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n" + \
+                  u"Encoded multipart3 with no charset (éàê)\n")
 
 
 class POP3Connection_TestCase(unittest.TestCase):

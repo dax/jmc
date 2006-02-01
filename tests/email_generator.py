@@ -32,6 +32,9 @@ def _create_multipart(encoded):
         part2 = MIMEText("Encoded multipart2 with 'iso-8859-15' charset (יאך)", \
                          _charset = "iso-8859-15")
         msg.attach(part2)
+        part3 = MIMEText("Encoded multipart3 with no charset (יאך)", \
+                         _charset = "")
+        msg.attach(part3)
     else:
         part1 = MIMEText("Not encoded multipart1")
         msg.attach(part1)
