@@ -60,7 +60,7 @@ class Storage(UserDict):
                     if regexp.search(key)]
 
     def __delitem__(self, pk_tuple):
-#        print "Deleting " + "#".join(map(str, pk_tuple))
+        #print "Deleting " + "#".join(map(str, pk_tuple))
         del self._registered[str("#".join(map(str, pk_tuple)))]
 
     def get_spool_dir(self):
@@ -276,4 +276,12 @@ class SQLiteStorage(Storage):
         
     def __delitem__(self, pk_tuple):
         Storage.__delitem__(self, pk_tuple)
-        # TODO
+        cursor = self.__connection.cursor()
+        cursor.execute("""
+        delete from account where jid = ? and name = ?
+        """,
+                       (pk_tuple[0],
+                        pk_tuple[1]))
+        self.__connection.commit()
+        cursor.close()
+

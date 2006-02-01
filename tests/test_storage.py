@@ -34,14 +34,6 @@ class Storage_TestCase(unittest.TestCase):
         self.assertTrue(os.access(spool_dir, os.F_OK))
         self.assertEquals(self._storage.spool_dir, spool_dir)
         os.removedirs(spool_dir)
-        
-# TODO
-class SQLiteStorage_TestCase(unittest.TestCase):
-    def setUp(self):
-        self._storage = SQLiteStorage()
-
-    def tearDown(self):
-        pass
 
 class DBMStorage_TestCase(unittest.TestCase):
     def setUp(self):
@@ -209,3 +201,14 @@ class SQLiteStorage_TestCase(DBMStorage_TestCase):
                           self._account1)
         self.assertEquals(loaded_storage[("test@localhost", "account2")],
                           self._account2)
+
+    def test_del_sync_get(self):
+        self._storage[("test@localhost", "account1")] = self._account1
+        self._storage[("test@localhost", "account2")] = self._account2
+        del self._storage[("test@localhost", "account2")]
+        loaded_storage = SQLiteStorage(nb_pk_fields = 2, spool_dir = "./spool/test")
+        self.assertEquals(len(loaded_storage.keys()),
+                          1)
+        self.assertEquals(loaded_storage[("test@localhost", "account1")],
+                          self._account1)
+                          
