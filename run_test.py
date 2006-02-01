@@ -25,6 +25,9 @@ coverage.erase()
 coverage.start()
 import unittest
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
+del sys.setdefaultencoding
 import tests
 from tests.test_mailconnection import *
 from tests.test_mailconnection_factory import *
@@ -33,6 +36,7 @@ from tests.test_storage import *
 from test import test_support
 import jabber
 import logging
+
 
 if __name__ == '__main__':
     logger = logging.getLogger()

@@ -1,5 +1,4 @@
-##
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
 ## email_generator.py
 ## Login : David Rousselie <david.rousselie@happycoders.org>
 ## Started on  Tue May 17 15:33:35 2005
@@ -28,8 +27,7 @@ from email.MIMEMultipart import MIMEMultipart
 def _create_multipart(encoded):
     msg = MIMEMultipart()
     if encoded:
-        part1 = MIMEText("Encoded multipart1 with 'iso-8859-15' charset (È‡Í)", \
-                         _charset = "iso-8859-15")
+        part1 = MIMEText("utf-8 multipart1 with no charset (√©√†√™)", _charset = "")
         msg.attach(part1)
         part2 = MIMEText("Encoded multipart2 with 'iso-8859-15' charset (È‡Í)", \
                          _charset = "iso-8859-15")

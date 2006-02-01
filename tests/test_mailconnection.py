@@ -103,8 +103,8 @@ class MailConnection_TestCase(unittest.TestCase):
         make_test((True, True, True), \
                   lambda self, email: self.connection.format_message(email), \
                   u"From : encoded from (éàê)\nSubject : encoded subject (éà" + \
-                  u"ê)\n\nEncoded multipart1 with 'iso-8859-15' charset (éàê" + \
-                  u")\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n")
+                  u"ê)\n\nutf-8 multipart1 with no charset (éàê)" + \
+                  u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n")
 
 
 class POP3Connection_TestCase(unittest.TestCase):
