@@ -59,7 +59,8 @@ class MailComponent(Component):
                  default_lang,
                  check_interval,
                  spool_dir,
-                 storage):
+                 storage,
+                 name):
 	Component.__init__(self, \
                            JID(jid), \
                            secret, \
@@ -70,6 +71,7 @@ class MailComponent(Component):
  	self.__logger = logging.getLogger("jabber.Component")
 	self.__shutdown = 0
         self.__lang = Lang(default_lang)
+        self.__name = name
         
 	signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
@@ -473,7 +475,7 @@ class MailComponent(Component):
 	if node is None:
 	    di.add_feature("jabber:iq:version")
 	    di.add_feature("jabber:iq:register")
-	    DiscoIdentity(di, "Jabber Mail Component", "headline", "mail")
+	    DiscoIdentity(di, self.__name, "headline", "newmail")
 	else:
 	    di.add_feature("jabber:iq:register")
 	return di
@@ -499,7 +501,7 @@ class MailComponent(Component):
 	self.__logger.debug("GET_VERSION")
         iq = iq.make_result_response()
         q = iq.new_query("jabber:iq:version")
-        q.newTextChild(q.ns(), "name", "Jabber Mail Component")
+        q.newTextChild(q.ns(), "name", self.__name)
         q.newTextChild(q.ns(), "version", "0.2")
         self.stream.send(iq)
         return 1

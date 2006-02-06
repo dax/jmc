@@ -59,7 +59,8 @@ def main(config_file = "jmc.xml", isDebug = 0):
                                  config.get_content("config/jabber/language"), \
                                  int(config.get_content("config/check_interval")), \
                                  config.get_content("config/spooldir"), \
-                                 config.get_content("config/storage"))
+                                 config.get_content("config/storage"), \
+                                 config.get_content("config/jabber/vCard/FN"))
 
         print "starting..."
         mailcomp.run(1)
