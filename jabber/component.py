@@ -50,31 +50,37 @@ class ComponentFatalError(RuntimeError):
     pass
 
 class MailComponent(Component):
-    def __init__(self, config):
+    def __init__(self,
+                 jid,
+                 secret,
+                 server,
+                 port,
+                 default_lang,
+                 check_interval,
+                 spool_dir,
+                 storage):
 	Component.__init__(self, \
-                           JID(config.get_content("config/jabber/service")), \
-                           config.get_content("config/jabber/secret"), \
-                           config.get_content("config/jabber/server"), \
-                           int(config.get_content("config/jabber/port")), \
+                           JID(jid), \
+                           secret, \
+                           server, \
+                           port, \
                            disco_category = "gateway", \
                            disco_type = "headline")
  	self.__logger = logging.getLogger("jabber.Component")
 	self.__shutdown = 0
-        self.__default_lang = config.get_content("config/jabber/language")
+        self.__lang = Lang(default_lang)
         
 	signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
 	
-	self.__interval = int(config.get_content("config/check_interval"))
-	self.__config = config
-        spool_dir = config.get_content("config/spooldir") + "/" + \
-                    config.get_content("config/jabber/service")
+	self.__interval = check_interval
+        spool_dir += "/" + jid
         try:
-            self.__storage = globals()[config.get_content("config/storage") \
+            self.__storage = globals()[storage \
                                        + "Storage"](2, spool_dir = spool_dir)
         except:
             print >>sys.stderr, "Cannot find " \
-                  + config.get_content("config/storage") + "Storage class"
+                  + storage + "Storage class"
             sys.exit(1)
 	# dump registered accounts (save) every hour
 	self.__count = 60
@@ -82,17 +88,7 @@ class MailComponent(Component):
 
     def __del__(self):
         logging.shutdown()
-        
-    def get_lang(self, node):
-        lang = node.getLang()
-        if lang is None:
-            self.__logger.debug("Using default lang " + self.__default_lang)
-            lang = self.__default_lang
-        return lang
 
-    def get_lang_class(self, lang):
-        return getattr(Lang, lang)
-    
     """ Register Form creator """
     def get_reg_form(self, lang_class):
         reg_form = X()
@@ -484,7 +480,7 @@ class MailComponent(Component):
     """ Discovery get nested nodes handler """
     def disco_get_items(self, node, iq):
 	self.__logger.debug("DISCO_GET_ITEMS")
-        lang_class = self.get_lang_class(self.get_lang(iq.get_node()))
+        lang_class = self.__lang.get_lang_class_from_node(iq.get_node())
 	base_from_jid = unicode(iq.get_from().bare())
 	di = DiscoItems()
         if not node:
@@ -510,7 +506,7 @@ class MailComponent(Component):
     """ Send back register form to user """
     def get_register(self, iq):
 	self.__logger.debug("GET_REGISTER")
-        lang_class = self.get_lang_class(self.get_lang(iq.get_node()))
+        lang_class = self.__lang.get_lang_class_from_node(iq.get_node())
 	base_from_jid = unicode(iq.get_from().bare())
         to = iq.get_to()
         iq = iq.make_result_response()
@@ -527,7 +523,7 @@ class MailComponent(Component):
     """ Handle user registration response """
     def set_register(self, iq):
 	self.__logger.debug("SET_REGISTER")
-        lang_class = self.get_lang_class(self.get_lang(iq.get_node()))
+        lang_class = self.__lang.get_lang_class_from_node(iq.get_node())
         to = iq.get_to()
 	from_jid = iq.get_from()
         base_from_jid = unicode(from_jid.bare())
@@ -699,7 +695,7 @@ class MailComponent(Component):
 	self.__logger.debug("PRESENCE_AVAILABLE")
 	from_jid = stanza.get_from()
         base_from_jid = unicode(from_jid.bare())
-        lang_class = self.get_lang_class(self.get_lang(stanza.get_node()))
+        lang_class = self.__lang.get_lang_class_from_node(stanza.get_node())
 	name = stanza.get_to().node
 	show = stanza.get_show()
         self.__logger.debug("SHOW : " + str(show))
@@ -819,7 +815,7 @@ class MailComponent(Component):
     """ Handle new message """
     def message(self, message):
 	self.__logger.debug("MESSAGE: " + message.get_body())
-        lang_class = self.get_lang_class(self.get_lang(message.get_node()))
+        lang_class = self.__lang.get_lang_class_from_node(message.get_node())
 	name = message.get_to().node
 	base_from_jid = unicode(message.get_from().bare())
         if re.compile("\[PASSWORD\]").search(message.get_subject()) is not None \
@@ -905,7 +901,6 @@ class MailComponent(Component):
             account = self.__storage[(jid, name)]
             if account.first_check and account.live_email_only:
                 account.first_check = False
-                print  "HERE"
                 if account.password is None:
                     self.__ask_password(name, jid, account.default_lang_class, account)
                     return

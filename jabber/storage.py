@@ -26,6 +26,7 @@ import os.path
 import sys
 import anydbm
 import mailconnection_factory
+import logging
 from UserDict import UserDict
 from pysqlite2 import dbapi2 as sqlite
  
@@ -105,6 +106,8 @@ class Storage(UserDict):
         pass
 
 class DBMStorage(Storage):
+    _logger = logging.getLogger("jabber.DBMStorage")
+
     def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
 #        print "DBM INIT"
         Storage.__init__(self, nb_pk_fields, spool_dir, db_file)
@@ -165,12 +168,14 @@ class DBMStorage(Storage):
             
         
 class SQLiteStorage(Storage):
+    _logger = logging.getLogger("jabber.SQLiteStorage")
+    
     def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
         self.__connection = None
         Storage.__init__(self, nb_pk_fields, spool_dir, db_file)
 
     def create(self):
-#         print "creating new Table"
+        SQLiteStorage._logger.debug("creating new Table")
         cursor = self.__connection.cursor()
         cursor.execute("""
         create table account(

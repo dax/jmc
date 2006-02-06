@@ -49,7 +49,14 @@ def main(config_file = "jmc.xml", isDebug = 0):
 
         mailconnection.default_encoding = config.get_content("config/mail_default_encoding")
         print "creating component..."
-        mailcomp = MailComponent(config)
+        mailcomp = MailComponent(config.get_content("config/jabber/service"), \
+                                 config.get_content("config/jabber/secret"), \
+                                 config.get_content("config/jabber/server"), \
+                                 int(config.get_content("config/jabber/port")), \
+                                 config.get_content("config/jabber/language"), \
+                                 int(config.get_content("config/check_interval")), \
+                                 config.get_content("config/spooldir"), \
+                                 config.get_content("config/storage"))
 
         print "starting..."
         mailcomp.run(1)

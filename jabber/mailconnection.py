@@ -22,8 +22,10 @@
 
 
 import sys
+import logging
 import email
 import email.Header
+import traceback
 
 import poplib
 import imaplib
@@ -129,6 +131,8 @@ class MailConnection(object):
     """ Wrapper to mail connection and action.
     Abstract class, do not represent real mail connection type"""
 
+    _logger = logging.getLogger("jabber.MailConnection")
+
     def __init__(self, login = "", password = "", host = "", \
 		 port = 110, ssl = False):
 	""" Initialize MailConnection object for common parameters of all
@@ -192,7 +196,8 @@ class MailConnection(object):
                (self.store_password and self.password or "/\\") + "#" \
                + self.host + "#" + str(self.port) + "#" + str(self.chat_action) + "#" \
                + str(self.online_action) + "#" + str(self.away_action) + "#" + \
-               str(self.xa_action) + "#" + str(self.dnd_action) + "#" + str(self.offline_action) + "#" + str(self.interval) + "#" + str(self.live_email_only)
+               str(self.xa_action) + "#" + str(self.dnd_action) + "#" + \
+               str(self.offline_action) + "#" + str(self.interval) + "#" + str(self.live_email_only)
  
     def get_decoded_part(self, part, charset_hint):
         content_charset = part.get_content_charset()
@@ -213,7 +218,9 @@ class MailConnection(object):
                             try:
                                 result = unicode(part.get_payload(decode=True).decode(charset_hint))
                             except Exception, e:
-                                print e
+                                type, value, stack = sys.exc_info()
+                                print >>sys.stderr, "".join(traceback.format_exception
+                                                            (type, value, stack, 5))
             return result
             
     def format_message(self, email_msg, include_body = True):
@@ -257,7 +264,9 @@ class MailConnection(object):
                                 try:
                                     result += unicode(subject_decoded[i][0].decode(charset_hint))
                                 except Exception, e:
-                                    print e
+                                    type, value, stack = sys.exc_info()
+                                    print >>sys.stderr, "".join(traceback.format_exception
+                                                                (type, value, stack, 5))
                     
         result += u"\n\n"
 
@@ -308,6 +317,8 @@ class MailConnection(object):
     action = property(get_action)
     
 class IMAPConnection(MailConnection):
+    _logger = logging.getLogger("jabber.IMAPConnection")
+
     def __init__(self, login = "", password = "", host = "", \
 		 port = None, ssl = False, mailbox = "INBOX"):
 	if not port:
@@ -334,10 +345,10 @@ class IMAPConnection(MailConnection):
 	return MailConnection.get_status(self) + "/" + self.mailbox
 
     def connect(self):
-	print >>sys.stderr, "Connecting to IMAP server " \
-	    + self.login + "@" + self.host + ":" + str(self.port) \
-	    + " (" + self.mailbox + "). SSL=" \
-	    + str(self.ssl)
+	IMAPConnection._logger.debug("Connecting to IMAP server " \
+                                     + self.login + "@" + self.host + ":" + str(self.port) \
+                                     + " (" + self.mailbox + "). SSL=" \
+                                     + str(self.ssl))
 	if self.ssl:
 	    self.connection = MYIMAP4_SSL(self.host, self.port)
 	else:
@@ -345,12 +356,12 @@ class IMAPConnection(MailConnection):
 	self.connection.login(self.login, self.password)
 
     def disconnect(self):
-	print >>sys.stderr, "Disconnecting from IMAP server " \
-	    + self.host
+	IMAPConnection._logger.debug("Disconnecting from IMAP server " \
+                                     + self.host)
 	self.connection.logout()
 
     def get_mail_list(self):
-	print >>sys.stderr, "Getting mail list"
+	IMAPConnection._logger.debug("Getting mail list")
 	typ, data = self.connection.select(self.mailbox)
 	typ, data = self.connection.search(None, 'UNSEEN')
 	if typ == 'OK':
@@ -358,7 +369,7 @@ class IMAPConnection(MailConnection):
 	return None
 
     def get_mail(self, index):
-	print >>sys.stderr, "Getting mail " + str(index)
+	IMAPConnection._logger.debug("Getting mail " + str(index))
 	typ, data = self.connection.select(self.mailbox)
 	typ, data = self.connection.fetch(index, '(RFC822)')
 	self.connection.store(index, "FLAGS", "UNSEEN")
@@ -367,7 +378,7 @@ class IMAPConnection(MailConnection):
 	return u"Error while fetching mail " + str(index)
 	
     def get_mail_summary(self, index):
-	print >>sys.stderr, "Getting mail summary " + str(index)
+	IMAPConnection._logger.debug("Getting mail summary " + str(index))
 	typ, data = self.connection.select(self.mailbox)
 	typ, data = self.connection.fetch(index, '(RFC822)')
 	self.connection.store(index, "FLAGS", "UNSEEN")
@@ -378,6 +389,8 @@ class IMAPConnection(MailConnection):
     type = property(get_type)
 
 class POP3Connection(MailConnection):
+    _logger = logging.getLogger("jabber.POP3Connection")
+
     def __init__(self, login = "", password = "", host = "", \
 		 port = None, ssl = False):
 	if not port:
@@ -393,9 +406,9 @@ class POP3Connection(MailConnection):
 	return "pop3"
 
     def connect(self):
-	print >>sys.stderr, "Connecting to POP3 server " \
-	    + self.login + "@" + self.host + ":" + str(self.port)\
-	    + ". SSL=" + str(self.ssl)
+	POP3Connection._logger.debug("Connecting to POP3 server " \
+                                     + self.login + "@" + self.host + ":" + str(self.port)\
+                                     + ". SSL=" + str(self.ssl))
 	if self.ssl:
 	    self.connection = MYPOP3_SSL(self.host, self.port)
 	else:
@@ -408,24 +421,24 @@ class POP3Connection(MailConnection):
 	
 
     def disconnect(self):
-	print >>sys.stderr, "Disconnecting from POP3 server " \
-	    + self.host
+	POP3Connection._logger.debug("Disconnecting from POP3 server " \
+                                     + self.host)
 	self.connection.quit()
 
     def get_mail_list(self):
-	print >>sys.stderr, "Getting mail list"
+	POP3Connection._logger.debug("Getting mail list")
 	count, size = self.connection.stat()
 	return [str(i) for i in range(1, count + 1)]
 
     def get_mail(self, index):
-	print >>sys.stderr, "Getting mail " + str(index)
+	POP3Connection._logger.debug("Getting mail " + str(index))
 	ret, data, size = self.connection.retr(index)
 	if ret[0:3] == '+OK':
             return self.format_message(email.message_from_string('\n'.join(data)))
 	return u"Error while fetching mail " + str(index)
 
     def get_mail_summary(self, index):
-	print >>sys.stderr, "Getting mail summary " + str(index)
+	POP3Connection._logger.debug("Getting mail summary " + str(index))
 	ret, data, size = self.connection.retr(index)
 	if ret[0:3] == '+OK':
             return self.format_message_summary(email.message_from_string('\n'.join(data)))

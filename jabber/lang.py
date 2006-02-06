@@ -23,6 +23,22 @@
 
 
 class Lang:
+    def __init__(self, default_lang = "en"):
+        self.default_lang = default_lang
+
+    def get_lang_from_node(self, node):
+        lang = node.getLang()
+        if lang is None:
+            print "Using default lang " + self.default_lang
+            lang = self.default_lang
+        return lang
+
+    def get_lang_class(self, lang):
+        return getattr(Lang, lang)
+    
+    def get_lang_class_from_node(self, node):
+        return self.get_lang_class(self.get_lang_from_node(node))
+    
     class en:
         register_title = u"Jabber Mail connection registration"
         register_instructions = u"Enter connection parameters"
@@ -32,7 +48,7 @@ class Lang:
         account_password_store = u"Store password on jabber server ?"
         account_host = u"Host"
         account_port = u"Port"
-        account_type = u"Mail serveur type"
+        account_type = u"Mail server type"
         account_mailbox = u"Mailbox path (IMAP)"
         account_ffc_action = u"Action when state is 'Free For Chat'"
         account_online_action = u"Action when state is 'Online'"
