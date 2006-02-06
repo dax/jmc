@@ -47,6 +47,9 @@ def main(config_file = "jmc.xml", isDebug = 0):
 		str(sys.exc_value)
             sys.exit(1)
 
+        pidfile = open(config.get_content("config/pidfile"), "w")
+        pidfile.write(str(os.getpid()))
+        pidfile.close()
         mailconnection.default_encoding = config.get_content("config/mail_default_encoding")
         print "creating component..."
         mailcomp = MailComponent(config.get_content("config/jabber/service"), \

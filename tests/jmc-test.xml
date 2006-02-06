@@ -13,6 +13,7 @@
      </vCard>
   </jabber>
   <storage>SQLite</storage>
+  <pidfile>jmc.pid</pidfile>
   <spooldir>.</spooldir>
   <check_interval>5</check_interval> <!-- in minutes -->
   <mail_default_encoding>iso-8859-15</mail_default_encoding>
