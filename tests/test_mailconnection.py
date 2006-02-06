@@ -59,13 +59,15 @@ class MailConnection_TestCase(unittest.TestCase):
     test_format_message_summary_not_encoded = \
         make_test((False, False, True), \
                   lambda self, email: self.connection.format_message_summary(email), \
-                  u"From : not encoded from\nSubject : not encoded subject\n\n")
+                  (u"From : not encoded from\nSubject : not encoded subject\n\n", \
+                   u"not encoded from"))
 
     test_format_message_summary_encoded = \
         make_test((True, False, True), \
                   lambda self, email: self.connection.format_message_summary(email), \
-                  u"From : encoded from (éàê)\nSubject : encoded subject " + \
-                  u"(éàê)\n\n")
+                  (u"From : encoded from (éàê)\nSubject : encoded subject " + \
+                   u"(éàê)\n\n", \
+                   u"encoded from (éàê)"))
 
     test_format_message_summary_partial_encoded = \
         make_test((True, False, True), \
@@ -77,35 +79,40 @@ class MailConnection_TestCase(unittest.TestCase):
                                        "\"" + str(email["From"]) \
                                        + "\" not encoded part") or \
                   self.connection.format_message_summary(email), \
-                  u"From : \"encoded from (éàê)\" not encoded part\nSubject " + \
-                  u": \"encoded subject (éàê)\" not encoded part\n\n")
+                  (u"From : \"encoded from (éàê)\" not encoded part\nSubject " + \
+                   u": \"encoded subject (éàê)\" not encoded part\n\n", \
+                   u"\"encoded from (éàê)\" not encoded part"))
 
     test_format_message_single_not_encoded = \
         make_test((False, False, True), \
                   lambda self, email: self.connection.format_message(email), \
-                  u"From : not encoded from\nSubject : not encoded subject" + \
-                  u"\n\nNot encoded single part\n")
+                  (u"From : not encoded from\nSubject : not encoded subject" + \
+                   u"\n\nNot encoded single part\n", \
+                   u"not encoded from"))
 
     test_format_message_single_encoded = \
         make_test((True, False, True), \
                   lambda self, email: self.connection.format_message(email), \
-                  u"From : encoded from (éàê)\nSubject : encoded subject " + \
-                  u"(éàê)\n\nEncoded single part with 'iso-8859-15' charset" + \
-                  u" (éàê)\n")
+                  (u"From : encoded from (éàê)\nSubject : encoded subject " + \
+                   u"(éàê)\n\nEncoded single part with 'iso-8859-15' charset" + \
+                   u" (éàê)\n", \
+                   u"encoded from (éàê)"))
 
     test_format_message_multi_not_encoded = \
         make_test((False, True, True), \
                   lambda self, email: self.connection.format_message(email), \
-                  u"From : not encoded from\nSubject : not encoded subject" + \
-                  u"\n\nNot encoded multipart1\nNot encoded multipart2\n")
+                  (u"From : not encoded from\nSubject : not encoded subject" + \
+                   u"\n\nNot encoded multipart1\nNot encoded multipart2\n", \
+                   u"not encoded from"))
 
     test_format_message_multi_encoded = \
         make_test((True, True, True), \
                   lambda self, email: self.connection.format_message(email), \
-                  u"From : encoded from (éàê)\nSubject : encoded subject (éà" + \
-                  u"ê)\n\nutf-8 multipart1 with no charset (éàê)" + \
-                  u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n" + \
-                  u"Encoded multipart3 with no charset (éàê)\n")
+                  (u"From : encoded from (éàê)\nSubject : encoded subject (éà" + \
+                   u"ê)\n\nutf-8 multipart1 with no charset (éàê)" + \
+                   u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n" + \
+                   u"Encoded multipart3 with no charset (éàê)\n", \
+                   u"encoded from (éàê)"))
 
 
 class POP3Connection_TestCase(unittest.TestCase):
@@ -161,8 +168,9 @@ class POP3Connection_TestCase(unittest.TestCase):
                   ["RETR 1\r\n"], \
                   lambda self: \
                   self.assertEquals(self.pop3connection.get_mail_summary(1), \
-                                    "From : user@test.com\n" + \
-                                    "Subject : subject test\n\n"))
+                                    (u"From : user@test.com\n" + \
+                                     u"Subject : subject test\n\n", \
+                                     u"user@test.com")))
 
     test_get_mail = \
         make_test(["+OK 10 octets\r\n" + \
@@ -172,9 +180,10 @@ class POP3Connection_TestCase(unittest.TestCase):
                   ["RETR 1\r\n"], \
                   lambda self: \
                   self.assertEquals(self.pop3connection.get_mail(1), \
-                                    "From : user@test.com\n" + \
-                                    "Subject : subject test\n\n" + \
-                                    "mymessage\n"))
+                                    (u"From : user@test.com\n" + \
+                                     u"Subject : subject test\n\n" + \
+                                     u"mymessage\n", \
+                                     u"user@test.com")))
 
 
 class IMAPConnection_TestCase(unittest.TestCase):
@@ -245,7 +254,8 @@ class IMAPConnection_TestCase(unittest.TestCase):
                                        "^[^ ]* FETCH 1 \(RFC822\)", \
                                        "^[^ ]* STORE 1 FLAGS \(UNSEEN\)"], \
                                       lambda self: self.assertEquals(self.imap_connection.get_mail_summary(1), \
-                                                                     "From : None\nSubject : None\n\n"))
+                                                                     (u"From : None\nSubject : None\n\n", \
+                                                                      u"None")))
 
     test_get_mail = make_test([lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
                                " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
@@ -261,5 +271,6 @@ class IMAPConnection_TestCase(unittest.TestCase):
                                "^[^ ]* FETCH 1 \(RFC822\)", \
                                "^[^ ]* STORE 1 FLAGS \(UNSEEN\)"], \
                               lambda self: self.assertEquals(self.imap_connection.get_mail(1), \
-                                                             "From : None\nSubject : None\n\nbody text\r\n\n"))
+                                                             (u"From : None\nSubject : None\n\nbody text\r\n\n", \
+                                                              u"None")))
         

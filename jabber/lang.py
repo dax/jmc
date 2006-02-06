@@ -78,7 +78,9 @@ class Lang:
         password_saved_for_session = u"Password will be kept during your jabber session"
         check_error_subject = u"Error while checking emails."
         check_error_body = u"An error appears while checking emails :\n\t%s"
-
+        new_mail_subject = u"New email from %s"
+        new_digest_subject = u"%i new email(s)"
+        
     class fr:
         register_title = u"Enregistrement d'une nouvelle connexion à un serveur email."
         register_instructions = u"Entrer les paramètres de connexion"
@@ -119,3 +121,5 @@ class Lang:
         check_error_subject = u"Erreur lors de la vérification des emails."
         check_error_body = u"Une erreur est survenue lors de la vérification " \
                            "des emails :\n\t%s"
+        new_mail_subject = u"Nouvel email de %s"
+        new_digest_subject = u"%i nouveau(x) email(s)"

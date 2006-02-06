@@ -226,23 +226,26 @@ class MailConnection(object):
     def format_message(self, email_msg, include_body = True):
         from_decoded = email.Header.decode_header(email_msg["From"])
         charset_hint = None
+        email_from = u""
         result = u"From : "
         for i in range(len(from_decoded)):
             if from_decoded[i][1]:
                 charset_hint = from_decoded[i][1]
-                result += unicode(from_decoded[i][0].decode(from_decoded[i][1]))
+                email_from += unicode(from_decoded[i][0].decode(from_decoded[i][1]))
             else:
                 try:
-                    result += unicode(from_decoded[i][0])
+                    email_from += unicode(from_decoded[i][0])
                 except Exception,e:
                     try:
-                        result += unicode(from_decoded[i][0].decode("iso-8859-1"))
+                        email_from += unicode(from_decoded[i][0].decode("iso-8859-1"))
                     except Exception, e:
                         try:
-                            result += unicode(from_decoded[i][0].decode(default_encoding))
+                            email_from += unicode(from_decoded[i][0].decode(default_encoding))
                         except Exception, e:
-                            print e
-        result += "\n"
+                            type, value, stack = sys.exc_info()
+                            print >>sys.stderr, "".join(traceback.format_exception
+                                                        (type, value, stack, 5))
+        result += email_from + u"\n"
 
         subject_decoded = email.Header.decode_header(email_msg["Subject"])
         result += u"Subject : "
@@ -279,7 +282,7 @@ class MailConnection(object):
                 content_type = part.get_content_type()
                 if action.has_key(content_type):
                     result += action[content_type](part) + u'\n'
-        return result
+        return (result, email_from)
 
     def format_message_summary(self, email_msg):
         return self.format_message(email_msg, False)

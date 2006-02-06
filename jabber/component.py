@@ -30,6 +30,7 @@ import sys
 import anydbm
 import os
 import time
+import traceback
 
 import mailconnection
 from mailconnection import *
@@ -112,7 +113,7 @@ class MailComponent(Component):
         reg_form.add_field(type = "boolean", \
                            label = lang_class.account_password_store, \
                            var = "store_password",
-                           value = "True")
+                           value = "1")
 
         reg_form.add_field(type = "text-single", \
                            label = lang_class.account_host, \
@@ -647,6 +648,7 @@ class MailComponent(Component):
 	else:
 	  socket = host
 	if self.__storage.has_key((base_from_jid, name)):
+            account = self.__storage[(base_from_jid, name)]
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
 			stanza_type = "normal", \
                         subject = lang_class.update_account_message_subject \
@@ -655,6 +657,7 @@ class MailComponent(Component):
 			% (login, password, socket))
 	    self.stream.send(m)
 	else:
+            account = mailconnection_factory.get_new_mail_connection(type)
 	    m = Message(from_jid = self.jid, to_jid = from_jid, \
 			stanza_type = "normal", \
                         subject = lang_class.new_account_message_subject \
@@ -666,9 +669,6 @@ class MailComponent(Component):
 			 to_jid = base_from_jid, \
 			 stanza_type="subscribe")
 	    self.stream.send(p)
-
- 	self.__storage[(base_from_jid, name)] = account = \
-            mailconnection_factory.get_new_mail_connection(type)
  	account.login = login
  	account.password = password
         account.store_password = store_password
@@ -687,7 +687,8 @@ class MailComponent(Component):
 
  	if type[0:4] == "imap":
  	    account.mailbox = mailbox
-
+        self.__storage[(base_from_jid, name)] = account
+        
         return 1
 
     """ Handle presence availability """
@@ -857,26 +858,30 @@ class MailComponent(Component):
                     account.lastmail = 0
                 if action == mailconnection.RETRIEVE:
                     while account.lastmail < num:
-                        body = account.get_mail(int(mail_list[account.lastmail]))
+                        (body, email_from) = account.get_mail(int(mail_list[account.lastmail]))
                         mesg = Message(from_jid = name + "@" + \
                                        unicode(self.jid), \
                                        to_jid = jid, \
                                        stanza_type = "normal", \
+                                       subject = account.default_lang_class.new_mail_subject % (email_from), \
                                        body = body)
                         self.stream.send(mesg)
                         account.lastmail += 1
                 else:
                     body = ""
+                    new_mail_count = 0
                     while account.lastmail < num:
-                        body += \
-                             account.get_mail_summary(int(mail_list[account.lastmail])) \
-                             + "\n----------------------------------\n"
+                        (tmp_body, from_email) = \
+                               account.get_mail_summary(int(mail_list[account.lastmail]))
+                        body += tmp_body + "\n----------------------------------\n"
                         account.lastmail += 1
+                        new_mail_count += 1
                     if body != "":
                         mesg = Message(from_jid = name + "@" + \
                                        unicode(self.jid), \
                                        to_jid = jid, \
                                        stanza_type = "headline", \
+                                       subject = account.default_lang_class.new_digest_subject % (new_mail_count), \
                                        body = body)
                         self.stream.send(mesg)
                 account.disconnect()
@@ -891,8 +896,10 @@ class MailComponent(Component):
                                   body = account.default_lang_class.check_error_body \
                                   % (e))
                     self.stream.send(msg)
-                self.__logger.debug("Error while checking mail : %s" \
-                                    % (e))
+                type, value, stack = sys.exc_info()
+                self.__logger.debug("Error while checking mail : %s\n%s" \
+                                    % (e, "".join(traceback.format_exception
+                                                  (type, value, stack, 5))))
 
     """ check mail handler """
     def check_all_mail(self):
@@ -923,8 +930,10 @@ class MailComponent(Component):
                                       body = account.default_lang_class.check_error_body \
                                       % (e))
                         self.stream.send(msg)
-                    self.__logger.debug("Error while checking mail : %s" \
-                                        % (e))
+                    type, value, stack = sys.exc_info()
+                    self.__logger.debug("Error while first checking mail : %s\n%s" \
+                                        % (e, "".join(traceback.format_exception
+                                                      (type, value, stack, 5))))
             account.lastcheck += 1
             if account.lastcheck == account.interval:
                 account.lastcheck = 0
