@@ -836,7 +836,7 @@ class MailComponent(Component):
 
     """ Check mail account """
     def check_mail(self, jid, name):
-	self.__logger.debug("CHECK_MAIL " + unicode(jid) + " " + name)
+	self.__logger.debug("\nCHECK_MAIL " + unicode(jid) + " " + name)
 	account = self.__storage[(jid, name)]
         action = account.action
 
@@ -861,7 +861,7 @@ class MailComponent(Component):
                                        subject = account.default_lang_class.new_mail_subject % (email_from), \
                                        body = body)
                         self.stream.send(mesg)
-                        account.get_next_mail_index(mail_list)
+                        mail_index = account.get_next_mail_index(mail_list)
                 else:
                     body = ""
                     new_mail_count = 0
@@ -882,6 +882,7 @@ class MailComponent(Component):
                         self.stream.send(mesg)
                 account.disconnect()
                 account.in_error = False
+                self.__logger.debug("\nCHECK_MAIL ends " + unicode(jid) + " " + name)
             except Exception,e:
                 if account.in_error == False:
                     account.in_error = True

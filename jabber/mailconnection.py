@@ -445,12 +445,8 @@ class POP3Connection(MailConnection):
     def get_mail_list(self):
 	POP3Connection._logger.debug("Getting mail list")
 	count, size = self.connection.stat()
-        result = [str(i) for i in range(1, count + 1)]
-        if not result or result[0] == '':
-            self.__nb_mail = 0
-        else:
-            self.__nb_mail = len(result)        
-	return result
+        self.__nb_mail = count 
+        return [str(i) for i in range(1, count + 1)]
 
     def get_mail(self, index):
 	POP3Connection._logger.debug("Getting mail " + str(index))
@@ -471,7 +467,7 @@ class POP3Connection(MailConnection):
             return None
         if self.__nb_mail < self.__lastmail:
             self.__lastmail = 0
-        result = self.__lastmail
+        result = int(mail_list[self.__lastmail])
         self.__lastmail += 1
         return result
 
