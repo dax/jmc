@@ -45,7 +45,7 @@ class Lang:
         account_name = u"Connection name"
         account_login = u"Login"
         account_password = u"Password"
-        account_password_store = u"Store password on jabber server ?"
+        account_password_store = u"Store password on Jabber server?"
         account_host = u"Host"
         account_port = u"Port"
         account_type = u"Mail server type"
@@ -72,12 +72,12 @@ class Lang:
                                    "username '%s' and password '%s' on '%s'"
         ask_password_subject = u"Password request"
         ask_password_body = u"Reply to this message with the password " \
-                            "for the following account : \n" \
+                            "for the following account: \n" \
                             "\thost = %s\n" \
                             "\tlogin = %s\n"
-        password_saved_for_session = u"Password will be kept during your jabber session"
+        password_saved_for_session = u"Password will be kept during your Jabber session"
         check_error_subject = u"Error while checking emails."
-        check_error_body = u"An error appears while checking emails :\n\t%s"
+        check_error_body = u"An error appears while checking emails:\n\t%s"
         new_mail_subject = u"New email from %s"
         new_digest_subject = u"%i new email(s)"
         
@@ -123,3 +123,46 @@ class Lang:
                            "des emails :\n\t%s"
         new_mail_subject = u"Nouvel email de %s"
         new_digest_subject = u"%i nouveau(x) email(s)"
+
+    class nl:
+        register_title = u"Registratie van verbindingen voor Jabber Mail"
+        register_instructions = u"Instellingen voor verbinding"
+        account_name = u"Accountnaam"
+        account_login = u"Gebruikersnaam"
+        account_password = u"Wachtwoord"
+        account_password_store = u"Wachtwoord opslaan op Jabber-server?"
+        account_host = u"Server"
+        account_port = u"Poort"
+        account_type = u"Soort account"
+        account_mailbox = u"Pad naar mailbox (IMAP)"
+        account_ffc_action = u"Actie bij aanwezigheid 'Chat'"
+        account_online_action = u"Actie bij aanwezigheid 'Beschikbaar'"
+        account_away_action = u"Actie bij aanwezigheid 'Afwezig'"
+        account_xa_action = u"Actie bij aanwezigheid 'Langdurig afwezig'"
+        account_dnd_action = u"Actie bij aanwezigheid 'Niet storen'"
+        account_offline_action = u"Actie bij aanwezigheid 'Niet beschikbaar'"
+        account_check_interval = u"Controle-interval (in minuten)"
+        account_live_email_only = u"Enkel controleren op e-mails als er een" \
+                                  "verbinding is met Jabber"
+        action_nothing = u"Niets doen"
+        action_retrieve = u"E-mail ophalen"
+        action_digest = u"Samenvatting verzenden"
+        update_title = u"Bijwerken van JMC"
+        update_instructions = u"Verbinding '%s' aanpassen"
+        connection_label = u"%s verbinding '%s'"
+        update_account_message_subject = u"Verbinding %s '%s' werd bijgewerkt"
+        update_account_message_body = u"Geregistreerd met gebruikersnaam '%s'"\
+                                      "en wachtwoord '%s' op '%s'"
+        new_account_message_subject = u"Nieuwe %s verbinding '%s' aangemaakt"
+        new_account_message_body = u"Geregistreerd met " \
+                                   "gebruikersnaam '%s' en wachtwoord '%s' op '%s'"
+        ask_password_subject = u"Wachtwoordaanvraag"
+        ask_password_body = u"Antwoord dit bericht met het volgende wachtwoord" \
+                            "voor de volgende account: \n" \
+                            "\thost = %s\n" \
+                            "\tlogin = %s\n"
+        password_saved_for_session = u"Het wachtwoord zal worden bewaard tijdens uw Jabber-sessie"
+        check_error_subject = u"Fout tijdens controle op e-mails."
+        check_error_body = u"Fout tijdens controle op e-mails:\n\t%s"
+        new_mail_subject = u"Nieuwe e-mail van %s"
+        new_digest_subject = u"%i nieuwe e-mail(s)"
