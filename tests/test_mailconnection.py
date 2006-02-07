@@ -236,7 +236,7 @@ class IMAPConnection_TestCase(unittest.TestCase):
                                     lambda data: "* SEARCH 9 10 \n" + \
                                     data.split()[0] + " OK SEARCH completed\n"], \
                                    ["^[^ ]* SELECT INBOX", \
-                                    "^[^ ]* SEARCH UNSEEN"], \
+                                    "^[^ ]* SEARCH RECENT"], \
                                    lambda self: \
                                    self.assertEquals(self.imap_connection.get_mail_list(), ['9', '10']))
 
@@ -247,12 +247,9 @@ class IMAPConnection_TestCase(unittest.TestCase):
                                        " OK [READ-WRITE] SELECT completed\r\n", \
                                        lambda data: "* 1 FETCH ((RFC822) {12}\r\nbody" + \
                                        " text\r\n)\r\n" + \
-                                       data.split()[0] + " OK FETCH completed\r\n", \
-                                       lambda data: "* 1 FETCH (FLAGS (\UNSEEN))\r\n" + \
-                                       data.split()[0] + " OK STORE completed\r\n"], \
-                                      ["^[^ ]* SELECT INBOX", \
-                                       "^[^ ]* FETCH 1 \(RFC822\)", \
-                                       "^[^ ]* STORE 1 FLAGS \(UNSEEN\)"], \
+                                       data.split()[0] + " OK FETCH completed\r\n"], \
+                                      ["^[^ ]* EXAMINE INBOX", \
+                                       "^[^ ]* FETCH 1 \(RFC822\)"], \
                                       lambda self: self.assertEquals(self.imap_connection.get_mail_summary(1), \
                                                                      (u"From : None\nSubject : None\n\n", \
                                                                       u"None")))
@@ -264,12 +261,9 @@ class IMAPConnection_TestCase(unittest.TestCase):
                                " OK [READ-WRITE] SELECT completed\r\n", \
                                lambda data: "* 1 FETCH ((RFC822) {11}\r\nbody" + \
                                " text\r\n)\r\n" + \
-                               data.split()[0] + " OK FETCH completed\r\n", \
-                               lambda data: "* 1 FETCH (FLAGS (\UNSEEN))\r\n" + \
-                               data.split()[0] + " OK STORE completed\r\n"], \
-                              ["^[^ ]* SELECT INBOX", \
-                               "^[^ ]* FETCH 1 \(RFC822\)", \
-                               "^[^ ]* STORE 1 FLAGS \(UNSEEN\)"], \
+                               data.split()[0] + " OK FETCH completed\r\n"], \
+                              ["^[^ ]* EXAMINE INBOX", \
+                               "^[^ ]* FETCH 1 \(RFC822\)",], \
                               lambda self: self.assertEquals(self.imap_connection.get_mail(1), \
                                                              (u"From : None\nSubject : None\n\nbody text\r\n\n", \
                                                               u"None")))

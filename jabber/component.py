@@ -850,17 +850,10 @@ class MailComponent(Component):
                                     + "@" + account.host)
                 account.connect()
                 mail_list = account.get_mail_list()
-                if not mail_list or mail_list[0] == '':
-                    num = 0
-                else:
-                    num = len(mail_list)
-                # unseen mails checked by external client
-                # TODO : better test to find
-                if num < account.lastmail:
-                    account.lastmail = 0
                 if action == mailconnection.RETRIEVE:
-                    while account.lastmail < num:
-                        (body, email_from) = account.get_mail(int(mail_list[account.lastmail]))
+                    mail_index = account.get_next_mail_index(mail_list)
+                    while mail_index is not None:
+                        (body, email_from) = account.get_mail(mail_index)
                         mesg = Message(from_jid = name + "@" + \
                                        unicode(self.jid), \
                                        to_jid = jid, \
@@ -868,15 +861,16 @@ class MailComponent(Component):
                                        subject = account.default_lang_class.new_mail_subject % (email_from), \
                                        body = body)
                         self.stream.send(mesg)
-                        account.lastmail += 1
+                        account.get_next_mail_index(mail_list)
                 else:
                     body = ""
                     new_mail_count = 0
-                    while account.lastmail < num:
+                    mail_index = account.get_next_mail_index(mail_list)
+                    while mail_index:
                         (tmp_body, from_email) = \
-                               account.get_mail_summary(int(mail_list[account.lastmail]))
+                               account.get_mail_summary(mail_index)
                         body += tmp_body + "\n----------------------------------\n"
-                        account.lastmail += 1
+                        mail_index = account.get_next_mail_index(mail_list)
                         new_mail_count += 1
                     if body != "":
                         mesg = Message(from_jid = name + "@" + \
@@ -915,11 +909,7 @@ class MailComponent(Component):
                     return
                 try:
                     account.connect()
-                    mail_list = account.get_mail_list()
-                    if not mail_list or mail_list[0] == '':
-                        account.lastmail = 0
-                    else:
-                        account.lastmail = len(mail_list)
+                    account.mark_all_as_read()
                     account.disconnect()
                     account.in_error = False
                 except Exception,e:

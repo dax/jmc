@@ -157,7 +157,6 @@ class MailConnection(object):
 	self.host = host
 	self.port = port
 	self.ssl = ssl
-        self.lastmail = 0
         self.status = "offline"
 	self.connection = None
         self.chat_action = RETRIEVE
@@ -306,6 +305,13 @@ class MailConnection(object):
     def get_mail_summary(self, index):
 	return None
 
+    def get_next_mail_index(self, mail_list):
+        pass
+
+    # Does not modify server state but just internal JMC state
+    def mark_all_as_read(self):
+        pass
+    
     def get_action(self):
         mapping = {"online": self.online_action,
                    "chat": self.chat_action,
@@ -366,29 +372,35 @@ class IMAPConnection(MailConnection):
     def get_mail_list(self):
 	IMAPConnection._logger.debug("Getting mail list")
 	typ, data = self.connection.select(self.mailbox)
-	typ, data = self.connection.search(None, 'UNSEEN')
+	typ, data = self.connection.search(None, 'RECENT')
 	if typ == 'OK':
 	    return data[0].split(' ')
 	return None
 
     def get_mail(self, index):
 	IMAPConnection._logger.debug("Getting mail " + str(index))
-	typ, data = self.connection.select(self.mailbox)
+	typ, data = self.connection.select(self.mailbox, True)
 	typ, data = self.connection.fetch(index, '(RFC822)')
-	self.connection.store(index, "FLAGS", "UNSEEN")
 	if typ == 'OK':
             return self.format_message(email.message_from_string(data[0][1]))
 	return u"Error while fetching mail " + str(index)
 	
     def get_mail_summary(self, index):
 	IMAPConnection._logger.debug("Getting mail summary " + str(index))
-	typ, data = self.connection.select(self.mailbox)
+	typ, data = self.connection.select(self.mailbox, True)
 	typ, data = self.connection.fetch(index, '(RFC822)')
-	self.connection.store(index, "FLAGS", "UNSEEN")
 	if typ == 'OK':
             return self.format_message_summary(email.message_from_string(data[0][1]))
 	return u"Error while fetching mail " + str(index)
 
+    def get_next_mail_index(self, mail_list):
+        if not mail_list or mail_list[0] == '':
+            return None
+        return mail_list.pop(0)
+
+    def mark_all_as_read(self):
+        self.get_mail_list()
+    
     type = property(get_type)
 
 class POP3Connection(MailConnection):
@@ -402,6 +414,8 @@ class POP3Connection(MailConnection):
 	    else:
 		port = 110
 	MailConnection.__init__(self, login, password, host, port, ssl)
+        self.__nb_mail = 0
+        self.__lastmail = 0
 
     def get_type(self):
 	if self.ssl:
@@ -431,7 +445,12 @@ class POP3Connection(MailConnection):
     def get_mail_list(self):
 	POP3Connection._logger.debug("Getting mail list")
 	count, size = self.connection.stat()
-	return [str(i) for i in range(1, count + 1)]
+        result = [str(i) for i in range(1, count + 1)]
+        if not result or result[0] == '':
+            self.__nb_mail = 0
+        else:
+            self.__nb_mail = len(result)        
+	return result
 
     def get_mail(self, index):
 	POP3Connection._logger.debug("Getting mail " + str(index))
@@ -447,4 +466,17 @@ class POP3Connection(MailConnection):
             return self.format_message_summary(email.message_from_string('\n'.join(data)))
 	return u"Error while fetching mail " + str(index)
 
+    def get_next_mail_index(self, mail_list):
+        if self.__nb_mail == self.__lastmail:
+            return None
+        if self.__nb_mail < self.__lastmail:
+            self.__lastmail = 0
+        result = self.__lastmail
+        self.__lastmail += 1
+        return result
+
+    def mark_all_as_read(self):
+        self.get_mail_list()
+        self.__lastmail = self.__nb_mail
+        
     type = property(get_type)

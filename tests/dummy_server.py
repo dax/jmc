@@ -56,29 +56,34 @@ class DummyServer:
         self.real_queries = []
         
     def serve(self):
-        conn, addr = self.socket.accept()
-        rfile = conn.makefile('rb', -1)
-        if self.responses:
-            data = None
-            for idx in range(len(self.responses)):
-                # if response is a function apply it (it must return a string)
-                # it is given previous received data
-                if isinstance(self.responses[idx], types.FunctionType):
-                    response = self.responses[idx](data)
-                else:
-                    response = self.responses[idx]
-                if response is not None:
-#                    print >>sys.stderr, 'Sending : ', response
-                    conn.send(response)
-                data = rfile.readline()
-                if not data:
-                    break
-                else:
-                    self.real_queries.append(data)
-#                    print >>sys.stderr, 'Receive : ', data
-        conn.close()
-        self.socket.close()
-        self.socket = None
+        try:
+            conn, addr = self.socket.accept()
+            rfile = conn.makefile('rb', -1)
+            if self.responses:
+                data = None
+                for idx in range(len(self.responses)):
+                    # if response is a function apply it (it must return a string)
+                    # it is given previous received data
+                    if isinstance(self.responses[idx], types.FunctionType):
+                        response = self.responses[idx](data)
+                    else:
+                        response = self.responses[idx]
+                    if response is not None:
+                        #print >>sys.stderr, 'Sending : ', response
+                        conn.send(response)
+                    data = rfile.readline()
+                    if not data:
+                        break
+                    else:
+                        self.real_queries.append(data)
+                        #print >>sys.stderr, 'Receive : ', data
+            conn.close()
+            self.socket.close()
+            self.socket = None
+        except:
+            type, value, stack = sys.exc_info()
+            print >>sys.stderr, "".join(traceback.format_exception
+                                        (type, value, stack, 5))
 
     def verify_queries(self):
         result = True
@@ -95,7 +100,8 @@ class DummyServer:
         else:
             result = False
             print >>sys.stderr, "Expected " + str(queries_len) + \
-                  " queries, got " + str(len(self.real_queries))
+                  " queries, got " + str(len(self.real_queries)) + \
+                  "\t" + str(self.real_queries)
         return result
 
 class XMLDummyServer(DummyServer):
