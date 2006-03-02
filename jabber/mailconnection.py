@@ -200,27 +200,28 @@ class MailConnection(object):
  
     def get_decoded_part(self, part, charset_hint):
         content_charset = part.get_content_charset()
-        if content_charset:
-            return unicode(part.get_payload(decode=True).decode(content_charset))
-        else:
-            result = ""
-            try:
+        result = u""
+        try:
+            if content_charset:
+                result = unicode(part.get_payload(decode=True).decode(content_charset))
+            else:
                 result = unicode(part.get_payload(decode=True))
+        except Exception, e:
+            try:
+                result = unicode(part.get_payload(decode=True).decode("iso-8859-1"))
             except Exception, e:
                 try:
-                    result = unicode(part.get_payload(decode=True).decode("iso-8859-1"))
+                    result = unicode(part.get_payload(decode=True).decode(default_encoding))
                 except Exception, e:
-                    try:
-                        result = unicode(part.get_payload(decode=True).decode(default_encoding))
-                    except Exception, e:
-                        if charset_hint is not None:
-                            try:
-                                result = unicode(part.get_payload(decode=True).decode(charset_hint))
-                            except Exception, e:
-                                type, value, stack = sys.exc_info()
-                                print >>sys.stderr, "".join(traceback.format_exception
-                                                            (type, value, stack, 5))
-            return result
+                    if charset_hint is not None:
+                        try:
+                            result = unicode(part.get_payload(decode=True).decode(charset_hint))
+                        except Exception, e:
+                            type, value, stack = sys.exc_info()
+                            print >>sys.stderr, "".join(traceback.format_exception
+                                                        (type, value, stack, 5))
+
+        return result
             
     def format_message(self, email_msg, include_body = True):
         from_decoded = email.Header.decode_header(email_msg["From"])
@@ -228,48 +229,48 @@ class MailConnection(object):
         email_from = u""
         result = u"From : "
         for i in range(len(from_decoded)):
-            if from_decoded[i][1]:
-                charset_hint = from_decoded[i][1]
-                email_from += unicode(from_decoded[i][0].decode(from_decoded[i][1]))
-            else:
-                try:
+            try:
+                if from_decoded[i][1]:
+                    charset_hint = from_decoded[i][1]
+                    email_from += unicode(from_decoded[i][0].decode(from_decoded[i][1]))
+                else:
                     email_from += unicode(from_decoded[i][0])
-                except Exception,e:
+            except Exception,e:
+                try:
+                    email_from += unicode(from_decoded[i][0].decode("iso-8859-1"))
+                except Exception, e:
                     try:
-                        email_from += unicode(from_decoded[i][0].decode("iso-8859-1"))
+                        email_from += unicode(from_decoded[i][0].decode(default_encoding))
                     except Exception, e:
-                        try:
-                            email_from += unicode(from_decoded[i][0].decode(default_encoding))
-                        except Exception, e:
-                            type, value, stack = sys.exc_info()
-                            print >>sys.stderr, "".join(traceback.format_exception
-                                                        (type, value, stack, 5))
+                        type, value, stack = sys.exc_info()
+                        print >>sys.stderr, "".join(traceback.format_exception
+                                                    (type, value, stack, 5))
         result += email_from + u"\n"
 
         subject_decoded = email.Header.decode_header(email_msg["Subject"])
         result += u"Subject : "
         for i in range(len(subject_decoded)):
-            if subject_decoded[i][1]:
-                charset_hint = subject_decoded[i][1]
-                result += unicode(subject_decoded[i][0].decode(subject_decoded[i][1]))
-            else:
-                try:
+            try:
+                if subject_decoded[i][1]:
+                    charset_hint = subject_decoded[i][1]
+                    result += unicode(subject_decoded[i][0].decode(subject_decoded[i][1]))
+                else:
                     result += unicode(subject_decoded[i][0])
-                except Exception,e:
+            except Exception,e:
+                try:
+                    result += unicode(subject_decoded[i][0].decode("iso-8859-1"))
+                except Exception, e:
                     try:
-                        result += unicode(subject_decoded[i][0].decode("iso-8859-1"))
+                        result += unicode(subject_decoded[i][0].decode(default_encoding))
                     except Exception, e:
-                        try:
-                            result += unicode(subject_decoded[i][0].decode(default_encoding))
-                        except Exception, e:
-                            if charset_hint is not None:
-                                try:
-                                    result += unicode(subject_decoded[i][0].decode(charset_hint))
-                                except Exception, e:
-                                    type, value, stack = sys.exc_info()
-                                    print >>sys.stderr, "".join(traceback.format_exception
-                                                                (type, value, stack, 5))
-                    
+                        if charset_hint is not None:
+                            try:
+                                result += unicode(subject_decoded[i][0].decode(charset_hint))
+                            except Exception, e:
+                                type, value, stack = sys.exc_info()
+                                print >>sys.stderr, "".join(traceback.format_exception
+                                                            (type, value, stack, 5))
+                                
         result += u"\n\n"
 
         if include_body:
