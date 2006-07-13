@@ -533,7 +533,8 @@ class MailComponent(Component):
         remove = iq.xpath_eval("r:query/r:remove", \
 			       {"r" : "jabber:iq:register"})
         if remove:
-            for jid, name in self.__storage.keys():
+            for name in self.__storage.keys((base_from_jid,)):
+                self.__logger.debug("Deleting " + name + " for " + base_from_jid)
                 p = Presence(from_jid = name + "@" + unicode(self.jid), \
                              to_jid = from_jid, \
                              stanza_type = "unsubscribe")
@@ -542,7 +543,7 @@ class MailComponent(Component):
                              to_jid = from_jid, \
                              stanza_type = "unsubscribed")
                 self.stream.send(p)
-                del self.__storage[(jid, name)]
+                del self.__storage[(base_from_jid, name)]
 	    p = Presence(from_jid = self.jid, to_jid = from_jid, \
 			 stanza_type = "unsubscribe")
 	    self.stream.send(p)
@@ -693,13 +694,33 @@ class MailComponent(Component):
         
         return 1
 
+    def __send_presence_available(self, name, to_account, to_jid, show, lang_class):
+        to_account.default_lang_class = lang_class
+        to_account.first_check = True
+        old_status = to_account.status
+        # Make available to receive mail only when online
+        if show is None:
+            to_account.status = "online" # TODO get real status = (not show)
+        else:
+            to_account.status = show
+        p = Presence(from_jid = name + "@" + \
+                     unicode(self.jid), \
+                     to_jid = to_jid, \
+                     status = to_account.get_status_msg(), \
+                     show = show, \
+                     stanza_type = "available")
+        self.stream.send(p)
+        if to_account.store_password == False \
+               and old_status == "offline":
+            self.__ask_password(name, to_jid, lang_class, to_account)
+        
     """ Handle presence availability """
     def presence_available(self, stanza):
 	self.__logger.debug("PRESENCE_AVAILABLE")
 	from_jid = stanza.get_from()
         base_from_jid = unicode(from_jid.bare())
-        lang_class = self.__lang.get_lang_class_from_node(stanza.get_node())
 	name = stanza.get_to().node
+        lang_class = self.__lang.get_lang_class_from_node(stanza.get_node())
 	show = stanza.get_show()
         self.__logger.debug("SHOW : " + str(show))
         if name:
@@ -713,25 +734,12 @@ class MailComponent(Component):
                          show = show, \
                          stanza_type = "available")
             self.stream.send(p)
+            for name in self.__storage.keys((base_from_jid,)):
+                account = self.__storage[(base_from_jid, name)]
+                self.__send_presence_available(name, account, from_jid, show, lang_class)
         elif self.__storage.has_key((base_from_jid, name)):
             account = self.__storage[(base_from_jid, name)]
-            account.default_lang_class = lang_class
-            old_status = account.status
-            # Make available to receive mail only when online
-            if show is None:
-                account.status = "online" # TODO get real status = (not show)
-            else:
-                account.status = show
-            p = Presence(from_jid = name + "@" + \
-                         unicode(self.jid), \
-                         to_jid = from_jid, \
-                         status = account.get_status_msg(), \
-                         show = show, \
-                         stanza_type = "available")
-            self.stream.send(p)
-            if account.store_password == False \
-                   and old_status == "offline":
-                self.__ask_password(name, from_jid, lang_class, account)
+            self.__send_presence_available(name, account, from_jid, show, lang_class)
         return 1
 
     def __ask_password(self, name, from_jid, lang_class, account):
@@ -752,7 +760,7 @@ class MailComponent(Component):
 	from_jid = stanza.get_from()
         base_from_jid = unicode(from_jid.bare())
         if stanza.get_to() == unicode(self.jid):
-	    for jid, name in self.__storage.keys():
+	    for name in self.__storage.keys((base_from_jid,)):
                 account = self.__storage[(base_from_jid, name)]
                 account.status = "offline"
                 account.waiting_password_reply = False
