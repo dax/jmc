@@ -26,15 +26,16 @@ import sys
 import os.path
 import logging
 
+reload(sys)
+sys.setdefaultencoding('utf-8')
+del sys.setdefaultencoding
+
 from jabber import mailconnection
 from jabber.component import MailComponent, ComponentFatalError
 from jabber.config import Config
 
 def main(config_file = "jmc.xml", isDebug = 0):
     try:
-        reload(sys)
-        sys.setdefaultencoding('utf-8')
-        del sys.setdefaultencoding
         logger = logging.getLogger()
         logger.addHandler(logging.StreamHandler())
         if isDebug > 0:
