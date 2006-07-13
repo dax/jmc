@@ -14,8 +14,8 @@
      </vCard>
   </jabber>
   <storage>DBM</storage>
-  <spooldir>/var/spool/jabber</spooldir>
-  <pidfile>/var/run/jabber/jmc.pid</pidfile>
+  <spooldir>./spool/jabber</spooldir>
+  <pidfile>./run/jabber/jmc.pid</pidfile>
   <!-- default check interval in minutes -->
   <check_interval>5</check_interval>
   <mail_default_encoding>iso-8859-1</mail_default_encoding>

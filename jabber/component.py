@@ -502,7 +502,7 @@ class MailComponent(Component):
         iq = iq.make_result_response()
         q = iq.new_query("jabber:iq:version")
         q.newTextChild(q.ns(), "name", self.__name)
-        q.newTextChild(q.ns(), "version", "0.2")
+        q.newTextChild(q.ns(), "version", "0.2.1")
         self.stream.send(iq)
         return 1
 
