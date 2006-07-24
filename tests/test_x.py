@@ -21,7 +21,7 @@
 ##
 
 import unittest
-from jabber.x import *
+from jmc.jabber.x import *
 
 class X_TestCase(unittest.TestCase):
     def setUp(self):

@@ -21,28 +21,49 @@
 ##
 
 import unittest
-from jabber.mailconnection_factory import *
-from jabber import mailconnection
+from jmc.email.mailconnection_factory import *
+from jmc.email.mailconnection import *
+import jmc.email.mailconnection as mailconnection
 
 class MailConnectionFactory_TestCase(unittest.TestCase):
     def test_new_mail_connection_imap(self):
 	mc = get_new_mail_connection("imap")
-        # TODO
-        self.assertEquals(mc, mc)
+        self.assertEquals(mc, IMAPConnection())
 
     def test_new_mail_connection_imaps(self):
 	mc = get_new_mail_connection("imaps")
-        self.assertEquals(mc, mc)
+        self.assertEquals(mc, IMAPConnection(ssl = True))
 
     def test_new_mail_connection_pop3(self):
 	mc = get_new_mail_connection("pop3")
-        self.assertEquals(mc, mc)
+        self.assertEquals(mc, POP3Connection())
 
     def test_new_mail_connection_pop3s(self):
 	mc = get_new_mail_connection("pop3s")
-        self.assertEquals(mc, mc)
+        self.assertEquals(mc, POP3Connection(ssl = True))
 
+    def test_new_mail_connection_unknown(self):
+        self.assertRaises(Exception, get_new_mail_connection, "unknown")
+        
     def test_str_to_mail_connection_imap_v01_v02(self):
+	mc = str_to_mail_connection("imap#login#passwd#host#193#False#INBOX")
+        self.assertEquals(mc.get_type(), "imap")
+        self.assertEquals(mc.login, "login")
+        self.assertEquals(mc.password, "passwd")
+        self.assertEquals(mc.store_password, True)
+        self.assertEquals(mc.host, "host")
+        self.assertEquals(mc.port, 193)
+        self.assertEquals(mc.mailbox, "INBOX")
+        self.assertEquals(mc.chat_action, mailconnection.DIGEST)
+        self.assertEquals(mc.online_action, mailconnection.DIGEST)
+        self.assertEquals(mc.away_action, mailconnection.DIGEST)
+        self.assertEquals(mc.xa_action, mailconnection.DIGEST)
+        self.assertEquals(mc.dnd_action, mailconnection.DIGEST)
+        self.assertEquals(mc.offline_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.interval, 5)
+        self.assertEquals(mc.live_email_only, False)
+
+    def test_str_to_mail_connection_imap_v01_v02_retrieve(self):
 	mc = str_to_mail_connection("imap#login#passwd#host#193#True#INBOX")
         self.assertEquals(mc.get_type(), "imap")
         self.assertEquals(mc.login, "login")
@@ -76,7 +97,24 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.offline_action, mailconnection.DO_NOTHING)
         self.assertEquals(mc.interval, 5)
         self.assertEquals(mc.live_email_only, False)
-        
+
+    def test_str_to_mail_connection_pop3_v01_v02_retrieve(self):
+	mc = str_to_mail_connection("pop3#login#passwd#host#110#True")
+        self.assertEquals(mc.get_type(), "pop3")
+        self.assertEquals(mc.login, "login")
+        self.assertEquals(mc.password, "passwd")
+        self.assertEquals(mc.store_password, True)
+        self.assertEquals(mc.host, "host")
+        self.assertEquals(mc.port, 110)
+        self.assertEquals(mc.chat_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.online_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.away_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.xa_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.dnd_action, mailconnection.RETRIEVE)
+        self.assertEquals(mc.offline_action, mailconnection.DO_NOTHING)
+        self.assertEquals(mc.interval, 5)
+        self.assertEquals(mc.live_email_only, False)
+
     def test_str_to_mail_connection_imap(self):
 	mc = str_to_mail_connection("imap#login#passwd#host#193#0#0#0#1#1#2#4#True#INBOX")
         self.assertEquals(mc.get_type(), "imap")
@@ -160,4 +198,7 @@ class MailConnectionFactory_TestCase(unittest.TestCase):
         self.assertEquals(mc.offline_action, mailconnection.RETRIEVE)
         self.assertEquals(mc.interval, 4)
         self.assertEquals(mc.live_email_only, True)
+
+    def test_str_to_mail_connection_unknown(self):
+	self.assertRaises(Exception, str_to_mail_connection, ("unknown#login#passwd#host#995#0#0#0#1#1#2#4#True"))
 

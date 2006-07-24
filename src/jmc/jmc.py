@@ -30,9 +30,9 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 del sys.setdefaultencoding
 
-from jabber import mailconnection
-from jabber.component import MailComponent, ComponentFatalError
-from jabber.config import Config
+from jmc import mailconnection
+from jmc.component import MailComponent, ComponentFatalError
+from jmc.config import Config
 
 def main(config_file = "jmc.xml", isDebug = 0):
     try:
@@ -87,5 +87,5 @@ if __name__ == "__main__":
     if (var_option & 2) == 2:
         main(sys.argv[file_num], debug_level)
     else:
-        main("jmc.xml", debug_level)
+        main("/etc/jabber/jmc.xml", debug_level)
 

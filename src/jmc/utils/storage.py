@@ -25,11 +25,11 @@ import re
 import os.path
 import sys
 import anydbm
-import mailconnection_factory
 import logging
 from UserDict import UserDict
-from pysqlite2 import dbapi2 as sqlite
- 
+
+import jmc.email.mailconnection_factory as mailconnection_factory
+
 
 class Storage(UserDict):
     def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
@@ -106,7 +106,7 @@ class Storage(UserDict):
         pass
 
 class DBMStorage(Storage):
-    _logger = logging.getLogger("jabber.DBMStorage")
+    _logger = logging.getLogger("jmc.utils.DBMStorage")
 
     def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
 #        print "DBM INIT"
@@ -165,128 +165,133 @@ class DBMStorage(Storage):
     def __delitem__(self, pk_tuple):
         Storage.__delitem__(self, pk_tuple)
         self.sync()
+
+# Do not fail if pysqlite is not installed
+try:
+    from pysqlite2 import dbapi2 as sqlite
+
+    class SQLiteStorage(Storage):
+        _logger = logging.getLogger("jmc.utils.SQLiteStorage")
+    
+        def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
+            self.__connection = None
+            Storage.__init__(self, nb_pk_fields, spool_dir, db_file)
+
+        def create(self):
+            SQLiteStorage._logger.debug("creating new Table")
+            cursor = self.__connection.cursor()
+            cursor.execute("""
+            create table account(
+            jid STRING,
+            name STRING,
+            type STRING,
+            login STRING,
+            password STRING,
+            host STRING,
+            port INTEGER,
+            chat_action INTEGER,
+            online_action INTEGER,
+            away_action INTEGER,
+            xa_action INTEGER,
+            dnd_action INTEGER,
+            offline_action INTEGER,
+            interval INTEGER,
+            live_email_only BOOLEAN,
+            mailbox STRING,
+            PRIMARY KEY(jid, name)
+            )
+            """)
+            self.__connection.commit()
+            cursor.close()
             
-        
-class SQLiteStorage(Storage):
-    _logger = logging.getLogger("jabber.SQLiteStorage")
-    
-    def __init__(self, nb_pk_fields = 1, spool_dir = ".", db_file = None):
-        self.__connection = None
-        Storage.__init__(self, nb_pk_fields, spool_dir, db_file)
+        def __del__(self):
+            self.__connection.close()
 
-    def create(self):
-        SQLiteStorage._logger.debug("creating new Table")
-        cursor = self.__connection.cursor()
-        cursor.execute("""
-        create table account(
-          jid STRING,
-          name STRING,
-          type STRING,
-          login STRING,
-          password STRING,
-          host STRING,
-          port INTEGER,
-          chat_action INTEGER,
-          online_action INTEGER,
-          away_action INTEGER,
-          xa_action INTEGER,
-          dnd_action INTEGER,
-          offline_action INTEGER,
-          interval INTEGER,
-          live_email_only BOOLEAN,
-          mailbox STRING,
-          PRIMARY KEY(jid, name)
-        )
-        """)
-        self.__connection.commit()
-        cursor.close()
+        def sync(self):
+            pass
 
-    def __del__(self):
-        self.__connection.close()
-
-    def sync(self):
-        pass
-
-    def load(self):
-        if not os.path.exists(self.file):
-            self.__connection = sqlite.connect(self.file)
-            self.create()
-        else:
-            self.__connection = sqlite.connect(self.file)
-        cursor = self.__connection.cursor()
-        cursor.execute("""select * from account""")
-        result = {}
-        for row in cursor.fetchall():
-            #             print "Creating new " + row[self.nb_pk_fields] + " connection."
-            account_type = row[self.nb_pk_fields]
-            account = result["#".join(row[0:self.nb_pk_fields])] = mailconnection_factory.get_new_mail_connection(account_type)
-            account.login = row[self.nb_pk_fields + 1]
-            account.password = row[self.nb_pk_fields + 2]
-            if account.password is None:
-                account.store_password = False
+        def load(self):
+            if not os.path.exists(self.file):
+                self.__connection = sqlite.connect(self.file)
+                self.create()
             else:
-                account.store_password = True
-            account.host = row[self.nb_pk_fields + 3]
-            account.port = int(row[self.nb_pk_fields + 4])
-            account.chat_action = int(row[self.nb_pk_fields + 5])
-            account.online_action = int(row[self.nb_pk_fields + 6])
-            account.away_action = int(row[self.nb_pk_fields + 7])
-            account.xa_action = int(row[self.nb_pk_fields + 8])
-            account.dnd_action = int(row[self.nb_pk_fields + 9])
-            account.offline_action = int(row[self.nb_pk_fields + 10])
-            account.interval = int(row[self.nb_pk_fields + 11])
-            account.live_email_only = (row[self.nb_pk_fields + 12] == 1)
-            if account_type[0:4] == "imap":
-                account.mailbox = row[self.nb_pk_fields + 13]
-#            for field_index in range(self.nb_pk_fields + 1, len(row)):
-#                 print "\tSetting " + str(cursor.description[field_index][0]) + \
-#                       " to " + str(row[field_index])
-#                setattr(account,
-#                        cursor.description[field_index][0],
-#                        row[field_index])
-        cursor.close()
-        return result
+                self.__connection = sqlite.connect(self.file)
+            cursor = self.__connection.cursor()
+            cursor.execute("""select * from account""")
+            result = {}
+            for row in cursor.fetchall():
+                #             print "Creating new " + row[self.nb_pk_fields] + " connection."
+                account_type = row[self.nb_pk_fields]
+                account = result["#".join(row[0:self.nb_pk_fields])] = mailconnection_factory.get_new_mail_connection(account_type)
+                account.login = row[self.nb_pk_fields + 1]
+                account.password = row[self.nb_pk_fields + 2]
+                if account.password is None:
+                    account.store_password = False
+                else:
+                    account.store_password = True
+                account.host = row[self.nb_pk_fields + 3]
+                account.port = int(row[self.nb_pk_fields + 4])
+                account.chat_action = int(row[self.nb_pk_fields + 5])
+                account.online_action = int(row[self.nb_pk_fields + 6])
+                account.away_action = int(row[self.nb_pk_fields + 7])
+                account.xa_action = int(row[self.nb_pk_fields + 8])
+                account.dnd_action = int(row[self.nb_pk_fields + 9])
+                account.offline_action = int(row[self.nb_pk_fields + 10])
+                account.interval = int(row[self.nb_pk_fields + 11])
+                account.live_email_only = (row[self.nb_pk_fields + 12] == 1)
+                if account_type[0:4] == "imap":
+                    account.mailbox = row[self.nb_pk_fields + 13]
+                    #            for field_index in range(self.nb_pk_fields + 1, len(row)):
+                    #                 print "\tSetting " + str(cursor.description[field_index][0]) + \
+                    #                       " to " + str(row[field_index])
+                    #                setattr(account,
+                    #                        cursor.description[field_index][0],
+                    #                        row[field_index])
+            cursor.close()
+            return result
     
-    def __setitem__(self, pk_tuple, obj):
-        Storage.__setitem__(self, pk_tuple, obj)
-        cursor = self.__connection.cursor()
-        mailbox = None
-        password = None
-        if obj.type[0:4] == "imap":
-            mailbox = obj.mailbox
-        if obj.store_password == True:
-            password = obj.password
-        cursor.execute("""
-        insert or replace into account values
-        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-                       (pk_tuple[0],
-                        pk_tuple[1],
-                        obj.type,
-                        obj.login,
-                        password,
-                        obj.host,
-                        obj.port,
-                        obj.chat_action,
-                        obj.online_action,
-                        obj.away_action,
-                        obj.xa_action,
-                        obj.dnd_action,
-                        obj.offline_action,
-                        obj.interval,
-                        obj.live_email_only,
-                        mailbox))
-        self.__connection.commit()
-        cursor.close()
+        def __setitem__(self, pk_tuple, obj):
+            Storage.__setitem__(self, pk_tuple, obj)
+            cursor = self.__connection.cursor()
+            mailbox = None
+            password = None
+            if obj.type[0:4] == "imap":
+                mailbox = obj.mailbox
+            if obj.store_password == True:
+                password = obj.password
+            cursor.execute("""
+            insert or replace into account values
+            (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+                           (pk_tuple[0],
+                            pk_tuple[1],
+                            obj.type,
+                            obj.login,
+                            password,
+                            obj.host,
+                            obj.port,
+                            obj.chat_action,
+                            obj.online_action,
+                            obj.away_action,
+                            obj.xa_action,
+                            obj.dnd_action,
+                            obj.offline_action,
+                            obj.interval,
+                            obj.live_email_only,
+                            mailbox))
+            self.__connection.commit()
+            cursor.close()
         
-    def __delitem__(self, pk_tuple):
-        Storage.__delitem__(self, pk_tuple)
-        cursor = self.__connection.cursor()
-        cursor.execute("""
-        delete from account where jid = ? and name = ?
-        """,
-                       (pk_tuple[0],
-                        pk_tuple[1]))
-        self.__connection.commit()
-        cursor.close()
+        def __delitem__(self, pk_tuple):
+            Storage.__delitem__(self, pk_tuple)
+            cursor = self.__connection.cursor()
+            cursor.execute("""
+            delete from account where jid = ? and name = ?
+            """,
+                           (pk_tuple[0],
+                            pk_tuple[1]))
+            self.__connection.commit()
+            cursor.close()
+except ImportError:
+    pass
 

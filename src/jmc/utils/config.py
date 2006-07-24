@@ -24,7 +24,7 @@ import libxml2
 import os
 
 from pyxmpp.jid import JID
-from component import ComponentFatalError
+from jmc.jabber.component import ComponentFatalError
 
 class Config:
     def __init__(self, config_file):

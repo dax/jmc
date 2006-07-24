@@ -23,9 +23,9 @@
 import os
 import unittest
 import dummy_server
-from jabber.storage import *
-from jabber import mailconnection
-from jabber.mailconnection import *
+from jmc.utils.storage import *
+from jmc.email.mailconnection import *
+import jmc.email.mailconnection as mailconnection
 
 class Storage_TestCase(unittest.TestCase):
     def test_init(self):

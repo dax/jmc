@@ -32,11 +32,12 @@ import os
 import time
 import traceback
 
-import mailconnection
-from mailconnection import *
-from x import *
-from storage import *
-import mailconnection_factory
+from jmc.email.mailconnection import *
+from jmc.jabber.x import *
+from jmc.utils.storage import *
+from jmc.utils.lang import Lang
+import jmc.email.mailconnection_factory
+
 import pyxmpp.jabberd
 from pyxmpp.presence import Presence
 from pyxmpp.message import Message
@@ -44,8 +45,6 @@ from pyxmpp.streambase import StreamError, FatalStreamError
 from pyxmpp.jid import JID
 from pyxmpp.jabber.disco import DiscoItems, DiscoItem, DiscoInfo, DiscoIdentity
 from pyxmpp.jabberd.component import Component
-
-from jabber.lang import Lang
 
 class ComponentFatalError(RuntimeError):
     pass
@@ -68,7 +67,7 @@ class MailComponent(Component):
                            port, \
                            disco_category = "gateway", \
                            disco_type = "headline")
- 	self.__logger = logging.getLogger("jabber.Component")
+ 	self.__logger = logging.getLogger("jmc.jabber.Component")
 	self.__shutdown = 0
         self.__lang = Lang(default_lang)
         self.__name = name

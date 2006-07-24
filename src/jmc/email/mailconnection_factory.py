@@ -20,17 +20,18 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-import mailconnection
-from mailconnection import IMAPConnection, POP3Connection
+import jmc.email.mailconnection as mailconnection
+from jmc.email.mailconnection import IMAPConnection, POP3Connection
 
-""" Static method to return an empty MailConnection object of given type
-:Parameters:
-    - 'type': type of connection to return : 'imap', 'imaps', 'pop3', 'pop3s'
-
-:return: MailConnection of given type in parameter, None if unknown type
-
-:returntype: 'MailConnection'"""
 def get_new_mail_connection(type):
+    """ Static method to return an empty MailConnection object of given type
+    :Parameters:
+    - 'type': type of connection to return : 'imap', 'imaps', 'pop3', 'pop3s'
+    
+    :return: MailConnection of given type in parameter, None if unknown type
+    
+    :returntype: 'MailConnection'
+    """
     if type == "imap":
         return IMAPConnection()
     elif type == "imaps":
@@ -41,19 +42,20 @@ def get_new_mail_connection(type):
         return POP3Connection(ssl = True)
     raise Exception, "Connection type \"" + type + "\" unknown"
 
-""" Static methode to create a MailConnection object filled from string 
-
-:Parameters:
-- 'connection_string': string containing MailConnection parameters separated
-by '#'. ex: 'pop3#login#password#host#110#True'
-
-:Types:
-- 'connection_string': string
-
-:return: MailConnection of given type found in string parameter
-
-:returntype: 'MailConnection'"""
 def str_to_mail_connection(connection_string):
+    """ Static methode to create a MailConnection object filled from string 
+    
+    :Parameters:
+    - 'connection_string': string containing MailConnection parameters separated
+    by '#'. ex: 'pop3#login#password#host#110#chat_action#online_action#away_action#xa_action#dnd_action#offline_action#check_interval#liv_email_only(#Mailbox)'
+    
+    :Types:
+    - 'connection_string': string
+    
+    :return: MailConnection of given type found in string parameter
+    
+    :returntype: 'MailConnection'
+    """
     arg_list = connection_string.split("#")
     # optionals values must be the at the beginning of the list to pop them
     # last
@@ -76,6 +78,7 @@ def str_to_mail_connection(connection_string):
     offline_action = None
     interval = None
     live_email_only = False
+    result = None
     if type[0:4] == "imap":
         if len(arg_list) == 9:
             chat_action = int(arg_list.pop())
@@ -100,7 +103,7 @@ def str_to_mail_connection(connection_string):
                                 ssl = (len(type) == 5), \
                                 port = port, \
                                 mailbox = mailbox)
-    else:
+    elif type[0:4] == "pop3":
         if len(arg_list) == 8:
             chat_action = int(arg_list.pop())
             online_action = int(arg_list.pop())

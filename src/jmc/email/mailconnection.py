@@ -31,7 +31,7 @@ import poplib
 import imaplib
 import socket
 
-from jabber.lang import Lang
+from jmc.utils.lang import Lang
 
 IMAP4_TIMEOUT = 10
 POP3_TIMEOUT = 10
@@ -131,7 +131,7 @@ class MailConnection(object):
     """ Wrapper to mail connection and action.
     Abstract class, do not represent real mail connection type"""
 
-    _logger = logging.getLogger("jabber.MailConnection")
+    _logger = logging.getLogger("jmc.MailConnection")
 
     def __init__(self, login = "", password = "", host = "", \
 		 port = 110, ssl = False):
@@ -327,7 +327,7 @@ class MailConnection(object):
     action = property(get_action)
     
 class IMAPConnection(MailConnection):
-    _logger = logging.getLogger("jabber.IMAPConnection")
+    _logger = logging.getLogger("jmc.IMAPConnection")
 
     def __init__(self, login = "", password = "", host = "", \
 		 port = None, ssl = False, mailbox = "INBOX"):
@@ -405,7 +405,7 @@ class IMAPConnection(MailConnection):
     type = property(get_type)
 
 class POP3Connection(MailConnection):
-    _logger = logging.getLogger("jabber.POP3Connection")
+    _logger = logging.getLogger("jmc.POP3Connection")
 
     def __init__(self, login = "", password = "", host = "", \
 		 port = None, ssl = False):

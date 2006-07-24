@@ -22,7 +22,7 @@
 ##
 
 import unittest
-from jabber.mailconnection import IMAPConnection, \
+from jmc.email.mailconnection import IMAPConnection, \
      POP3Connection, \
      MailConnection
 import dummy_server

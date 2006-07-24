@@ -1,6 +1,6 @@
 ##
 ## run_test.py
-## Login : <david.rousselie@happycoders.org>
+## Login : David Rousselie <dax@happycoders.org>
 ## Started on  Wed May 18 13:33:03 2005 David Rousselie
 ## $Id: run_test.py,v 1.2 2005/09/18 20:24:07 David Rousselie Exp $
 ## 
@@ -24,18 +24,21 @@ import coverage
 coverage.erase()
 coverage.start()
 import unittest
+
 import sys
+sys.path.append("src")
 reload(sys)
 sys.setdefaultencoding('utf8')
 del sys.setdefaultencoding
+
 import tests
 from tests.test_mailconnection import *
 from tests.test_mailconnection_factory import *
 from tests.test_component import *
 from tests.test_storage import *
 from test import test_support
-import jabber
 import logging
+import jmc
 
 
 if __name__ == '__main__':
@@ -81,10 +84,10 @@ if __name__ == '__main__':
     #test_support.run_suite(dbmstorage_suite)
     test_support.run_suite(jmc_suite)
 
-# coverage.stop()
-# coverage.analysis(jabber.mailconnection_factory)
-# coverage.analysis(jabber.mailconnection)
-# coverage.analysis(jabber.component)
-# coverage.analysis(jabber.x)
-# coverage.report([jabber.mailconnection_factory, jabber.mailconnection, \
-#                  jabber.component, jabber.x])
+coverage.stop()
+coverage.analysis(jmc.email.mailconnection_factory)
+coverage.analysis(jmc.email.mailconnection)
+coverage.analysis(jmc.jabber.component)
+coverage.analysis(jmc.jabber.x)
+coverage.report([jmc.email.mailconnection_factory, jmc.email.mailconnection, \
+                 jmc.jabber.component, jmc.jabber.x])

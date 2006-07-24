@@ -26,8 +26,8 @@ import dummy_server
 import time
 import traceback
 from pyxmpp import xmlextra
-from jabber.component import *
-from jabber.config import Config
+from jmc.jabber.component import *
+from jmc.utils.config import Config
 
 class TestStreamHandler(xmlextra.StreamHandler):
     def __init__(self, expected_balises = []):
