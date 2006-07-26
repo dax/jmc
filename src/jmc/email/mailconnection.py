@@ -452,6 +452,10 @@ class POP3Connection(MailConnection):
     def get_mail(self, index):
 	POP3Connection._logger.debug("Getting mail " + str(index))
 	ret, data, size = self.connection.retr(index)
+        try:
+            self.connection.rset()
+        except:
+            pass
 	if ret[0:3] == '+OK':
             return self.format_message(email.message_from_string('\n'.join(data)))
 	return u"Error while fetching mail " + str(index)
@@ -459,6 +463,10 @@ class POP3Connection(MailConnection):
     def get_mail_summary(self, index):
 	POP3Connection._logger.debug("Getting mail summary " + str(index))
 	ret, data, size = self.connection.retr(index)
+        try:
+            self.connection.rset()
+        except:
+            pass
 	if ret[0:3] == '+OK':
             return self.format_message_summary(email.message_from_string('\n'.join(data)))
 	return u"Error while fetching mail " + str(index)

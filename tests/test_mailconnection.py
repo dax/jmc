@@ -164,8 +164,10 @@ class POP3Connection_TestCase(unittest.TestCase):
         make_test(["+OK 10 octets\r\n" + \
                    "From: user@test.com\r\n" + \
                    "Subject: subject test\r\n\r\n" + \
-                   "mymessage\r\n.\r\n"], \
-                  ["RETR 1\r\n"], \
+                   "mymessage\r\n.\r\n",
+                   "+OK\r\n"], \
+                  ["RETR 1\r\n",
+                   "RSET\r\n"], \
                   lambda self: \
                   self.assertEquals(self.pop3connection.get_mail_summary(1), \
                                     (u"From : user@test.com\n" + \
@@ -176,8 +178,39 @@ class POP3Connection_TestCase(unittest.TestCase):
         make_test(["+OK 10 octets\r\n" + \
                    "From: user@test.com\r\n" + \
                    "Subject: subject test\r\n\r\n" + \
-                   "mymessage\r\n.\r\n"], \
-                  ["RETR 1\r\n"], \
+                   "mymessage\r\n.\r\n",
+                   "+OK\r\n"], \
+                  ["RETR 1\r\n",
+                   "RSET\r\n"], \
+                  lambda self: \
+                  self.assertEquals(self.pop3connection.get_mail(1), \
+                                    (u"From : user@test.com\n" + \
+                                     u"Subject : subject test\n\n" + \
+                                     u"mymessage\n", \
+                                     u"user@test.com")))
+
+    test_unsupported_reset_command_get_mail_summary = \
+        make_test(["+OK 10 octets\r\n" + \
+                   "From: user@test.com\r\n" + \
+                   "Subject: subject test\r\n\r\n" + \
+                   "mymessage\r\n.\r\n",
+                   "-ERR unknown command\r\n"], \
+                  ["RETR 1\r\n",
+                   "RSET\r\n"], \
+                  lambda self: \
+                  self.assertEquals(self.pop3connection.get_mail_summary(1), \
+                                    (u"From : user@test.com\n" + \
+                                     u"Subject : subject test\n\n", \
+                                     u"user@test.com")))
+
+    test_unsupported_reset_command_get_mail = \
+        make_test(["+OK 10 octets\r\n" + \
+                   "From: user@test.com\r\n" + \
+                   "Subject: subject test\r\n\r\n" + \
+                   "mymessage\r\n.\r\n",
+                   "-ERR unknown command\r\n"], \
+                  ["RETR 1\r\n",
+                   "RSET\r\n"], \
                   lambda self: \
                   self.assertEquals(self.pop3connection.get_mail(1), \
                                     (u"From : user@test.com\n" + \
