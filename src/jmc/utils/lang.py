@@ -4,23 +4,22 @@
 ## Login : David Rousselie <david.rousselie@happycoders.org>
 ## Started on  Sat Jan 28 16:37:11 2006 David Rousselie
 ## $Id$
-## 
+##
 ## Copyright (C) 2006 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
-
 
 class Lang:
     def __init__(self, default_lang = "en"):
@@ -35,10 +34,10 @@ class Lang:
 
     def get_lang_class(self, lang):
         return getattr(Lang, lang)
-    
+
     def get_lang_class_from_node(self, node):
         return self.get_lang_class(self.get_lang_from_node(node))
-    
+
     class en:
         register_title = u"Jabber Mail connection registration"
         register_instructions = u"Enter connection parameters"
@@ -80,7 +79,7 @@ class Lang:
         check_error_body = u"An error appears while checking emails:\n\t%s"
         new_mail_subject = u"New email from %s"
         new_digest_subject = u"%i new email(s)"
-        
+
     class fr:
         register_title = u"Enregistrement d'une nouvelle connexion à un serveur email."
         register_instructions = u"Entrer les paramètres de connexion"
@@ -193,11 +192,9 @@ class Lang:
         update_instructions = u"Modifica los datos de la cuenta '%s'"
         connection_label = u"%s conexión '%s'"
         update_account_message_subject = u"Actualizada %s conexión '%s'"
-        update_account_message_body = u"Registrado con el usuario '%s' y " \
-                                      "contraseña '%s' en '%s'"
+        update_account_message_body = u"Registrado con el usuario '%s' y contraseña '%s' en '%s'"
         new_account_message_subject = u"Nueva %s conexión '%s' creada"
-        new_account_message_body = u"Registrado con " \
-                                   "usuario '%s' y contraseña '%s' en '%s'"
+        new_account_message_body = u"Registrado con usuario '%s' y contraseña '%s' en '%s'"
         ask_password_subject = u"Petición de contraseña"
         ask_password_body = u"Para avisarte de emails nuevos, contesta a este mensaje con la contraseña " \
                             "de la cuenta: \n" \
