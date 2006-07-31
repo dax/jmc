@@ -64,6 +64,7 @@ def main(config_file = "jmc.xml", isDebug = 0):
 
         print "starting..."
         mailcomp.run(1)
+	os.remove(config.get_content("config/pidfile"))
     except ComponentFatalError,e:
         print e
         print "Aborting."

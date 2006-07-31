@@ -1,0 +1,10 @@
+# Defaults for jmc initscript
+# sourced by /etc/init.d/jmc
+# installed at /etc/default/jmc by the maintainer scripts
+
+ENABLE="false"
+
+# Additional options that are passed to the Daemon.
+# use this line to activate debug
+#DAEMON_OPTS="-D"
+DAEMON_OPTS=""

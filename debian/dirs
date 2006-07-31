@@ -1,0 +1,7 @@
+var/run/jabber
+var/log/jabber
+var/spool/jabber
+etc/default
+etc/jabber
+usr/share/jmc
+usr/bin
