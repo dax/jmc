@@ -5,7 +5,7 @@
      <secret>secret</secret>
      <service>jmc.localhost</service>
      <connectsleep>5</connectsleep>
-     <!-- check jabber/lang.py for available languages -->
+     <!-- check jmc/utils/lang.py for available languages -->
      <language>fr</language>
      <vCard>
          <FN>Jabber Mail Component</FN>

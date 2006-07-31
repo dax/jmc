@@ -32,6 +32,7 @@ import os
 import time
 import traceback
 
+import jmc.email.mailconnection as mailconnection
 from jmc.email.mailconnection import *
 from jmc.jabber.x import *
 from jmc.utils.storage import *

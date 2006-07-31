@@ -9,7 +9,8 @@ Installation :
                             {host, "jmc.localhost",
                              [{password, "secret"}]}]}
 
-- then run python jmc.py -c jmc.xml (-D to get debug)
+- then run (in src directory):
+$ python jmc.py -c jmc.xml (-D to get debug)
 
 Usage :
 
@@ -22,28 +23,29 @@ Feedback :
 
 Send me feedback and comments to dax at happycoders dot org
 
-Utils :
-- backend_converter.py convert from one storage type to another.
+Utils (in src/utils directory) :
+- jmc_converter.py convert from one storage type to another.
 
-$ python utils/backend_converter.py 
+$ python jmc_converter.py 
 
-give you the list of supported types.
-example of usage :
+-> give you the list of supported types.
 
-$ python utils/backend_converter.py \
+Example of usage :
+
+$ python jmc_converter.py \
   DBM \
   registered.db \
   SQLite \
   registered.sqlite
 
-converts a DBM file (registered.db) to a SQLite file
+-> converts a DBM file (registered.db) to a SQLite file
 (registered.sqlite). Once converted, the new file copied in
 ${spool_dir}/${service}/registered.db where ${spool_dir} and
 ${service} are defined in jmc.xml configuration file.
 
-- backend_dump.py dump a db file. example :
+- jmc_dump.py dump a db file. example :
 
-$ python utils/backend_dump.py DBM registered.db
+$ python jmc_dump.py DBM registered.db
 
 
 

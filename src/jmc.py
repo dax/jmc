@@ -29,10 +29,9 @@ import logging
 reload(sys)
 sys.setdefaultencoding('utf-8')
 del sys.setdefaultencoding
-
-from jmc import mailconnection
-from jmc.component import MailComponent, ComponentFatalError
-from jmc.config import Config
+from jmc.email import mailconnection
+from jmc.jabber.component import MailComponent, ComponentFatalError
+from jmc.utils.config import Config
 
 def main(config_file = "jmc.xml", isDebug = 0):
     try:
