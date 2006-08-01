@@ -47,6 +47,8 @@ from pyxmpp.jid import JID
 from pyxmpp.jabber.disco import DiscoItems, DiscoItem, DiscoInfo, DiscoIdentity
 from pyxmpp.jabberd.component import Component
 
+VERSION="0.2.2"
+
 class ComponentFatalError(RuntimeError):
     pass
 
@@ -502,7 +504,7 @@ class MailComponent(Component):
         iq = iq.make_result_response()
         q = iq.new_query("jabber:iq:version")
         q.newTextChild(q.ns(), "name", self.__name)
-        q.newTextChild(q.ns(), "version", "0.2.1")
+        q.newTextChild(q.ns(), "version", VERSION)
         self.stream.send(iq)
         return 1
 
