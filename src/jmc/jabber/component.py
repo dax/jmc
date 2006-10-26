@@ -568,10 +568,10 @@ class MailComponent(Component):
 	else:
 	    login = u""
 
-	if x.fields.has_key("password"):
+	if x.fields.has_key("password") and x.fields["password"].value != "":
 	    password = x.fields["password"].value
 	else:
-	    password = u""
+	    password = None
 
 	store_password = x.fields.has_key("store_password") \
                          and (x.fields["store_password"].value == "1")
