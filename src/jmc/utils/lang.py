@@ -30,7 +30,7 @@ class Lang:
         if lang is None:
             print "Using default lang " + self.default_lang
             lang = self.default_lang
-        return lang
+        return lang[:2]
 
     def get_lang_class(self, lang):
         return getattr(Lang, lang)
