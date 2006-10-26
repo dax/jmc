@@ -574,7 +574,8 @@ class MailComponent(Component):
 	    password = None
 
 	store_password = x.fields.has_key("store_password") \
-                         and (x.fields["store_password"].value == "1")
+                         and (x.fields["store_password"].value == "1"
+                              or x.fields["store_password"].value.lower() == "true")
 
 	if x.fields.has_key("host"):
 	    host = x.fields["host"].value
@@ -632,7 +633,8 @@ class MailComponent(Component):
 	    interval = None
 
 	live_email_only = x.fields.has_key("live_email_only") \
-                          and (x.fields["live_email_only"].value == "1")
+                          and (x.fields["live_email_only"].value == "1"
+                               or x.fields["live_email_only"].value == "true")
 
 	self.__logger.debug(u"New Account: %s, %s, %s, %s, %s, %s, %s, %s %i %i %i %i %i %i %i %s" \
 			    % (name, login, password, str(store_password), host, str(port), \
