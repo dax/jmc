@@ -23,7 +23,7 @@
 import sys
 sys.path.insert(0, "..")
 import types
-import jabber.storage
+import jmc.utils.storage
 import os.path
 import re
 
@@ -32,8 +32,8 @@ if len(sys.argv) != 3:
     print >>sys.stderr, "Usage: " + sys.argv[0] + " db_type db_file"
     print >>sys.stderr, "Supported DB type are :"
     for var in [aclass
-                for aclass in dir(jabber.storage)
-                if type(getattr(jabber.storage, aclass)) == types.ClassType \
+                for aclass in dir(jmc.utils.storage)
+                if type(getattr(jmc.utils.storage, aclass)) == types.ClassType \
                 and re.compile(".+Storage$").match(aclass) is not None]:
         print >>sys.stderr, "\t" + var
     sys.exit(1)
@@ -45,7 +45,7 @@ if not os.path.exists(from_file):
     print >>sys.stderr, from_file + " does not exist."
     sys.exit(1)
 
-from jabber.storage import *
+from jmc.utils.storage import *
 
 try:
     from_storage = globals()[from_storage_class + "Storage"](2, db_file = from_file)
