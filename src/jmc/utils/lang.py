@@ -30,10 +30,14 @@ class Lang:
         if lang is None:
             print "Using default lang " + self.default_lang
             lang = self.default_lang
-        return lang[:2]
+        return lang
 
     def get_lang_class(self, lang):
-        return getattr(Lang, lang)
+        if lang is not None:
+            lang = lang[:2]
+        if hasattr(Lang, lang):
+            return getattr(Lang, lang)
+        return getattr(Lang, self.default_lang)
 
     def get_lang_class_from_node(self, node):
         return self.get_lang_class(self.get_lang_from_node(node))

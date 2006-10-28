@@ -36,6 +36,7 @@ from tests.test_mailconnection import *
 from tests.test_mailconnection_factory import *
 from tests.test_component import *
 from tests.test_storage import *
+from tests.test_lang import *
 from test import test_support
 import logging
 import jmc
@@ -63,6 +64,8 @@ if __name__ == '__main__':
                                           "test")
     sqlitestorage_suite = unittest.makeSuite(SQLiteStorage_TestCase, \
                                              "test")
+    lang_suite = unittest.makeSuite(Lang_TestCase, \
+                                    "test")
 
     jmc_suite = unittest.TestSuite((mail_connection_suite, \
                                     pop3_connection_suite, \
@@ -72,7 +75,8 @@ if __name__ == '__main__':
  #                                   component2_suite, \
                                     storage_suite, \
                                     dbmstorage_suite, \
-                                    sqlitestorage_suite))
+                                    sqlitestorage_suite, \
+                                    lang_suite))
     #test_support.run_suite(mail_connection_suite)
     #test_support.run_suite(pop3_connection_suite)
     #test_support.run_suite(imap_connection_suite)
@@ -89,5 +93,6 @@ coverage.analysis(jmc.email.mailconnection_factory)
 coverage.analysis(jmc.email.mailconnection)
 coverage.analysis(jmc.jabber.component)
 coverage.analysis(jmc.jabber.x)
+coverage.analysis(jmc.utils.lang)
 coverage.report([jmc.email.mailconnection_factory, jmc.email.mailconnection, \
-                 jmc.jabber.component, jmc.jabber.x])
+                 jmc.jabber.component, jmc.jabber.x, jmc.utils.lang])
