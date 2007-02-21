@@ -1,10 +1,10 @@
 ##
-## mailconnection.py
-## Login : David Rousselie <dax@happycoders.org>
-## Started on  Fri Jan  7 11:06:42 2005 
-## $Id: mailconnection.py,v 1.11 2005/09/18 20:24:07 dax Exp $
+## account.py
+## Login : <dax@happycoders.org>
+## Started on  Fri Jan 19 18:21:44 2007 David Rousselie
+## $Id$
 ## 
-## Copyright (C) 2005 
+## Copyright (C) 2007 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -20,7 +20,6 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-
 import sys
 import logging
 import email
@@ -31,15 +30,14 @@ import poplib
 import imaplib
 import socket
 
-from jmc.utils.lang import Lang
+from sqlobject.inheritance import InheritableSQLObject
+from sqlobject.col import StringCol, IntCol, BoolCol
+
+from jcl.model.account import PresenceAccount
+from jmc.lang import Lang
 
 IMAP4_TIMEOUT = 10
 POP3_TIMEOUT = 10
-
-DO_NOTHING = 0
-DIGEST = 1
-RETRIEVE = 2
-default_encoding = "iso-8859-1"
 
 ## All MY* classes are implemented to add a timeout (settimeout)
 ## while connecting
@@ -127,77 +125,84 @@ class MYPOP3_SSL(poplib.POP3_SSL):
         self._debugging = 0
         self.welcome = self._getresp()
 
-class MailConnection(object):
+class MailAccount(PresenceAccount):
     """ Wrapper to mail connection and action.
     Abstract class, do not represent real mail connection type"""
 
-    _logger = logging.getLogger("jmc.MailConnection")
+    # Define constants
+    DIGEST = 1
+    RETRIEVE = 2
+    default_encoding = "iso-8859-1"
+    possibles_actions = [PresenceAccount.DO_NOTHING, \
+                         DIGEST, \
+                         RETRIEVE]
 
-    def __init__(self, login = "", password = "", host = "", \
-		 port = 110, ssl = False):
-	""" Initialize MailConnection object for common parameters of all
-	connections types
-
-	:Parameters:
-	- 'login': login used to connect mail server
-	- 'password': password associated with 'login' to connect mail server
-	- 'host': mail server hostname
-	- 'port': mail server port
-	- 'ssl': activate ssl to connect server
-
-	:Types:
-	- 'login': string
-	- 'password': string
-	- 'host': string
-	- 'port': int
-	- 'ssl': boolean"""
-	self.login = login
-	self.password = password
-        self.store_password = True
-	self.host = host
-	self.port = port
-	self.ssl = ssl
-        self.status = "offline"
-	self.connection = None
-        self.chat_action = RETRIEVE
-        self.online_action = RETRIEVE
-        self.away_action = RETRIEVE
-        self.xa_action = RETRIEVE
-        self.dnd_action = RETRIEVE
-        self.offline_action = DO_NOTHING
-        self.interval = 5
-	self.lastcheck = 0
-        self.default_lang_class = Lang.en
-        self.waiting_password_reply = False
-        self.in_error = False
-        self.live_email_only = False
-        self.first_check = True
-        
-    def __eq__(self, other):
-        return self.get_type() == other.get_type() \
-               and self.login == other.login \
-               and (not self.store_password or self.password == other.password) \
-               and self.store_password == other.store_password \
-               and self.host == other.host \
-               and self.port == other.port \
-               and self.ssl == other.ssl \
-               and self.chat_action == other.chat_action \
-               and self.online_action == other.online_action \
-               and self.away_action == other.away_action \
-               and self.xa_action == other.xa_action \
-               and self.dnd_action == other.dnd_action \
-               and self.offline_action == other.offline_action \
-               and self.interval == other.interval \
-               and self.live_email_only == other.live_email_only
+    login = StringCol(default = "")
+    password = StringCol(default = None)
+    host = StringCol(default = "localhost")
+    port = IntCol(default = 110)
+    ssl = BoolCol(default = False)
+    interval = IntCol(default = 5)
+    store_password = BoolCol(default = True)
+    live_email_only = BoolCol(default = False)
     
-    def __str__(self):
-	return self.get_type() + "#" + self.login + "#" + \
-               (self.store_password and self.password or "/\\") + "#" \
-               + self.host + "#" + str(self.port) + "#" + str(self.chat_action) + "#" \
-               + str(self.online_action) + "#" + str(self.away_action) + "#" + \
-               str(self.xa_action) + "#" + str(self.dnd_action) + "#" + \
-               str(self.offline_action) + "#" + str(self.interval) + "#" + str(self.live_email_only)
- 
+    lastcheck = IntCol(default = 0)
+    waiting_password_reply = BoolCol(default = False)
+    in_error = BoolCol(default = False)
+    first_check = BoolCol(default = True)
+    
+    def _init(self, *args, **kw):
+        """MailAccount init
+        Initialize class attributes"""
+        InheritableSQLObject._init(self, *args, **kw)
+        self.__logger = logging.getLogger("jmc.model.account.MailAccount")
+        self.connection = None
+        self.default_lang_class = Lang.en # TODO: use String
+    
+    def _get_register_fields(cls):
+        """See Account._get_register_fields
+        """
+        def password_post_func(password):
+            if password is None or password == "":
+                return None
+            return password
+        
+        return Account.get_register_fields() + \
+               [("login", "text-single", None, account.string_not_null_post_func, \
+                 account.mandatory_field), \
+                ("password", "text-private", None, password_post_func, \
+                 (lambda field_name: None)), \
+                ("host", "text-single", None, account.string_not_null_post_func, \
+                 account.mandatory_field), \
+                ("port", "text-single", None, account.int_post_func, \
+                 account.mandatory_field), \
+                ("ssl", "boolean", None, account.default_post_func, \
+                 (lambda field_name: None)), \
+                ("store_password", "boolean", None, account.default_post_func, \
+                 (lambda field_name: True)), \
+                ("live_email_only", "boolean", None, account.default_post_func, \
+                 lambda field_name: False)]
+    
+    get_register_fields = classmethod(_get_register_fields)
+    
+    def _get_presence_actions_fields(cls):
+        """See PresenceAccount._get_presence_actions_fields
+        """
+        return {'chat_action': (cls.possibles_actions, \
+                                RETRIEVE), \
+                'online_action': (cls.possibles_actions, \
+                                  RETRIEVE), \
+                'away_action': (cls.possibles_actions, \
+                                RETRIEVE), \
+                'xa_action': (cls.possibles_actions, \
+                              RETRIEVE), \
+                'dnd_action': (cls.possibles_actions, \
+                               RETRIEVE), \
+                'offline_action': (cls.possibles_actions, \
+                                   PresenceAccount.DO_NOTHING)}
+    
+    get_presence_actions_fields = classmethod(_get_presence_actions_fields)
+
     def get_decoded_part(self, part, charset_hint):
         content_charset = part.get_content_charset()
         result = u""
@@ -292,26 +297,26 @@ class MailConnection(object):
 	    unicode(self.port)
 
     def connect(self):
-	pass
+        raise NotImplementedError
 
     def disconnect(self):
-	pass
+        raise NotImplementedError
 
     def get_mail_list(self):
-	return 0
+        raise NotImplementedError
 
     def get_mail(self, index):
-	return None
+        raise NotImplementedError
 
     def get_mail_summary(self, index):
-	return None
+        raise NotImplementedError
 
     def get_next_mail_index(self, mail_list):
-        pass
+        raise NotImplementedError
 
     # Does not modify server state but just internal JMC state
     def mark_all_as_read(self):
-        pass
+        raise NotImplementedError
     
     def get_action(self):
         mapping = {"online": self.online_action,
@@ -322,29 +327,35 @@ class MailConnection(object):
                    "offline": self.offline_action}
         if mapping.has_key(self.status):
             return mapping[self.status]
-        return DO_NOTHING
+        return PresenceAccount.DO_NOTHING
         
     action = property(get_action)
-    
-class IMAPConnection(MailConnection):
-    _logger = logging.getLogger("jmc.IMAPConnection")
 
-    def __init__(self, login = "", password = "", host = "", \
-		 port = None, ssl = False, mailbox = "INBOX"):
-	if not port:
-	    if ssl:
-		port = 993
-	    else:
-		port = 143
-	MailConnection.__init__(self, login, password, host, port, ssl)
-	self.mailbox = mailbox
+class IMAPAccount(MailAccount):
+    mailbox = StringCol(default = "INBOX") # TODO : set default INBOX in reg_form (use get_register_fields last field ?)
 
-    def __eq__(self, other):
-        return MailConnection.__eq__(self, other) \
-               and self.mailbox == other.mailbox
+    def _get_register_fields(cls):
+        """See Account._get_register_fields
+        """
+        def password_post_func(password):
+            if password is None or password == "":
+                return None
+            return password
+        
+        return MailAccount.get_register_fields() + \
+               [("mailbox", "text-single", None, account.string_not_null_post_func, \
+                 (lambda field_name: "INBOX")), \
+                ("password", "text-private", None, password_post_func, \
+                 (lambda field_name: None)), \
+                ("store_password", "boolean", None, account.boolean_post_func, \
+                 lambda field_name: True)]
     
-    def __str__(self):
-	return MailConnection.__str__(self) + "#" + self.mailbox
+    get_register_fields = classmethod(_get_register_fields)
+
+
+    def _init(self, *args, **kw):
+	MailAccount._init(self, *args, **kw)
+        self.__logger = logging.getLogger("jmc.IMAPConnection")
 
     def get_type(self):
 	if self.ssl:
@@ -352,10 +363,10 @@ class IMAPConnection(MailConnection):
 	return "imap"
 	    
     def get_status(self):
-	return MailConnection.get_status(self) + "/" + self.mailbox
+	return MailAccount.get_status(self) + "/" + self.mailbox
 
     def connect(self):
-	IMAPConnection._logger.debug("Connecting to IMAP server " \
+	self.__logger.debug("Connecting to IMAP server " \
                                      + self.login + "@" + self.host + ":" + str(self.port) \
                                      + " (" + self.mailbox + "). SSL=" \
                                      + str(self.ssl))
@@ -366,12 +377,12 @@ class IMAPConnection(MailConnection):
 	self.connection.login(self.login, self.password)
 
     def disconnect(self):
-	IMAPConnection._logger.debug("Disconnecting from IMAP server " \
+	self.__logger.debug("Disconnecting from IMAP server " \
                                      + self.host)
 	self.connection.logout()
 
     def get_mail_list(self):
-	IMAPConnection._logger.debug("Getting mail list")
+	self.__logger.debug("Getting mail list")
 	typ, data = self.connection.select(self.mailbox)
 	typ, data = self.connection.search(None, 'RECENT')
 	if typ == 'OK':
@@ -379,7 +390,7 @@ class IMAPConnection(MailConnection):
 	return None
 
     def get_mail(self, index):
-	IMAPConnection._logger.debug("Getting mail " + str(index))
+	self.__logger.debug("Getting mail " + str(index))
 	typ, data = self.connection.select(self.mailbox, True)
 	typ, data = self.connection.fetch(index, '(RFC822)')
 	if typ == 'OK':
@@ -387,7 +398,7 @@ class IMAPConnection(MailConnection):
 	return u"Error while fetching mail " + str(index)
 	
     def get_mail_summary(self, index):
-	IMAPConnection._logger.debug("Getting mail summary " + str(index))
+	self.__logger.debug("Getting mail summary " + str(index))
 	typ, data = self.connection.select(self.mailbox, True)
 	typ, data = self.connection.fetch(index, '(RFC822)')
 	if typ == 'OK':
@@ -404,29 +415,25 @@ class IMAPConnection(MailConnection):
     
     type = property(get_type)
 
-class POP3Connection(MailConnection):
-    _logger = logging.getLogger("jmc.POP3Connection")
-
-    def __init__(self, login = "", password = "", host = "", \
-		 port = None, ssl = False):
-	if not port:
-	    if ssl:
-		port = 995
-	    else:
-		port = 110
-	MailConnection.__init__(self, login, password, host, port, ssl)
-        self.__nb_mail = 0
-        self.__lastmail = 0
+class POP3Account(MailAccount):
+    nb_mail = IntCol(default = 0)
+    lastmail = IntCol(default = 0)
+    
+    def _init(self, *args, **kw):
+	MailAccount._init(self, *args, **kw)
+        self.__logger = logging.getLogger("jmc.model.account.POP3Account")
 
     def get_type(self):
 	if self.ssl:
 	    return "pop3s"
 	return "pop3"
 
+    type = property(get_type)
+
     def connect(self):
-	POP3Connection._logger.debug("Connecting to POP3 server " \
-                                     + self.login + "@" + self.host + ":" + str(self.port)\
-                                     + ". SSL=" + str(self.ssl))
+	self.__logger.debug("Connecting to POP3 server " \
+                            + self.login + "@" + self.host + ":" + str(self.port)\
+                            + ". SSL=" + str(self.ssl))
 	if self.ssl:
 	    self.connection = MYPOP3_SSL(self.host, self.port)
 	else:
@@ -439,18 +446,18 @@ class POP3Connection(MailConnection):
 	
 
     def disconnect(self):
-	POP3Connection._logger.debug("Disconnecting from POP3 server " \
-                                     + self.host)
+	self.__logger.debug("Disconnecting from POP3 server " \
+                            + self.host)
 	self.connection.quit()
 
     def get_mail_list(self):
-	POP3Connection._logger.debug("Getting mail list")
+	self.__logger.debug("Getting mail list")
 	count, size = self.connection.stat()
-        self.__nb_mail = count 
+        self.nb_mail = count 
         return [str(i) for i in range(1, count + 1)]
 
     def get_mail(self, index):
-	POP3Connection._logger.debug("Getting mail " + str(index))
+	self.__logger.debug("Getting mail " + str(index))
 	ret, data, size = self.connection.retr(index)
         try:
             self.connection.rset()
@@ -461,7 +468,7 @@ class POP3Connection(MailConnection):
 	return u"Error while fetching mail " + str(index)
 
     def get_mail_summary(self, index):
-	POP3Connection._logger.debug("Getting mail summary " + str(index))
+	self.__logger.debug("Getting mail summary " + str(index))
 	ret, data, size = self.connection.retr(index)
         try:
             self.connection.rset()
@@ -472,16 +479,15 @@ class POP3Connection(MailConnection):
 	return u"Error while fetching mail " + str(index)
 
     def get_next_mail_index(self, mail_list):
-        if self.__nb_mail == self.__lastmail:
+        if self.nb_mail == self.lastmail:
             return None
-        if self.__nb_mail < self.__lastmail:
-            self.__lastmail = 0
-        result = int(mail_list[self.__lastmail])
-        self.__lastmail += 1
+        if self.nb_mail < self.lastmail:
+            self.lastmail = 0
+        result = int(mail_list[self.lastmail])
+        self.lastmail += 1
         return result
 
     def mark_all_as_read(self):
         self.get_mail_list()
-        self.__lastmail = self.__nb_mail
+        self.lastmail = self.nb_mail
         
-    type = property(get_type)

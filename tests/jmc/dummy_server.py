@@ -29,8 +29,27 @@ import socket
 import types
 import select
 import xml.dom.minidom
-import utils
 from pyxmpp import xmlextra
+
+def xmldiff(node1, node2):
+    if node1.nodeType == node1.TEXT_NODE:
+        if not node2.nodeType == node2.TEXT_NODE \
+               or re.compile(node2.data + "$").match(node1.data) is None:
+            raise Exception("data in text node " + node1.data + " does not match " + node2.data)
+    elif node1.nodeType == node1.DOCUMENT_NODE:
+        if not node2.nodeType == node2.DOCUMENT_NODE:
+            raise Exception("node1 is Document but not node2 (" + node2.nodeType + ")")
+    elif node1.tagName != node2.tagName:
+        raise Exception("Different tag name : " + node1.tagName + " != " + node2.tagName)
+    else:
+        for attr in node1._get_attributes().keys():
+            if not node2.hasAttribute(attr) \
+                   or node1.getAttribute(attr) != node2.getAttribute(attr):
+                raise Exception("(" + node1.tagName + ") Different attributes : " + node1.getAttribute(attr) + " != " + node2.getAttribute(attr))
+    if len(node1.childNodes) != len(node2.childNodes):
+        raise Exception("(" + node1.tagName + ") Different children number : " + str(len(node1.childNodes)) + " != " + str(len(node2.childNodes)))
+    for i in range(len(node1.childNodes)):
+        xmldiff(node1.childNodes[i], node2.childNodes[i])
 
 class DummyServer:
     def __init__(self, host, port, responses = None):
@@ -40,7 +59,7 @@ class DummyServer:
                 s = socket.socket(af, socktype, proto)
             except socket.error, msg:
                 s = None
-                continue
+                raise socket.error
             try:
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 s.bind(sa)
@@ -48,7 +67,7 @@ class DummyServer:
             except socket.error, msg:
                 s.close()
                 s = None
-                continue
+                raise socket.error
             break
         self.socket = s
         self.responses = None
@@ -56,6 +75,7 @@ class DummyServer:
         self.real_queries = []
         
     def serve(self):
+        conn = None
         try:
             conn, addr = self.socket.accept()
             rfile = conn.makefile('rb', -1)
@@ -77,9 +97,11 @@ class DummyServer:
                     else:
                         self.real_queries.append(data)
                         #print >>sys.stderr, 'Receive : ', data
-            conn.close()
-            self.socket.close()
-            self.socket = None
+            if conn is not None:
+                conn.close()
+            if self.socket is not None:
+                self.socket.close()
+                self.socket = None
         except:
             type, value, stack = sys.exc_info()
             print >>sys.stderr, "".join(traceback.format_exception

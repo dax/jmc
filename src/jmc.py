@@ -1,12 +1,10 @@
-#!/usr/bin/python -u
 ##
-## Jabber Mail Component
 ## jmc.py
-## Login : David Rousselie <david.rousselie@happycoders.org>
-## Started on  Fri Jan  7 11:06:42 2005 
-## $Id: jmc.py,v 1.3 2005/07/11 20:39:31 dax Exp $
+## Login : <dax@happycoders.org>
+## Started on  Fri Jan 19 18:14:41 2007 David Rousselie
+## $Id$
 ## 
-## Copyright (C) 2005 
+## Copyright (C) 2007 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -22,70 +20,27 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-import sys
-import os.path
 import logging
+import sys
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
 del sys.setdefaultencoding
-from jmc.email import mailconnection
-from jmc.jabber.component import MailComponent, ComponentFatalError
-from jmc.utils.config import Config
 
-def main(config_file = "jmc.xml", isDebug = 0):
-    try:
-        logger = logging.getLogger()
-        logger.addHandler(logging.StreamHandler())
-        if isDebug > 0:
-            logger.setLevel(logging.DEBUG)
-        try:
-	    logger.debug("Loading config file " + config_file)
-            config = Config(config_file)
-        except:
-            print >>sys.stderr, "Couldn't load config file:", \
-		str(sys.exc_value)
-            sys.exit(1)
+from sqlobject import *
+from pyxmpp.message import Message
 
-        pidfile = open(config.get_content("config/pidfile"), "w")
-        pidfile.write(str(os.getpid()))
-        pidfile.close()
-        mailconnection.default_encoding = config.get_content("config/mail_default_encoding")
-        print "creating component..."
-        mailcomp = MailComponent(config.get_content("config/jabber/service"), \
-                                 config.get_content("config/jabber/secret"), \
-                                 config.get_content("config/jabber/server"), \
-                                 int(config.get_content("config/jabber/port")), \
-                                 config.get_content("config/jabber/language"), \
-                                 int(config.get_content("config/check_interval")), \
-                                 config.get_content("config/spooldir"), \
-                                 config.get_content("config/storage"), \
-                                 config.get_content("config/jabber/vCard/FN"))
+from jmc.jabber.component import MailComponent
+from jmc.model.account import MailPresenceAccount
 
-        print "starting..."
-        mailcomp.run(1)
-	os.remove(config.get_content("config/pidfile"))
-    except ComponentFatalError,e:
-        print e
-        print "Aborting."
-        sys.exit(1)
-
-if __name__ == "__main__":
-    var_option = 0
-    file_num = 0
-    index = 0
-    debug_level = 0
-    for opt in sys.argv:
-        if var_option == 0 and len(opt) == 2 and opt == "-c":
-            var_option += 1
-        elif (var_option & 1) == 1 and len(opt) > 0:
-            var_option += 1
-            file_num = index
-        if len(opt) == 2 and opt == "-D":
-            debug_level = 1
-        index += 1
-    if (var_option & 2) == 2:
-        main(sys.argv[file_num], debug_level)
-    else:
-        main("/etc/jabber/jmc.xml", debug_level)
-
+logger = logging.getLogger()
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
+component = MailComponent("jmc.localhost", \
+                          "secret", \
+                          "127.0.0.1", \
+                          5349, \
+                          "sqlite:///tmp/jmc_test.db")
+component.account_class = MailPresenceAccount
+component.run()
+logger.debug("JMC is exiting")

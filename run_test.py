@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 ##
-## run_test.py
+## run_tests.py
 ## Login : David Rousselie <dax@happycoders.org>
-## Started on  Wed May 18 13:33:03 2005 David Rousselie
-## $Id: run_test.py,v 1.2 2005/09/18 20:24:07 David Rousselie Exp $
+## Started on  Wed Aug  9 21:37:35 2006 David Rousselie
+## $Id$
 ## 
-## Copyright (C) 2005 David Rousselie
+## Copyright (C) 2006 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -23,7 +24,9 @@
 import coverage
 coverage.erase()
 coverage.start()
+import logging
 import unittest
+from test import test_support
 
 import sys
 sys.path.append("src")
@@ -32,67 +35,32 @@ sys.setdefaultencoding('utf8')
 del sys.setdefaultencoding
 
 import tests
-from tests.test_mailconnection import *
-from tests.test_mailconnection_factory import *
-from tests.test_component import *
-from tests.test_storage import *
-from tests.test_lang import *
-from test import test_support
-import logging
-import jmc
+from tests.jmc.model.test_account import *
 
+import jmc
+import jmc.jabber
+#import jmc.jabber.component
 
 if __name__ == '__main__':
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.INFO)
-    mail_connection_suite = unittest.makeSuite(MailConnection_TestCase, \
-                                               "test")
-    pop3_connection_suite = unittest.makeSuite(POP3Connection_TestCase, \
-                                               "test")
-    imap_connection_suite = unittest.makeSuite(IMAPConnection_TestCase, \
-                                               "test")
-    mc_factory_suite = unittest.makeSuite(MailConnectionFactory_TestCase, \
-                                          "test")
-    component_suite = unittest.makeSuite(MailComponent_TestCase_Basic, \
-                                          "test")
-    component2_suite = unittest.makeSuite(MailComponent_TestCase_NoReg, \
-                                          "test")
-    storage_suite = unittest.makeSuite(Storage_TestCase, \
-                                       "test")
-    dbmstorage_suite = unittest.makeSuite(DBMStorage_TestCase, \
-                                          "test")
-    sqlitestorage_suite = unittest.makeSuite(SQLiteStorage_TestCase, \
-                                             "test")
-    lang_suite = unittest.makeSuite(Lang_TestCase, \
-                                    "test")
-
-    jmc_suite = unittest.TestSuite((mail_connection_suite, \
-                                    pop3_connection_suite, \
-                                    imap_connection_suite, \
-                                    mc_factory_suite, \
- #                                   component_suite, \
- #                                   component2_suite, \
-                                    storage_suite, \
-                                    dbmstorage_suite, \
-                                    sqlitestorage_suite, \
-                                    lang_suite))
-    #test_support.run_suite(mail_connection_suite)
-    #test_support.run_suite(pop3_connection_suite)
-    #test_support.run_suite(imap_connection_suite)
-    #test_support.run_suite(mc_factory_suite)
-    #test_support.run_suite(component_suite)
-    #test_support.run_suite(component2_suite)
-    #test_support.run_suite(storage_suite)
-    #test_support.run_suite(sqlitestorage_suite)
-    #test_support.run_suite(dbmstorage_suite)
+    
+    mail_account_suite = unittest.makeSuite(MailAccount_TestCase, "test")
+    imap_account_suite = unittest.makeSuite(IMAPAccount_TestCase, "test")
+    pop3_account_suite = unittest.makeSuite(POP3Account_TestCase, "test")
+    
+    jmc_suite = unittest.TestSuite()
+    jmc_suite = unittest.TestSuite((mail_account_suite, \
+                                    imap_account_suite, \
+                                    pop3_account_suite))
     test_support.run_suite(jmc_suite)
 
+
 coverage.stop()
-coverage.analysis(jmc.email.mailconnection_factory)
-coverage.analysis(jmc.email.mailconnection)
-coverage.analysis(jmc.jabber.component)
-coverage.analysis(jmc.jabber.x)
-coverage.analysis(jmc.utils.lang)
-coverage.report([jmc.email.mailconnection_factory, jmc.email.mailconnection, \
-                 jmc.jabber.component, jmc.jabber.x, jmc.utils.lang])
+#coverage.analysis(jmc.jabber.component)
+coverage.analysis(jmc.model.account)
+
+coverage.report([
+                 jmc.model.account])
+

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 ##
-## mailconnection_test.py
-## Login : David Rousselie <david.rousselie@happycoders.org>
-## Started on  Fri May 13 11:32:51 2005 David Rousselie
-## $Id: test_mailconnection.py,v 1.2 2005/09/18 20:24:07 David Rousselie Exp $
+## test_account.py
+## Login : <dax@happycoders.org>
+## Started on  Wed Feb 14 08:23:17 2007 David Rousselie
+## $Id$
 ## 
-## Copyright (C) 2005 David Rousselie
+## Copyright (C) 2007 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -22,20 +22,45 @@
 ##
 
 import unittest
-from jmc.email.mailconnection import IMAPConnection, \
-     POP3Connection, \
-     MailConnection
-import dummy_server
-import email_generator
+import os
 import thread
-import re
-import sys
-import string
 
-class MailConnection_TestCase(unittest.TestCase):
+from sqlobject import *
+from sqlobject.dbconnection import TheURIOpener
+
+from jcl.model import account
+from jcl.model.account import Account, PresenceAccount
+from jmc.model.account import MailAccount, POP3Account, IMAPAccount
+
+from tests.jmc import email_generator, dummy_server
+
+DB_PATH = "/tmp/jmc_test.db"
+DB_URL = DB_PATH # + "?debug=1&debugThreading=1"
+
+class MailAccount_TestCase(unittest.TestCase):
     def setUp(self):
-        self.connection = MailConnection()
-            
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        Account.createTable(ifNotExists = True)
+        PresenceAccount.createTable(ifNotExists = True)
+        MailAccount.createTable(ifNotExists = True)
+        self.account = MailAccount(user_jid = "user1@test.com", \
+                                   name = "account1", \
+                                   jid = "account1@jmc.test.com")
+        del account.hub.threadConnection
+
+    def tearDown(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        MailAccount.dropTable(ifExists = True)
+        PresenceAccount.dropTable(ifExists = True)
+        Account.dropTable(ifExists = True)
+        del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
+        account.hub.threadConnection.close()
+        del account.hub.threadConnection
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+
     def make_test(email_type, tested_func, expected_res):
         def inner(self):
             encoded, multipart, header = email_type
@@ -48,23 +73,23 @@ class MailConnection_TestCase(unittest.TestCase):
 
     test_get_decoded_part_not_encoded = \
         make_test((False, False, False), \
-                  lambda self, email: self.connection.get_decoded_part(email, None), \
+                  lambda self, email: self.account.get_decoded_part(email, None), \
                   u"Not encoded single part")
 
     test_get_decoded_part_encoded = \
         make_test((True, False, False), \
-                  lambda self, email: self.connection.get_decoded_part(email, None), \
+                  lambda self, email: self.account.get_decoded_part(email, None), \
                   u"Encoded single part with 'iso-8859-15' charset (éàê)")
 
     test_format_message_summary_not_encoded = \
         make_test((False, False, True), \
-                  lambda self, email: self.connection.format_message_summary(email), \
+                  lambda self, email: self.account.format_message_summary(email), \
                   (u"From : not encoded from\nSubject : not encoded subject\n\n", \
                    u"not encoded from"))
 
     test_format_message_summary_encoded = \
         make_test((True, False, True), \
-                  lambda self, email: self.connection.format_message_summary(email), \
+                  lambda self, email: self.account.format_message_summary(email), \
                   (u"From : encoded from (éàê)\nSubject : encoded subject " + \
                    u"(éàê)\n\n", \
                    u"encoded from (éàê)"))
@@ -78,21 +103,21 @@ class MailConnection_TestCase(unittest.TestCase):
                   email.replace_header("From", \
                                        "\"" + str(email["From"]) \
                                        + "\" not encoded part") or \
-                  self.connection.format_message_summary(email), \
+                  self.account.format_message_summary(email), \
                   (u"From : \"encoded from (éàê)\" not encoded part\nSubject " + \
                    u": \"encoded subject (éàê)\" not encoded part\n\n", \
                    u"\"encoded from (éàê)\" not encoded part"))
 
     test_format_message_single_not_encoded = \
         make_test((False, False, True), \
-                  lambda self, email: self.connection.format_message(email), \
+                  lambda self, email: self.account.format_message(email), \
                   (u"From : not encoded from\nSubject : not encoded subject" + \
                    u"\n\nNot encoded single part\n", \
                    u"not encoded from"))
 
     test_format_message_single_encoded = \
         make_test((True, False, True), \
-                  lambda self, email: self.connection.format_message(email), \
+                  lambda self, email: self.account.format_message(email), \
                   (u"From : encoded from (éàê)\nSubject : encoded subject " + \
                    u"(éàê)\n\nEncoded single part with 'iso-8859-15' charset" + \
                    u" (éàê)\n", \
@@ -100,14 +125,14 @@ class MailConnection_TestCase(unittest.TestCase):
 
     test_format_message_multi_not_encoded = \
         make_test((False, True, True), \
-                  lambda self, email: self.connection.format_message(email), \
+                  lambda self, email: self.account.format_message(email), \
                   (u"From : not encoded from\nSubject : not encoded subject" + \
                    u"\n\nNot encoded multipart1\nNot encoded multipart2\n", \
                    u"not encoded from"))
 
     test_format_message_multi_encoded = \
         make_test((True, True, True), \
-                  lambda self, email: self.connection.format_message(email), \
+                  lambda self, email: self.account.format_message(email), \
                   (u"From : encoded from (éàê)\nSubject : encoded subject (éà" + \
                    u"ê)\n\nutf-8 multipart1 with no charset (éàê)" + \
                    u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n" + \
@@ -115,19 +140,40 @@ class MailConnection_TestCase(unittest.TestCase):
                    u"encoded from (éàê)"))
 
 
-class POP3Connection_TestCase(unittest.TestCase):
+class POP3Account_TestCase(unittest.TestCase):
     def setUp(self):
         self.server = dummy_server.DummyServer("localhost", 1110)
         thread.start_new_thread(self.server.serve, ())
-        self.pop3connection = POP3Connection("login", \
-                                             "pass", \
-                                             "localhost", \
-                                             1110, \
-                                             ssl = False)
-
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        Account.createTable(ifNotExists = True)
+        PresenceAccount.createTable(ifNotExists = True)
+        MailAccount.createTable(ifNotExists = True)
+        POP3Account.createTable(ifNotExists = True)
+        self.pop3_account = POP3Account(user_jid = "user1@test.com", \
+                                       name = "account1", \
+                                       jid = "account1@jmc.test.com", \
+                                       login = "login")
+        self.pop3_account.password = "pass"
+        self.pop3_account.host = "localhost"
+        self.pop3_account.port = 1110
+        self.pop3_account.ssl = False
+        del account.hub.threadConnection
+        
     def tearDown(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        POP3Account.dropTable(ifExists = True)
+        MailAccount.dropTable(ifExists = True)
+        PresenceAccount.dropTable(ifExists = True)
+        Account.dropTable(ifExists = True)
+        del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
+        account.hub.threadConnection.close()
+        del account.hub.threadConnection
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
         self.server = None
-        self.pop3connection = None
+        self.pop3_account = None
 
     def make_test(responses = None, queries = None, core = None):
         def inner(self):
@@ -141,12 +187,14 @@ class POP3Connection_TestCase(unittest.TestCase):
             if queries:
                 self.server.queries += queries
             self.server.queries += ["QUIT\r\n"]
-            self.pop3connection.connect()
-            self.failUnless(self.pop3connection.connection, \
+            self.pop3_account.connect()
+            self.failUnless(self.pop3_account.connection, \
                             "Cannot establish connection")
             if core:
+                account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
                 core(self)
-            self.pop3connection.disconnect()
+                del account.hub.threadConnection
+            self.pop3_account.disconnect()
             self.failUnless(self.server.verify_queries(), \
                             "Sended queries does not match expected queries.")
         return inner
@@ -157,7 +205,7 @@ class POP3Connection_TestCase(unittest.TestCase):
         make_test(["+OK 2 20\r\n"], \
                   ["STAT\r\n"], \
                   lambda self: \
-                  self.assertEquals(self.pop3connection.get_mail_list(), \
+                  self.assertEquals(self.pop3_account.get_mail_list(), \
                                     ["1", "2"]))
 
     test_get_mail_summary = \
@@ -169,7 +217,7 @@ class POP3Connection_TestCase(unittest.TestCase):
                   ["RETR 1\r\n",
                    "RSET\r\n"], \
                   lambda self: \
-                  self.assertEquals(self.pop3connection.get_mail_summary(1), \
+                  self.assertEquals(self.pop3_account.get_mail_summary(1), \
                                     (u"From : user@test.com\n" + \
                                      u"Subject : subject test\n\n", \
                                      u"user@test.com")))
@@ -183,7 +231,7 @@ class POP3Connection_TestCase(unittest.TestCase):
                   ["RETR 1\r\n",
                    "RSET\r\n"], \
                   lambda self: \
-                  self.assertEquals(self.pop3connection.get_mail(1), \
+                  self.assertEquals(self.pop3_account.get_mail(1), \
                                     (u"From : user@test.com\n" + \
                                      u"Subject : subject test\n\n" + \
                                      u"mymessage\n", \
@@ -198,7 +246,7 @@ class POP3Connection_TestCase(unittest.TestCase):
                   ["RETR 1\r\n",
                    "RSET\r\n"], \
                   lambda self: \
-                  self.assertEquals(self.pop3connection.get_mail_summary(1), \
+                  self.assertEquals(self.pop3_account.get_mail_summary(1), \
                                     (u"From : user@test.com\n" + \
                                      u"Subject : subject test\n\n", \
                                      u"user@test.com")))
@@ -212,26 +260,47 @@ class POP3Connection_TestCase(unittest.TestCase):
                   ["RETR 1\r\n",
                    "RSET\r\n"], \
                   lambda self: \
-                  self.assertEquals(self.pop3connection.get_mail(1), \
+                  self.assertEquals(self.pop3_account.get_mail(1), \
                                     (u"From : user@test.com\n" + \
                                      u"Subject : subject test\n\n" + \
                                      u"mymessage\n", \
                                      u"user@test.com")))
 
 
-class IMAPConnection_TestCase(unittest.TestCase):
+class IMAPAccount_TestCase(unittest.TestCase):
     def setUp(self):
         self.server = dummy_server.DummyServer("localhost", 1143)
         thread.start_new_thread(self.server.serve, ())
-        self.imap_connection = IMAPConnection("login", \
-                                              "pass", \
-                                              "localhost", \
-                                              1143, \
-                                              ssl = False)
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        Account.createTable(ifNotExists = True)
+        PresenceAccount.createTable(ifNotExists = True)
+        MailAccount.createTable(ifNotExists = True)
+        IMAPAccount.createTable(ifNotExists = True)
+        self.imap_account = IMAPAccount(user_jid = "user1@test.com", \
+                                       name = "account1", \
+                                       jid = "account1@jmc.test.com", \
+                                       login = "login")
+        self.imap_account.password = "pass"
+        self.imap_account.host = "localhost"
+        self.imap_account.port = 1143
+        self.imap_account.ssl = False
+        del account.hub.threadConnection
 
     def tearDown(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        IMAPAccount.dropTable(ifExists = True)
+        MailAccount.dropTable(ifExists = True)
+        PresenceAccount.dropTable(ifExists = True)
+        Account.dropTable(ifExists = True)
+        del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
+        account.hub.threadConnection.close()
+        del account.hub.threadConnection
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
         self.server = None
-        self.imap_connection = None
+        self.imap_account = None
 
     def make_test(responses = None, queries = None, core = None):
         def inner(self):
@@ -250,12 +319,14 @@ class IMAPConnection_TestCase(unittest.TestCase):
             if queries:
                 self.server.queries += queries
             self.server.queries += ["^[^ ]* LOGOUT"]
-            self.imap_connection.connect()
-            self.failUnless(self.imap_connection.connection, \
+            self.imap_account.connect()
+            self.failUnless(self.imap_account.connection, \
                             "Cannot establish connection")
             if core:
+                account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
                 core(self)
-            self.imap_connection.disconnect()
+                del account.hub.threadConnection
+            self.imap_account.disconnect()
             self.failUnless(self.server.verify_queries())
         return inner
             
@@ -271,7 +342,7 @@ class IMAPConnection_TestCase(unittest.TestCase):
                                    ["^[^ ]* SELECT INBOX", \
                                     "^[^ ]* SEARCH RECENT"], \
                                    lambda self: \
-                                   self.assertEquals(self.imap_connection.get_mail_list(), ['9', '10']))
+                                   self.assertEquals(self.imap_account.get_mail_list(), ['9', '10']))
 
     test_get_mail_summary = make_test([lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
                                        " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
@@ -283,7 +354,7 @@ class IMAPConnection_TestCase(unittest.TestCase):
                                        data.split()[0] + " OK FETCH completed\r\n"], \
                                       ["^[^ ]* EXAMINE INBOX", \
                                        "^[^ ]* FETCH 1 \(RFC822\)"], \
-                                      lambda self: self.assertEquals(self.imap_connection.get_mail_summary(1), \
+                                      lambda self: self.assertEquals(self.imap_account.get_mail_summary(1), \
                                                                      (u"From : None\nSubject : None\n\n", \
                                                                       u"None")))
 
@@ -297,7 +368,7 @@ class IMAPConnection_TestCase(unittest.TestCase):
                                data.split()[0] + " OK FETCH completed\r\n"], \
                               ["^[^ ]* EXAMINE INBOX", \
                                "^[^ ]* FETCH 1 \(RFC822\)",], \
-                              lambda self: self.assertEquals(self.imap_connection.get_mail(1), \
+                              lambda self: self.assertEquals(self.imap_account.get_mail(1), \
                                                              (u"From : None\nSubject : None\n\nbody text\r\n\n", \
                                                               u"None")))
         

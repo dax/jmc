@@ -1,10 +1,10 @@
 ##
-## release.py
-## Login : David Rousselie <dax@happycoders.org>
-## Started on  Mon Jul 24 22:37:00 2006 dax
+## test_component.py
+## Login : <dax@happycoders.org>
+## Started on  Wed Feb 14 18:04:49 2007 David Rousselie
 ## $Id$
 ## 
-## Copyright (C) 2006 dax
+## Copyright (C) 2007 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
@@ -20,14 +20,7 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-version = "0.2.2"
-author = "David Rousselie"
-email = "dax@happycoders.org"
-license = "GPL"
-long_description = """Jabber Mail Component
+import unittest
 
-JMC is a jabber service to check email from POP3 and IMAP4 server and retrieve
-them or just a notification of new emails. Jabber users can register multiple
-email accounts.
-
-"""
+class MailComponent_TestCase(unittest.TestCase):
+    pass
