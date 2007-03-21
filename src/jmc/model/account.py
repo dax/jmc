@@ -33,7 +33,8 @@ import socket
 from sqlobject.inheritance import InheritableSQLObject
 from sqlobject.col import StringCol, IntCol, BoolCol
 
-from jcl.model.account import PresenceAccount
+from jcl.model import account
+from jcl.model.account import Account, PresenceAccount
 from jmc.lang import Lang
 
 IMAP4_TIMEOUT = 10
@@ -148,15 +149,15 @@ class MailAccount(PresenceAccount):
     
     lastcheck = IntCol(default = 0)
     waiting_password_reply = BoolCol(default = False)
-    in_error = BoolCol(default = False)
     first_check = BoolCol(default = True)
     
     def _init(self, *args, **kw):
         """MailAccount init
         Initialize class attributes"""
-        InheritableSQLObject._init(self, *args, **kw)
+        PresenceAccount._init(self, *args, **kw)
         self.__logger = logging.getLogger("jmc.model.account.MailAccount")
         self.connection = None
+        self.connected = False
         self.default_lang_class = Lang.en # TODO: use String
     
     def _get_register_fields(cls):
@@ -167,7 +168,7 @@ class MailAccount(PresenceAccount):
                 return None
             return password
         
-        return Account.get_register_fields() + \
+        return PresenceAccount.get_register_fields() + \
                [("login", "text-single", None, account.string_not_null_post_func, \
                  account.mandatory_field), \
                 ("password", "text-private", None, password_post_func, \
@@ -314,22 +315,12 @@ class MailAccount(PresenceAccount):
     def get_next_mail_index(self, mail_list):
         raise NotImplementedError
 
+    def is_mail_list_valid(self, mail_list):
+        return (mail_list and mail_list != [] and mail_list[0] != '')
+
     # Does not modify server state but just internal JMC state
     def mark_all_as_read(self):
         raise NotImplementedError
-    
-    def get_action(self):
-        mapping = {"online": self.online_action,
-                   "chat": self.chat_action,
-                   "away": self.away_action,
-                   "xa": self.xa_action,
-                   "dnd": self.dnd_action,
-                   "offline": self.offline_action}
-        if mapping.has_key(self.status):
-            return mapping[self.status]
-        return PresenceAccount.DO_NOTHING
-        
-    action = property(get_action)
 
 class IMAPAccount(MailAccount):
     mailbox = StringCol(default = "INBOX") # TODO : set default INBOX in reg_form (use get_register_fields last field ?)
@@ -344,11 +335,7 @@ class IMAPAccount(MailAccount):
         
         return MailAccount.get_register_fields() + \
                [("mailbox", "text-single", None, account.string_not_null_post_func, \
-                 (lambda field_name: "INBOX")), \
-                ("password", "text-private", None, password_post_func, \
-                 (lambda field_name: None)), \
-                ("store_password", "boolean", None, account.boolean_post_func, \
-                 lambda field_name: True)]
+                 (lambda field_name: "INBOX"))]
     
     get_register_fields = classmethod(_get_register_fields)
 
@@ -375,11 +362,13 @@ class IMAPAccount(MailAccount):
 	else:
 	    self.connection = MYIMAP4(self.host, self.port)
 	self.connection.login(self.login, self.password)
+        self.connected = True
 
     def disconnect(self):
 	self.__logger.debug("Disconnecting from IMAP server " \
                                      + self.host)
 	self.connection.logout()
+        self.connected = False
 
     def get_mail_list(self):
 	self.__logger.debug("Getting mail list")
@@ -406,9 +395,10 @@ class IMAPAccount(MailAccount):
 	return u"Error while fetching mail " + str(index)
 
     def get_next_mail_index(self, mail_list):
-        if not mail_list or mail_list[0] == '':
+        if self.is_mail_list_valid(mail_list):
+            return mail_list.pop(0)
+        else:
             return None
-        return mail_list.pop(0)
 
     def mark_all_as_read(self):
         self.get_mail_list()
@@ -443,12 +433,14 @@ class POP3Account(MailAccount):
 	except:
 	  self.connection.user(self.login)
 	  self.connection.pass_(self.password)
+        self.connected = True
 	
 
     def disconnect(self):
 	self.__logger.debug("Disconnecting from POP3 server " \
                             + self.host)
 	self.connection.quit()
+        self.connected = False
 
     def get_mail_list(self):
 	self.__logger.debug("Getting mail list")
@@ -479,13 +471,16 @@ class POP3Account(MailAccount):
 	return u"Error while fetching mail " + str(index)
 
     def get_next_mail_index(self, mail_list):
-        if self.nb_mail == self.lastmail:
+        if self.is_mail_list_valid(mail_list):
+            if self.nb_mail == self.lastmail:
+                return None
+            if self.nb_mail < self.lastmail:
+                self.lastmail = 0
+            result = int(mail_list[self.lastmail])
+            self.lastmail += 1
+            return result
+        else:
             return None
-        if self.nb_mail < self.lastmail:
-            self.lastmail = 0
-        result = int(mail_list[self.lastmail])
-        self.lastmail += 1
-        return result
 
     def mark_all_as_read(self):
         self.get_mail_list()

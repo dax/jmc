@@ -21,31 +21,11 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-class Lang:
-    def __init__(self, default_lang = "en"):
-        self.default_lang = default_lang
+import jcl.lang
 
-    def get_lang_from_node(self, node):
-        lang = node.getLang()
-        if lang is None:
-            print "Using default lang " + self.default_lang
-            lang = self.default_lang
-        return lang
 
-    def get_lang_class(self, lang):
-        if lang is not None:
-            lang = lang[:2]
-        if hasattr(Lang, lang):
-            return getattr(Lang, lang)
-        return getattr(Lang, self.default_lang)
-
-    def get_lang_class_from_node(self, node):
-        return self.get_lang_class(self.get_lang_from_node(node))
-
-    class en:
-        register_title = u"Jabber Mail connection registration"
-        register_instructions = u"Enter connection parameters"
-        account_name = u"Connection name"
+class Lang(jcl.lang.Lang):
+    class en(jcl.lang.Lang.en):
         account_login = u"Login"
         account_password = u"Password"
         account_password_store = u"Store password on Jabber server?"
@@ -70,15 +50,6 @@ class Lang:
         update_account_message_subject = u"Updated %s connection '%s'"
         update_account_message_body = u"Registered with username '%s' and " \
                                       "password '%s' on '%s'"
-        new_account_message_subject = u"New %s connection '%s' created"
-        new_account_message_body = u"Registered with " \
-                                   "username '%s' and password '%s' on '%s'"
-        ask_password_subject = u"Password request"
-        ask_password_body = u"Reply to this message with the password " \
-                            "for the following account: \n" \
-                            "\thost = %s\n" \
-                            "\tlogin = %s\n"
-        password_saved_for_session = u"Password will be kept during your Jabber session"
         check_error_subject = u"Error while checking emails."
         check_error_body = u"An error appears while checking emails:\n\t%s"
         new_mail_subject = u"New email from %s"

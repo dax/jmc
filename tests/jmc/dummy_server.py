@@ -58,6 +58,7 @@ class DummyServer:
             try:
                 s = socket.socket(af, socktype, proto)
             except socket.error, msg:
+                print >>sys.stderr, msg
                 s = None
                 raise socket.error
             try:
@@ -65,6 +66,7 @@ class DummyServer:
                 s.bind(sa)
                 s.listen(1)
             except socket.error, msg:
+                print >>sys.stderr, msg
                 s.close()
                 s = None
                 raise socket.error

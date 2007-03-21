@@ -22,7 +22,7 @@
 ##
 
 import unittest
-from jmc.utils.lang import Lang
+from jmc.lang import Lang
 
 from pyxmpp.iq import Iq
 

@@ -139,11 +139,12 @@ class MailAccount_TestCase(unittest.TestCase):
                    u"Encoded multipart3 with no charset (éàê)\n", \
                    u"encoded from (éàê)"))
 
+    def test_get_register_fields(self):
+        register_fields = MailAccount.get_register_fields()
+        self.assertEquals(len(register_fields), 14)
 
 class POP3Account_TestCase(unittest.TestCase):
     def setUp(self):
-        self.server = dummy_server.DummyServer("localhost", 1110)
-        thread.start_new_thread(self.server.serve, ())
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
@@ -177,6 +178,8 @@ class POP3Account_TestCase(unittest.TestCase):
 
     def make_test(responses = None, queries = None, core = None):
         def inner(self):
+            self.server = dummy_server.DummyServer("localhost", 1110)
+            thread.start_new_thread(self.server.serve, ())
             self.server.responses = ["+OK connected\r\n", \
                                      "+OK name is a valid mailbox\r\n", \
                                      "+OK pass\r\n"]
@@ -266,11 +269,12 @@ class POP3Account_TestCase(unittest.TestCase):
                                      u"mymessage\n", \
                                      u"user@test.com")))
 
+    def test_get_register_fields(self):
+        register_fields = POP3Account.get_register_fields()
+        self.assertEquals(len(register_fields), 14)
 
 class IMAPAccount_TestCase(unittest.TestCase):
     def setUp(self):
-        self.server = dummy_server.DummyServer("localhost", 1143)
-        thread.start_new_thread(self.server.serve, ())
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
@@ -304,6 +308,8 @@ class IMAPAccount_TestCase(unittest.TestCase):
 
     def make_test(responses = None, queries = None, core = None):
         def inner(self):
+            self.server = dummy_server.DummyServer("localhost", 1143)
+            thread.start_new_thread(self.server.serve, ())
             self.server.responses = ["* OK [CAPABILITY IMAP4 LOGIN-REFERRALS " + \
                                      "AUTH=PLAIN]\n", \
                                      lambda data: "* CAPABILITY IMAP4 " + \
@@ -372,3 +378,6 @@ class IMAPAccount_TestCase(unittest.TestCase):
                                                              (u"From : None\nSubject : None\n\nbody text\r\n\n", \
                                                               u"None")))
         
+    def test_get_register_fields(self):
+        register_fields = IMAPAccount.get_register_fields()
+        self.assertEquals(len(register_fields), 15)

@@ -35,11 +35,13 @@ sys.setdefaultencoding('utf8')
 del sys.setdefaultencoding
 
 import tests
+from tests.jmc.jabber.test_component import *
 from tests.jmc.model.test_account import *
+from tests.jmc.test_lang import *
 
 import jmc
 import jmc.jabber
-#import jmc.jabber.component
+import jmc.jabber.component
 
 if __name__ == '__main__':
     logger = logging.getLogger()
@@ -49,18 +51,26 @@ if __name__ == '__main__':
     mail_account_suite = unittest.makeSuite(MailAccount_TestCase, "test")
     imap_account_suite = unittest.makeSuite(IMAPAccount_TestCase, "test")
     pop3_account_suite = unittest.makeSuite(POP3Account_TestCase, "test")
+    lang_suite = unittest.makeSuite(Lang_TestCase, "test")
+    mail_component_suite = unittest.makeSuite(MailComponent_TestCase, "test")
     
-    jmc_suite = unittest.TestSuite()
-    jmc_suite = unittest.TestSuite((mail_account_suite, \
+#    jmc_suite = unittest.TestSuite((mail_component_suite))
+#    jmc_suite = unittest.TestSuite()
+#    jmc_suite.addTest(MailAccount_TestCase('test_get_register_fields'))
+    jmc_suite = unittest.TestSuite((lang_suite, \
+                                    mail_account_suite, \
                                     imap_account_suite, \
-                                    pop3_account_suite))
+                                    pop3_account_suite, \
+                                    mail_component_suite))
     test_support.run_suite(jmc_suite)
 
 
 coverage.stop()
-#coverage.analysis(jmc.jabber.component)
+coverage.analysis(jmc.jabber.component)
+coverage.analysis(jmc.lang)
 coverage.analysis(jmc.model.account)
 
-coverage.report([
+coverage.report([jmc.jabber.component, \
+                 jmc.lang, \
                  jmc.model.account])
 
