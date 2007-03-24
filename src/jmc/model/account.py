@@ -163,28 +163,42 @@ class MailAccount(PresenceAccount):
     def _get_register_fields(cls):
         """See Account._get_register_fields
         """
-        def password_post_func(password):
+        def password_post_func(password, default_func):
             if password is None or password == "":
                 return None
             return password
         
         return PresenceAccount.get_register_fields() + \
-               [("login", "text-single", None, account.string_not_null_post_func, \
-                 account.mandatory_field), \
+               [("login", "text-single", None, \
+                 lambda field_value, default_func: account.mandatory_field("login", \
+                                                                           field_value, \
+                                                                           default_func), \
+                 lambda : ""), \
                 ("password", "text-private", None, password_post_func, \
-                 (lambda field_name: None)), \
-                ("host", "text-single", None, account.string_not_null_post_func, \
-                 account.mandatory_field), \
-                ("port", "text-single", None, account.int_post_func, \
-                 account.mandatory_field), \
-                ("ssl", "boolean", None, account.default_post_func, \
-                 (lambda field_name: None)), \
-                ("store_password", "boolean", None, account.default_post_func, \
-                 (lambda field_name: True)), \
-                ("live_email_only", "boolean", None, account.default_post_func, \
-                 lambda field_name: False)]
+                 lambda : ""), \
+                ("host", "text-single", None, \
+                 lambda field_value, default_func: account.mandatory_field("host", \
+                                                                           field_value, \
+                                                                           default_func), \
+                 lambda : ""), \
+                ("port", "text-single", None, \
+                 account.int_post_func, \
+                 lambda : cls.get_default_port()), \
+                ("ssl", "boolean", None, \
+                 account.default_post_func, \
+                 lambda : False), \
+                ("store_password", "boolean", None, \
+                 account.default_post_func, \
+                 lambda : True), \
+                ("live_email_only", "boolean", None, \
+                 account.default_post_func, \
+                 lambda : False)]
     
     get_register_fields = classmethod(_get_register_fields)
+
+    def _get_default_port(cls):
+        return 42
+    get_default_port = classmethod(_get_default_port)
     
     def _get_presence_actions_fields(cls):
         """See PresenceAccount._get_presence_actions_fields
@@ -334,11 +348,17 @@ class IMAPAccount(MailAccount):
             return password
         
         return MailAccount.get_register_fields() + \
-               [("mailbox", "text-single", None, account.string_not_null_post_func, \
-                 (lambda field_name: "INBOX"))]
+               [("mailbox", "text-single", None, \
+                 account.default_post_func, \
+                 lambda : "INBOX")]
     
     get_register_fields = classmethod(_get_register_fields)
 
+    def _get_default_port(cls):
+        """Return default IMAP server port"""
+        return 143
+    
+    get_default_port = classmethod(_get_default_port)
 
     def _init(self, *args, **kw):
 	MailAccount._init(self, *args, **kw)
@@ -412,6 +432,12 @@ class POP3Account(MailAccount):
     def _init(self, *args, **kw):
 	MailAccount._init(self, *args, **kw)
         self.__logger = logging.getLogger("jmc.model.account.POP3Account")
+
+    def _get_default_port(cls):
+        """Return default POP3 server port"""
+        return 110
+    
+    get_default_port = classmethod(_get_default_port)
 
     def get_type(self):
 	if self.ssl:

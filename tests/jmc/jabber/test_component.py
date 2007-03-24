@@ -489,3 +489,4 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertTrue(account11.marked_all_as_read)
         self.assertEquals(len(self.comp.stream.sent), 1)
         del account.hub.threadConnection
+        
