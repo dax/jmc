@@ -55,6 +55,22 @@ class Lang(jcl.lang.Lang):
         new_mail_subject = u"New email from %s"
         new_digest_subject = u"%i new email(s)"
 
+        field_action_1 = u"Retrieve digest"
+        field_chat_action_1 = field_action_1
+        field_online_action_1 = field_action_1
+        field_away_action_1 = field_action_1
+        field_xa_action_1 = field_action_1
+        field_dnd_action_1 = field_action_1
+        field_offline_action_1 = field_action_1
+
+        field_action_2 = u"Retrieve full email"
+        field_chat_action_2 = field_action_2
+        field_online_action_2 = field_action_2
+        field_away_action_2 = field_action_2
+        field_xa_action_2 = field_action_2
+        field_dnd_action_2 = field_action_2
+        field_offline_action_2 = field_action_2
+
     class fr:
         register_title = u"Enregistrement d'une nouvelle connexion à un serveur email."
         register_instructions = u"Entrer les paramètres de connexion"
