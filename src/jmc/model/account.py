@@ -160,15 +160,17 @@ class MailAccount(PresenceAccount):
         self.connected = False
         self.default_lang_class = Lang.en # TODO: use String
     
-    def _get_register_fields(cls):
+    def _get_register_fields(cls, real_class = None):
         """See Account._get_register_fields
         """
         def password_post_func(password, default_func):
             if password is None or password == "":
                 return None
             return password
-        
-        return PresenceAccount.get_register_fields() + \
+
+        if real_class is None:
+            real_class = cls
+        return PresenceAccount.get_register_fields(real_class) + \
                [("login", "text-single", None, \
                  lambda field_value, default_func: account.mandatory_field("login", \
                                                                            field_value, \
@@ -183,7 +185,7 @@ class MailAccount(PresenceAccount):
                  lambda : ""), \
                 ("port", "text-single", None, \
                  account.int_post_func, \
-                 lambda : cls.get_default_port()), \
+                 lambda : real_class.get_default_port()), \
                 ("ssl", "boolean", None, \
                  account.default_post_func, \
                  lambda : False), \
@@ -204,15 +206,15 @@ class MailAccount(PresenceAccount):
         """See PresenceAccount._get_presence_actions_fields
         """
         return {'chat_action': (cls.possibles_actions, \
-                                RETRIEVE), \
+                                MailAccount.RETRIEVE), \
                 'online_action': (cls.possibles_actions, \
-                                  RETRIEVE), \
+                                  MailAccount.RETRIEVE), \
                 'away_action': (cls.possibles_actions, \
-                                RETRIEVE), \
+                                MailAccount.DIGEST), \
                 'xa_action': (cls.possibles_actions, \
-                              RETRIEVE), \
+                              MailAccount.DIGEST), \
                 'dnd_action': (cls.possibles_actions, \
-                               RETRIEVE), \
+                               MailAccount.DIGEST), \
                 'offline_action': (cls.possibles_actions, \
                                    PresenceAccount.DO_NOTHING)}
     
@@ -339,15 +341,17 @@ class MailAccount(PresenceAccount):
 class IMAPAccount(MailAccount):
     mailbox = StringCol(default = "INBOX") # TODO : set default INBOX in reg_form (use get_register_fields last field ?)
 
-    def _get_register_fields(cls):
+    def _get_register_fields(cls, real_class = None):
         """See Account._get_register_fields
         """
         def password_post_func(password):
             if password is None or password == "":
                 return None
             return password
-        
-        return MailAccount.get_register_fields() + \
+
+        if real_class is None:
+            real_class = cls
+        return MailAccount.get_register_fields(real_class) + \
                [("mailbox", "text-single", None, \
                  account.default_post_func, \
                  lambda : "INBOX")]
