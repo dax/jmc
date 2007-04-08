@@ -178,14 +178,15 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.live_email_only = True
         account11.password = None
         result = self.comp.feeder.feed(account11)
-        self.assertEquals(result, [])
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].get_to(), "test1@test.com")
+        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertTrue(account11.waiting_password_reply)
         self.assertFalse(account11.in_error)
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        self.assertEquals(len(self.comp.stream.sent), 1)
         del account.hub.threadConnection
         
     def test_feed_live_email_init_no_password2(self):
@@ -252,11 +253,12 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.waiting_password_reply)
         result = self.comp.feeder.feed(account11)
         self.assertFalse(account11.in_error)
-        self.assertEquals(result, [])
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].get_to(), "test1@test.com")
+        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
-        self.assertEquals(len(self.comp.stream.sent), 1)
         del account.hub.threadConnection
 
     def test_feed_unknown_action(self):
@@ -273,11 +275,12 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.get_mail_list = lambda: []
         result = self.comp.feeder.feed(account11)
         self.assertTrue(account11.in_error)
-        self.assertEquals(result, [])
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].get_to(), "test1@test.com")
+        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
-        self.assertEquals(len(self.comp.stream.sent), 1)
         del account.hub.threadConnection
         
     def test_feed_retrieve_no_mail(self):
@@ -407,15 +410,15 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        result = self.comp.feeder.initialize_live_email(account11)
-        self.assertEquals(result, True)
+        (continue_checking, result) = self.comp.feeder.initialize_live_email(account11)
+        self.assertEquals(continue_checking, True)
+        self.assertEquals(result, [])
         self.assertFalse(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertFalse(account11.in_error)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
-        self.assertEquals(len(self.comp.stream.sent), 0)
         del account.hub.threadConnection
 
     def test_initialize_live_email_connection_error(self):
@@ -431,15 +434,17 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        result = self.comp.feeder.initialize_live_email(account11)
-        self.assertEquals(result, False)
+        (continue_checking, result) = self.comp.feeder.initialize_live_email(account11)
+        self.assertEquals(continue_checking, False)
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].get_to(), "test1@test.com")
+        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertTrue(account11.in_error)
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        self.assertEquals(len(self.comp.stream.sent), 1)
         del account.hub.threadConnection
     
     def test_initialize_live_email_mark_as_read_error(self):
@@ -455,15 +460,17 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        result = self.comp.feeder.initialize_live_email(account11)
-        self.assertEquals(result, False)
+        (continue_checking, result) = self.comp.feeder.initialize_live_email(account11)
+        self.assertEquals(continue_checking, False)
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].get_to(), "test1@test.com")
+        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertTrue(account11.in_error)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        self.assertEquals(len(self.comp.stream.sent), 1)
         del account.hub.threadConnection
 
     def test_initialize_live_email_disconnection_error(self):
@@ -479,14 +486,16 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        result = self.comp.feeder.initialize_live_email(account11)
-        self.assertEquals(result, False)
+        (continue_checking, result) = self.comp.feeder.initialize_live_email(account11)
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].get_to(), "test1@test.com")
+        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(continue_checking, False)
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertTrue(account11.in_error)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
-        self.assertEquals(len(self.comp.stream.sent), 1)
         del account.hub.threadConnection
         

@@ -54,7 +54,7 @@ class MailComponent(FeederComponent):
         self.name = "Jabber Mail Component"
         self.feeder = MailFeeder(self)
         self.sender = MailSender(self)
-        self.account_classes = [IMAPAccount, POP3Account]
+        self.account_manager.account_classes = (IMAPAccount, POP3Account)
 
 class MailFeeder(Feeder):
     """Email check"""
@@ -68,18 +68,19 @@ class MailFeeder(Feeder):
         """For live email checking account, mark emails received while
         offline as read.
         Return a boolean to continue mail checking or not (if waiting for password)"""
+        result = []
         if _account.password is None:
             if not _account.waiting_password_reply:
-                self.component.ask_password(_account,
-                                            _account.default_lang_class)
-            return False
+                result.extend(self.component.account_manager.ask_password(_account, \
+                                                                          _account.default_lang_class))
+            return (False, result)
         try:
             _account.connect()
             _account.mark_all_as_read()
             _account.disconnect()
             _account.first_check = False
             _account.in_error = False
-            return True
+            return (True, result)
         except Exception, e:
             if _account.connected:
                 try:
@@ -87,8 +88,8 @@ class MailFeeder(Feeder):
                 except:
                     # We have done everything we could
                     _account.connected = False
-            self.component.send_error(_account, e)
-            return False
+            result.extend(self.component.account_manager.send_error(_account, e))
+            return (False, result)
 
     def feed(self, _account):
         """Check for new emails for given MailAccount and return a list of
@@ -96,9 +97,10 @@ class MailFeeder(Feeder):
 	self.__logger.debug("MailFeeder.feed")
         result = []
         if _account.first_check and _account.live_email_only:
-            continue_checking = self.initialize_live_email(_account)
+            (continue_checking, to_send) = self.initialize_live_email(_account)
+            result.extend(to_send)
             if not continue_checking:
-                return []
+                return result
         _account.lastcheck += 1
         if _account.lastcheck == _account.interval:
             _account.lastcheck = 0
@@ -106,9 +108,9 @@ class MailFeeder(Feeder):
             if action != PresenceAccount.DO_NOTHING:
                 try:
                     if _account.password is None:
-                        self.component.ask_password(_account,
-                                                    _account.default_lang_class)
-                        return []
+                        result.extend(self.component.account_manager.ask_password(_account, \
+                                                                                  _account.default_lang_class))
+                        return result
                     self.__logger.debug("Checking " + _account.name)
                     self.__logger.debug("\t" + _account.login \
                                         + "@" + _account.host)
@@ -153,7 +155,7 @@ class MailFeeder(Feeder):
                         except:
                             # We have done everything we could
                             _account.connected = False
-                    self.component.send_error(_account, e)
+                    result.extend(self.component.account_manager.send_error(_account, e))
         return result
 
 class MailSender(Sender):
