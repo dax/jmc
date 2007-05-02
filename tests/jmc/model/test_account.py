@@ -98,11 +98,11 @@ class MailAccount_TestCase(unittest.TestCase):
         make_test((True, False, True), \
                   lambda self, email: \
                   email.replace_header("Subject", \
-                                       "\"" + str(email["Subject"]) \
-                                       + "\" not encoded part") or \
+                                       "\" " + str(email["Subject"]) \
+                                       + " \" not encoded part") or \
                   email.replace_header("From", \
-                                       "\"" + str(email["From"]) \
-                                       + "\" not encoded part") or \
+                                       "\" " + str(email["From"]) \
+                                       + " \" not encoded part") or \
                   self.account.format_message_summary(email), \
                   (u"From : \"encoded from (éàê)\" not encoded part\nSubject " + \
                    u": \"encoded subject (éàê)\" not encoded part\n\n", \

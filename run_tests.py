@@ -56,7 +56,7 @@ if __name__ == '__main__':
     
 #    jmc_suite = unittest.TestSuite((mail_component_suite))
 #    jmc_suite = unittest.TestSuite()
-#    jmc_suite.addTest(MailAccount_TestCase('test_get_register_fields'))
+#    jmc_suite.addTest(MailAccount_TestCase('test_format_message_summary_partial_encoded'))
     jmc_suite = unittest.TestSuite((lang_suite, \
                                     mail_account_suite, \
                                     imap_account_suite, \
