@@ -95,7 +95,7 @@ class MockStream(object):
     def close(self):
         pass
 
-class MockMailAccount():
+class MockMailAccount(object):
     def _init(self):
         self.connected = False
         self.has_connected = False
