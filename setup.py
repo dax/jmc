@@ -20,7 +20,7 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-from distutils.core import setup
+from setuptools import setup
 
 setup(name = 'jmc', \
       version = '0.3', \
@@ -29,4 +29,6 @@ setup(name = 'jmc', \
       author_email = 'dax@happycoders.org', \
       url = 'http://people.happycoders.org/dax/projects/jmc', \
       package_dir = {'': 'src'}, \
-      packages = ['jmc', 'jmc.jabber', 'jmc.model'])
+      packages = ['jmc', 'jmc.jabber', 'jmc.model'], \
+      scripts = ['src/jmc.py'], \
+      test_suite = 'run_tests.test_suite')

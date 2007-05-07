@@ -22,8 +22,6 @@
 ##
 
 import coverage
-coverage.erase()
-coverage.start()
 import logging
 import unittest
 from test import test_support
@@ -43,11 +41,7 @@ import jmc
 import jmc.jabber
 import jmc.jabber.component
 
-if __name__ == '__main__':
-    logger = logging.getLogger()
-    logger.addHandler(logging.StreamHandler())
-    logger.setLevel(logging.INFO)
-    
+def test_suite():
     mail_account_suite = unittest.makeSuite(MailAccount_TestCase, "test")
     imap_account_suite = unittest.makeSuite(IMAPAccount_TestCase, "test")
     pop3_account_suite = unittest.makeSuite(POP3Account_TestCase, "test")
@@ -62,15 +56,23 @@ if __name__ == '__main__':
                                     imap_account_suite, \
                                     pop3_account_suite, \
                                     mail_component_suite))
-    test_support.run_suite(jmc_suite)
+    return jmc_suite
 
+if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler())
+    logger.setLevel(logging.INFO)
+    
+    coverage.erase()
+    coverage.start()
 
-coverage.stop()
-coverage.analysis(jmc.jabber.component)
-coverage.analysis(jmc.lang)
-coverage.analysis(jmc.model.account)
+    unittest.main()    
 
-coverage.report([jmc.jabber.component, \
-                 jmc.lang, \
-                 jmc.model.account])
+    coverage.stop()
+    coverage.analysis(jmc.jabber.component)
+    coverage.analysis(jmc.lang)
+    coverage.analysis(jmc.model.account)
 
+    coverage.report([jmc.jabber.component, \
+                     jmc.lang, \
+                     jmc.model.account])
