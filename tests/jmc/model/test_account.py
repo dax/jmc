@@ -24,6 +24,7 @@
 import unittest
 import os
 import thread
+import sys
 
 from sqlobject import *
 from sqlobject.dbconnection import TheURIOpener
@@ -34,7 +35,10 @@ from jmc.model.account import MailAccount, POP3Account, IMAPAccount
 
 from tests.jmc import email_generator, dummy_server
 
-DB_PATH = "/tmp/jmc_test.db"
+if sys.platform == "win32":
+   DB_PATH = "/c|/temp/test.db"
+else:
+   DB_PATH = "/tmp/test.db"
 DB_URL = DB_PATH # + "?debug=1&debugThreading=1"
 
 class MailAccount_TestCase(unittest.TestCase):

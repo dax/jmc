@@ -22,6 +22,7 @@
 
 import unittest
 import os
+import sys
 
 from sqlobject import *
 from sqlobject.dbconnection import TheURIOpener
@@ -33,7 +34,10 @@ from jmc.model.account import MailAccount, IMAPAccount, POP3Account
 from jmc.jabber.component import MailComponent
 
 
-DB_PATH = "/tmp/test_jmc.db"
+if sys.platform == "win32":
+   DB_PATH = "/c|/temp/test.db"
+else:
+   DB_PATH = "/tmp/test.db"
 DB_URL = DB_PATH# + "?debug=1&debugThreading=1"
 
 class MockStream(object):
