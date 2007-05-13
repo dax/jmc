@@ -34,7 +34,7 @@ from jcl.model.account import Account, PresenceAccount
 from jmc.model.account import MailAccount, POP3Account, IMAPAccount
 
 from jcl.model.tests.account import PresenceAccount_TestCase
-from tests.jmc import email_generator, dummy_server
+from jmc.model.tests import email_generator, server
 
 if sys.platform == "win32":
    DB_PATH = "/c|/temp/test.db"
@@ -184,7 +184,7 @@ class POP3Account_TestCase(unittest.TestCase):
 
     def make_test(responses = None, queries = None, core = None):
         def inner(self):
-            self.server = dummy_server.DummyServer("localhost", 1110)
+            self.server = server.DummyServer("localhost", 1110)
             thread.start_new_thread(self.server.serve, ())
             self.server.responses = ["+OK connected\r\n", \
                                      "+OK name is a valid mailbox\r\n", \
@@ -314,7 +314,7 @@ class IMAPAccount_TestCase(unittest.TestCase):
 
     def make_test(responses = None, queries = None, core = None):
         def inner(self):
-            self.server = dummy_server.DummyServer("localhost", 1143)
+            self.server = server.DummyServer("localhost", 1143)
             thread.start_new_thread(self.server.serve, ())
             self.server.responses = ["* OK [CAPABILITY IMAP4 LOGIN-REFERRALS " + \
                                      "AUTH=PLAIN]\n", \
@@ -387,3 +387,14 @@ class IMAPAccount_TestCase(unittest.TestCase):
     def test_get_register_fields(self):
         register_fields = IMAPAccount.get_register_fields()
         self.assertEquals(len(register_fields), 15)
+
+
+def suite():
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(MailAccount_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(POP3Account_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(IMAPAccount_TestCase, 'test'))
+    return suite
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')

@@ -133,7 +133,7 @@ class MailAccount(PresenceAccount):
     # Define constants
     DIGEST = 1
     RETRIEVE = 2
-    default_encoding = "iso-8859-1"
+    default_encoding = "utf-8"
     possibles_actions = [PresenceAccount.DO_NOTHING, \
                          DIGEST, \
                          RETRIEVE]
@@ -223,13 +223,13 @@ class MailAccount(PresenceAccount):
             if content_charset:
                 result = unicode(part.get_payload(decode=True).decode(content_charset))
             else:
-                result = unicode(part.get_payload(decode=True))
+                result = unicode(part.get_payload(decode=True).decode(MailAccount.default_encoding))
         except Exception, e:
             try:
-                result = unicode(part.get_payload(decode=True).decode("iso-8859-1"))
+                result = unicode(part.get_payload(decode=True))
             except Exception, e:
                 try:
-                    result = unicode(part.get_payload(decode=True).decode(default_encoding))
+                    result = unicode(part.get_payload(decode=True).decode("iso-8859-1"))
                 except Exception, e:
                     if charset_hint is not None:
                         try:
@@ -252,13 +252,13 @@ class MailAccount(PresenceAccount):
                     charset_hint = from_decoded[i][1]
                     email_from += unicode(from_decoded[i][0].decode(from_decoded[i][1]))
                 else:
-                    email_from += unicode(from_decoded[i][0])
+                    email_from += unicode(from_decoded[i][0].decode(MailAccount.default_encoding))
             except Exception,e:
                 try:
-                    email_from += unicode(from_decoded[i][0].decode("iso-8859-1"))
+                    email_from += unicode(from_decoded[i][0])
                 except Exception, e:
                     try:
-                        email_from += unicode(from_decoded[i][0].decode(default_encoding))
+                        email_from += unicode(from_decoded[i][0].decode("iso-8859-1"))
                     except Exception, e:
                         type, value, stack = sys.exc_info()
                         print >>sys.stderr, "".join(traceback.format_exception
@@ -273,13 +273,13 @@ class MailAccount(PresenceAccount):
                     charset_hint = subject_decoded[i][1]
                     result += unicode(subject_decoded[i][0].decode(subject_decoded[i][1]))
                 else:
-                    result += unicode(subject_decoded[i][0])
+                    result += unicode(subject_decoded[i][0].decode(MailAccount.default_encoding))
             except Exception,e:
                 try:
-                    result += unicode(subject_decoded[i][0].decode("iso-8859-1"))
+                    result += unicode(subject_decoded[i][0])
                 except Exception, e:
                     try:
-                        result += unicode(subject_decoded[i][0].decode(default_encoding))
+                        result += unicode(subject_decoded[i][0].decode("iso-8859-1"))
                     except Exception, e:
                         if charset_hint is not None:
                             try:

@@ -503,3 +503,8 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertTrue(account11.marked_all_as_read)
         del account.hub.threadConnection
         
+def suite():
+    return unittest.makeSuite(MailComponent_TestCase, 'test')
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')

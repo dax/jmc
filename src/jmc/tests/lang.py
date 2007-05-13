@@ -20,6 +20,7 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
+# TODO : Reuse JCL Lang tests
 
 import unittest
 from jmc.lang import Lang
@@ -63,3 +64,8 @@ class Lang_TestCase(unittest.TestCase):
         lang = self.lang.get_lang_class_from_node(iq_node)
         self.assertEquals(lang, Lang.fr)
         
+def suite():
+    return unittest.makeSuite(Lang_TestCase, 'test')
+
+if __name__ == '__main__':
+    unittest.main(defaultTest='suite')

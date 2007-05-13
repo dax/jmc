@@ -32,31 +32,14 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 del sys.setdefaultencoding
 
-import tests
-from tests.jmc.jabber.test_component import *
-from tests.jmc.model.test_account import *
-from tests.jmc.test_lang import *
-
 import jmc
 import jmc.jabber
 import jmc.jabber.component
 
-def test_suite():
-    mail_account_suite = unittest.makeSuite(MailAccount_TestCase, "test")
-    imap_account_suite = unittest.makeSuite(IMAPAccount_TestCase, "test")
-    pop3_account_suite = unittest.makeSuite(POP3Account_TestCase, "test")
-    lang_suite = unittest.makeSuite(Lang_TestCase, "test")
-    mail_component_suite = unittest.makeSuite(MailComponent_TestCase, "test")
-    
-#    jmc_suite = unittest.TestSuite((mail_component_suite))
-#    jmc_suite = unittest.TestSuite()
-#    jmc_suite.addTest(MailAccount_TestCase('test_format_message_summary_partial_encoded'))
-    jmc_suite = unittest.TestSuite((lang_suite, \
-                                    mail_account_suite, \
-                                    imap_account_suite, \
-                                    pop3_account_suite, \
-                                    mail_component_suite))
-    return jmc_suite
+import jmc.tests as jmc
+
+def suite():
+    return jmc.suite()
 
 if __name__ == '__main__':
     logger = logging.getLogger()
@@ -66,7 +49,7 @@ if __name__ == '__main__':
     coverage.erase()
     coverage.start()
 
-    unittest.main()    
+    unittest.main(defaultTest='suite')    
 
     coverage.stop()
     coverage.analysis(jmc.jabber.component)

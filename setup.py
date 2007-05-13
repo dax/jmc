@@ -31,4 +31,4 @@ setup(name = 'jmc', \
       package_dir = {'': 'src'}, \
       packages = ['jmc', 'jmc.jabber', 'jmc.model'], \
       scripts = ['src/jmc.py'], \
-      test_suite = 'run_tests.test_suite')
+      test_suite = 'jmc.tests.suite')
