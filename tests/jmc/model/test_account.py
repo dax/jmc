@@ -33,6 +33,7 @@ from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
 from jmc.model.account import MailAccount, POP3Account, IMAPAccount
 
+from jcl.model.tests.account import PresenceAccount_TestCase
 from tests.jmc import email_generator, dummy_server
 
 if sys.platform == "win32":
@@ -41,7 +42,7 @@ else:
    DB_PATH = "/tmp/test.db"
 DB_URL = DB_PATH # + "?debug=1&debugThreading=1"
 
-class MailAccount_TestCase(unittest.TestCase):
+class MailAccount_TestCase(PresenceAccount_TestCase):
     def setUp(self):
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
@@ -53,6 +54,7 @@ class MailAccount_TestCase(unittest.TestCase):
                                    name = "account1", \
                                    jid = "account1@jmc.test.com")
         del account.hub.threadConnection
+        self.account_class = MailAccount
 
     def tearDown(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)

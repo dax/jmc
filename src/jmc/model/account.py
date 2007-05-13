@@ -172,16 +172,12 @@ class MailAccount(PresenceAccount):
             real_class = cls
         return PresenceAccount.get_register_fields(real_class) + \
                [("login", "text-single", None, \
-                 lambda field_value, default_func: account.mandatory_field("login", \
-                                                                           field_value, \
-                                                                           default_func), \
+                 lambda field_value, default_func: account.mandatory_field(field_value), \
                  lambda : ""), \
                 ("password", "text-private", None, password_post_func, \
                  lambda : ""), \
                 ("host", "text-single", None, \
-                 lambda field_value, default_func: account.mandatory_field("host", \
-                                                                           field_value, \
-                                                                           default_func), \
+                 lambda field_value, default_func: account.mandatory_field(field_value), \
                  lambda : ""), \
                 ("port", "text-single", None, \
                  account.int_post_func, \

@@ -74,5 +74,5 @@ if __name__ == '__main__':
     coverage.analysis(jmc.model.account)
 
     coverage.report([jmc.jabber.component, \
-                     jmc.lang, \
-                     jmc.model.account])
+                         jmc.lang, \
+                         jmc.model.account])

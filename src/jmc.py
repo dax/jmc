@@ -54,7 +54,7 @@ del account.hub.threadConnection
 component = MailComponent("jmc.localhost", \
                           "secret", \
                           "127.0.0.1", \
-                          5349, \
+                          5347, \
                           "sqlite://" + DB_URL)
 component.run()
 logger.debug("JMC is exiting")
