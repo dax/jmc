@@ -26,7 +26,7 @@ import logging
 from pyxmpp.message import Message
 
 from jcl.model.account import PresenceAccount
-from jcl.jabber.feeder import FeederComponent, Feeder, Sender
+from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, HeadlineSender
 
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account
 from jmc.lang import Lang
@@ -68,19 +68,18 @@ class MailFeeder(Feeder):
         """For live email checking account, mark emails received while
         offline as read.
         Return a boolean to continue mail checking or not (if waiting for password)"""
-        result = []
         if _account.password is None:
             if not _account.waiting_password_reply:
-                result.extend(self.component.account_manager.ask_password(_account, \
-                                                                          _account.default_lang_class))
-            return (False, result)
+                self.component.send_stanzas(self.component.account_manager.ask_password(_account, \
+                                                                                       _account.default_lang_class))
+            return False
         try:
             _account.connect()
             _account.mark_all_as_read()
             _account.disconnect()
             _account.first_check = False
             _account.in_error = False
-            return (True, result)
+            return True
         except Exception, e:
             if _account.connected:
                 try:
@@ -88,8 +87,8 @@ class MailFeeder(Feeder):
                 except:
                     # We have done everything we could
                     _account.connected = False
-            result.extend(self.component.account_manager.send_error(_account, e))
-            return (False, result)
+            self.component.send_error(_account, e)
+            return False
 
     def feed(self, _account):
         """Check for new emails for given MailAccount and return a list of
@@ -97,8 +96,7 @@ class MailFeeder(Feeder):
 	self.__logger.debug("MailFeeder.feed")
         result = []
         if _account.first_check and _account.live_email_only:
-            (continue_checking, to_send) = self.initialize_live_email(_account)
-            result.extend(to_send)
+            continue_checking = self.initialize_live_email(_account)
             if not continue_checking:
                 return result
         _account.lastcheck += 1
@@ -108,8 +106,8 @@ class MailFeeder(Feeder):
             if action != PresenceAccount.DO_NOTHING:
                 try:
                     if _account.password is None:
-                        result.extend(self.component.account_manager.ask_password(_account, \
-                                                                                  _account.default_lang_class))
+                        self.component.send_stanzas(self.component.account_manager.ask_password(_account, \
+                                                                                                    _account.default_lang_class))
                         return result
                     self.__logger.debug("Checking " + _account.name)
                     self.__logger.debug("\t" + _account.login \
@@ -121,10 +119,8 @@ class MailFeeder(Feeder):
                         mail_index = _account.get_next_mail_index(mail_list)
                         while mail_index is not None:
                             (body, email_from) = _account.get_mail(mail_index)
-                            result.append(Message(from_jid = _account.jid, \
-                                                  to_jid = _account.user_jid, \
-                                                  subject = _account.default_lang_class.new_mail_subject % (email_from), \
-                                                  body = body))
+                            result.append((_account.default_lang_class.new_mail_subject % (email_from), \
+                                                  body))
                             mail_index = _account.get_next_mail_index(mail_list)
                     elif action == MailAccount.DIGEST:
                         body = ""
@@ -137,11 +133,8 @@ class MailFeeder(Feeder):
                             mail_index = _account.get_next_mail_index(mail_list)
                             new_mail_count += 1
                         if body != "":
-                            result.append(Message(from_jid = _account.jid, \
-                                                  to_jid = _account.user_jid, \
-                                                  stanza_type = "headline", \
-                                                  subject = _account.default_lang_class.new_digest_subject % (new_mail_count), \
-                                                  body = body))
+                            result.append((_account.default_lang_class.new_digest_subject % (new_mail_count), \
+                                                  body))
                     else:
                         raise Exception("Unkown action: " + str(action)
                                         + "\nPlease reconfigure account.")
@@ -155,13 +148,16 @@ class MailFeeder(Feeder):
                         except:
                             # We have done everything we could
                             _account.connected = False
-                    result.extend(self.component.account_manager.send_error(_account, e))
+                    self.component.send_error(_account, e)
         return result
 
-class MailSender(Sender):
+class MailSender(MessageSender, HeadlineSender):
     """Send emails messages to jabber users"""
     
-    def send(self, to_account, data):
+    def send(self, to_account, subject, body):
         """Send given emails (in data) as Jabber messages"""
-        pass
+        if to_account.action == MailAccount.RETRIEVE:
+            MessageSender.send(self, to_account, subject, body)
+        elif to_account.action == MailAccount.DIGEST:
+            HeadlineSender.send(self, to_account, subject, body)
     

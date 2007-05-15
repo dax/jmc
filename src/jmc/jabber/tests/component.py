@@ -182,9 +182,11 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.live_email_only = True
         account11.password = None
         result = self.comp.feeder.feed(account11)
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_to(), "test1@test.com")
-        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(len(result), 0)
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 1)
+        self.assertEquals(sent[0].get_to(), "test1@test.com")
+        self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertTrue(account11.waiting_password_reply)
         self.assertFalse(account11.in_error)
@@ -257,9 +259,11 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.waiting_password_reply)
         result = self.comp.feeder.feed(account11)
         self.assertFalse(account11.in_error)
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_to(), "test1@test.com")
-        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(len(result), 0)
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 1)
+        self.assertEquals(sent[0].get_to(), "test1@test.com")
+        self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
@@ -279,9 +283,11 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.get_mail_list = lambda: []
         result = self.comp.feeder.feed(account11)
         self.assertTrue(account11.in_error)
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_to(), "test1@test.com")
-        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(len(result), 0)
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 1)
+        self.assertEquals(sent[0].get_to(), "test1@test.com")
+        self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
@@ -331,20 +337,14 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
         self.assertEquals(len(result), 2)
-        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
-        self.assertEquals(result[0].get_to(), "test1@test.com")
-        self.assertEquals(result[0].stanza_type, "message")
-        self.assertEquals(result[0].get_subject(), \
+        self.assertEquals(result[0][0], \
                           account11.default_lang_class.new_mail_subject \
                           % ("from1@test.com"))
-        self.assertEquals(result[0].get_body(), "body1")
-        self.assertEquals(result[1].get_from(), "account11@jmc.test.com")
-        self.assertEquals(result[1].get_to(), "test1@test.com")
-        self.assertEquals(result[1].stanza_type, "message")
-        self.assertEquals(result[1].get_subject(), \
+        self.assertEquals(result[0][1], "body1")
+        self.assertEquals(result[1][0], \
                           account11.default_lang_class.new_mail_subject \
                           % ("from2@test.com"))
-        self.assertEquals(result[1].get_body(), "body2")
+        self.assertEquals(result[1][1], "body2")
         del account.hub.threadConnection
 
     def test_feed_digest_no_mail(self):
@@ -391,13 +391,10 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
         self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
-        self.assertEquals(result[0].get_to(), "test1@test.com")
-        self.assertEquals(result[0].stanza_type, "message")
-        self.assertEquals(result[0].get_subject(), \
+        self.assertEquals(result[0][0], \
                           account11.default_lang_class.new_digest_subject \
                           % (2))
-        self.assertEquals(result[0].get_body(), \
+        self.assertEquals(result[0][1], \
                           "body1\n----------------------------------\nbody2\n----------------------------------\n")
         del account.hub.threadConnection
 
@@ -414,9 +411,8 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        (continue_checking, result) = self.comp.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, True)
-        self.assertEquals(result, [])
         self.assertFalse(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertFalse(account11.in_error)
@@ -438,11 +434,12 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        (continue_checking, result) = self.comp.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, False)
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_to(), "test1@test.com")
-        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 1)
+        self.assertEquals(sent[0].get_to(), "test1@test.com")
+        self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertTrue(account11.in_error)
@@ -464,11 +461,12 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        (continue_checking, result) = self.comp.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, False)
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_to(), "test1@test.com")
-        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 1)
+        self.assertEquals(sent[0].get_to(), "test1@test.com")
+        self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertTrue(account11.in_error)
@@ -490,10 +488,12 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        (continue_checking, result) = self.comp.feeder.initialize_live_email(account11)
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_to(), "test1@test.com")
-        self.assertEquals(result[0].get_from(), "account11@jmc.test.com")
+        continue_checking = self.comp.feeder.initialize_live_email(account11)
+        self.assertFalse(continue_checking)
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 1)
+        self.assertEquals(sent[0].get_to(), "test1@test.com")
+        self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertEquals(continue_checking, False)
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
