@@ -190,7 +190,10 @@ class MailAccount(PresenceAccount):
                  lambda : True), \
                 ("live_email_only", "boolean", None, \
                  account.default_post_func, \
-                 lambda : False)]
+                 lambda : False), \
+                ("interval", "text-single", None, \
+                 account.int_post_func, \
+                 lambda : 5)]
     
     get_register_fields = classmethod(_get_register_fields)
 

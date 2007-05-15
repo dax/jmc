@@ -147,7 +147,7 @@ class MailAccount_TestCase(PresenceAccount_TestCase):
 
     def test_get_register_fields(self):
         register_fields = MailAccount.get_register_fields()
-        self.assertEquals(len(register_fields), 14)
+        self.assertEquals(len(register_fields), 15)
 
 class POP3Account_TestCase(unittest.TestCase):
     def setUp(self):
@@ -277,7 +277,7 @@ class POP3Account_TestCase(unittest.TestCase):
 
     def test_get_register_fields(self):
         register_fields = POP3Account.get_register_fields()
-        self.assertEquals(len(register_fields), 14)
+        self.assertEquals(len(register_fields), 15)
 
 class IMAPAccount_TestCase(unittest.TestCase):
     def setUp(self):
@@ -386,7 +386,7 @@ class IMAPAccount_TestCase(unittest.TestCase):
         
     def test_get_register_fields(self):
         register_fields = IMAPAccount.get_register_fields()
-        self.assertEquals(len(register_fields), 15)
+        self.assertEquals(len(register_fields), 16)
 
 
 def suite():
