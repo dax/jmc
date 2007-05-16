@@ -51,7 +51,6 @@ class MailComponent(FeederComponent):
                                  port, \
                                  db_connection_str,
                                  lang = lang)
-        self.name = "Jabber Mail Component"
         self.feeder = MailFeeder(self)
         self.sender = MailSender(self)
         self.account_manager.account_classes = (IMAPAccount, POP3Account)

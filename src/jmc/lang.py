@@ -26,34 +26,18 @@ import jcl.lang
 
 class Lang(jcl.lang.Lang):
     class en(jcl.lang.Lang.en):
-        account_login = u"Login"
-        account_password = u"Password"
-        account_password_store = u"Store password on Jabber server?"
-        account_host = u"Host"
-        account_port = u"Port"
-        account_type = u"Mail server type"
-        account_mailbox = u"Mailbox path (IMAP)"
-        account_ffc_action = u"Action when state is 'Free For Chat'"
-        account_online_action = u"Action when state is 'Online'"
-        account_away_action = u"Action when state is 'Away'"
-        account_xa_action = u"Action when state is 'Not Available'"
-        account_dnd_action = u"Action when state is 'Do not Disturb'"
-        account_offline_action = u"Action when state is 'Offline'"
-        account_check_interval = u"Mail check interval (in minutes)"
-        account_live_email_only = u"Reports only emails received while connected to Jabber"
-        action_nothing = u"Do nothing"
-        action_retrieve = u"Retrieve mail"
-        action_digest = u"Send mail digest"
-        update_title = u"Jabber mail connection update"
-        update_instructions = u"Modifying connection '%s'"
-        connection_label = u"%s connection '%s'"
-        update_account_message_subject = u"Updated %s connection '%s'"
-        update_account_message_body = u"Registered with username '%s' and " \
-                                      "password '%s' on '%s'"
-        check_error_subject = u"Error while checking emails."
-        check_error_body = u"An error appears while checking emails:\n\t%s"
-        new_mail_subject = u"New email from %s"
-        new_digest_subject = u"%i new email(s)"
+        register_title = u"Jabber Mail connection registration"
+        component_name = u"Jabber Mail Component"
+
+        field_login = u"Login"
+        field_password = u"Password"
+        field_host = u"Host"
+        field_port = u"Port"
+        field_ssl = u"Secure connection (SSL)"
+        field_store_password = u"Store password on Jabber server?"
+        field_live_email_only = u"Reports only emails received while connected to Jabber"
+        field_interval = u"Mail check interval (in minutes)"
+        field_mailbox = u"Mailbox path"
 
         field_action_1 = u"Retrieve digest"
         field_chat_action_1 = field_action_1
@@ -71,50 +55,52 @@ class Lang(jcl.lang.Lang):
         field_dnd_action_2 = field_action_2
         field_offline_action_2 = field_action_2
 
-    class fr:
-        register_title = u"Enregistrement d'une nouvelle connexion à un serveur email."
-        register_instructions = u"Entrer les paramètres de connexion"
-        account_name = u"Nom de la connexion"
-        account_login = u"Nom d'utilisateur"
-        account_password = u"Mot de passe"
-        account_password_store = u"Sauvegarder le mot de passe sur le serveur Jabber ?"
-        account_host = u"Adresse du serveur email"
-        account_port = u"Port du serveur email"
-        account_type = u"Type du serveur email"
-        account_mailbox = u"Chemin de la boîte email (IMAP)"
-        account_ffc_action = u"Action lorsque l'état est 'Free For Chat'"
-        account_online_action = u"Action lorsque l'état est 'Online'"
-        account_away_action = u"Action lorsque l'état est 'Away'"
-        account_xa_action = u"Action lorsque l'état est 'Not Available'"
-        account_dnd_action = u"Action lorsque l'état est 'Do not Disturb'"
-        account_offline_action = u"Action lorsque l'état est 'Offline'"
-        account_check_interval = u"Interval de vérification de nouveaux emails (en minutes)"
-        account_live_email_only = u"Vérifier les nouveaux emails seulement " \
-                                  "lorsqu'une session Jabber est ouverte"
-        action_nothing = u"Ne rien faire"
-        action_retrieve = u"Récupérer l'email"
-        action_digest = u"Envoyer un résumé"
-        update_title = u"Mise à jour du compte JMC"
-        update_instructions = u"Modification de la connexion '%s'"
-        connection_label = u"Connexion %s '%s'"
-        update_account_message_subject = u"La connexion %s '%s' a été mise à jour"
-        update_account_message_body = u"Nom d'utilisateur : '%s'\nMot de passe : '%s'\nsur : '%s'"
-        new_account_message_subject = u"La connexion %s '%s' a été créée"
-        new_account_message_body = u"Nom d'utilisateur : '%s'\nMot de passe : '%s'\nsur : '%s'"
-        ask_password_subject = u"Demande de mot de passe"
-        ask_password_body = u"Répondre à ce message avec le mot de passe du " \
-                            "compte suivant : \n" \
-                            "\thost = %s\n" \
-                            "\tlogin = %s\n"
-        password_saved_for_session = u"Le mot de passe sera garder tout au " \
-                                     "long de la session Jabber."
-        check_error_subject = u"Erreur lors de la vérification des emails."
-        check_error_body = u"Une erreur est survenue lors de la vérification " \
-                           "des emails :\n\t%s"
+        new_mail_subject = u"New email from %s"
+        new_digest_subject = u"%i new email(s)"
+
+        type_imap_name = u"IMAP accounts"
+        type_pop3_name = u"POP3 accounts"
+
+    class fr(jcl.lang.Lang.fr):
+        component_name = u"Jabber Mail Component"
+        register_title = u"Enregistrement d'une nouvelle connexion à un " \
+                         u"serveur email."
+
+        field_login = u"Nom d'utilisateur"
+        field_password = u"Mot de passe"
+        field_host = u"Adresse du serveur email"
+        field_port = u"Port du serveur email"
+        field_ssl = u"Connexion sécurisé (SSL)"
+        field_store_password = u"Sauvegarder le mot de passe sur le serveur Jabber ?"
+        field_live_email_only = u"Vérifier les nouveaux emails seulement " \
+            "lorsqu'une session Jabber est ouverte"
+        field_interval = u"Interval de vérification de nouveaux emails (en minutes)"
+        field_mailbox = u"Chemin de la boîte email"
+
+        field_action_1 = u"Envoyer un résumé"
+        field_chat_action_1 = field_action_1
+        field_online_action_1 = field_action_1
+        field_away_action_1 = field_action_1
+        field_xa_action_1 = field_action_1
+        field_dnd_action_1 = field_action_1
+        field_offline_action_1 = field_action_1
+
+        field_action_2 = u"Envoyer l'email complet"
+        field_chat_action_2 = field_action_2
+        field_online_action_2 = field_action_2
+        field_away_action_2 = field_action_2
+        field_xa_action_2 = field_action_2
+        field_dnd_action_2 = field_action_2
+        field_offline_action_2 = field_action_2
+
         new_mail_subject = u"Nouvel email de %s"
         new_digest_subject = u"%i nouveau(x) email(s)"
 
-    class nl:
+        type_imap_name = u"comptes IMAP"
+        type_pop3_name = u"comptes POP3"
+
+    class nl(jcl.lang.Lang.nl):
+        # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_nl_TestCase, 'test') line
         register_title = u"Registratie van verbindingen voor Jabber Mail"
         register_instructions = u"Instellingen voor verbinding"
         account_name = u"Accountnaam"
@@ -157,7 +143,8 @@ class Lang(jcl.lang.Lang):
         new_mail_subject = u"Nieuwe e-mail van %s"
         new_digest_subject = u"%i nieuwe e-mail(s)"
 
-    class es:
+    class es(jcl.lang.Lang.es):
+        # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_es_TestCase, 'test') line
         register_title = u"Registro de nueva cuenta de email"
         register_instructions = u"Inserta los datos para la nueva cuenta"
         account_name = u"Nombre para la cuenta"
@@ -197,7 +184,8 @@ class Lang(jcl.lang.Lang):
         new_mail_subject = u"Nuevo email en %s"
         new_digest_subject = u"%i email(s) nuevo(s)"
 
-    class pl:
+    class pl(jcl.lang.Lang.pl):
+        # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_pl_TestCase, 'test') line
         register_title = u"Rejestracja w komponencie E-Mail"
         register_instructions = u"Wprowadź parametry połączenia"
         account_name = u"Nazwa połączenia"
@@ -236,7 +224,8 @@ class Lang(jcl.lang.Lang):
         new_mail_subject = u"Nowy email od %s"
         new_digest_subject = u"%i nowy(ch) email(i)"
 
-    class cs:
+    class cs(jcl.lang.Lang.cs):
+        # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_cs_TestCase, 'test') line
         register_title = u"Jabber MailNotify registrace"
         register_instructions = u"Vložte nastavení spojení"
         account_name = u"Název spojení"

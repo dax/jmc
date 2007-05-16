@@ -20,9 +20,11 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
-# TODO : Reuse JCL Lang tests
 
 import unittest
+
+import jcl.tests.lang
+
 from jmc.lang import Lang
 
 from pyxmpp.iq import Iq
@@ -63,9 +65,72 @@ class Lang_TestCase(unittest.TestCase):
         iq_node.setLang("fr")
         lang = self.lang.get_lang_class_from_node(iq_node)
         self.assertEquals(lang, Lang.fr)
-        
+
+class Language_TestCase(jcl.tests.lang.Language_TestCase):
+    """Test language classes"""
+
+    def setUp(self):
+        """must define self.lang_class. Lang.en is default"""
+        self.lang_class = Lang.en
+
+    def test_strings(self):
+        jcl.tests.lang.Language_TestCase.test_strings(self)
+
+        self.assertNotEquals(self.lang_class.field_login, None)
+        self.assertNotEquals(self.lang_class.field_password, None)
+        self.assertNotEquals(self.lang_class.field_host, None)
+        self.assertNotEquals(self.lang_class.field_port, None)
+        self.assertNotEquals(self.lang_class.field_ssl, None)
+        self.assertNotEquals(self.lang_class.field_store_password, None)
+        self.assertNotEquals(self.lang_class.field_live_email_only, None)
+        self.assertNotEquals(self.lang_class.field_interval, None)
+        self.assertNotEquals(self.lang_class.field_mailbox, None)
+
+        self.assertNotEquals(self.lang_class.field_action_1, None)
+        self.assertNotEquals(self.lang_class.field_chat_action_1, None)
+        self.assertNotEquals(self.lang_class.field_online_action_1, None)
+        self.assertNotEquals(self.lang_class.field_away_action_1, None)
+        self.assertNotEquals(self.lang_class.field_xa_action_1, None)
+        self.assertNotEquals(self.lang_class.field_dnd_action_1, None)
+        self.assertNotEquals(self.lang_class.field_offline_action_1, None)
+
+        self.assertNotEquals(self.lang_class.field_action_2, None)
+        self.assertNotEquals(self.lang_class.field_chat_action_2, None)
+        self.assertNotEquals(self.lang_class.field_online_action_2, None)
+        self.assertNotEquals(self.lang_class.field_away_action_2, None)
+        self.assertNotEquals(self.lang_class.field_xa_action_2, None)
+        self.assertNotEquals(self.lang_class.field_dnd_action_2, None)
+        self.assertNotEquals(self.lang_class.field_offline_action_2, None)
+
+        self.assertNotEquals(self.lang_class.new_mail_subject, None)
+        self.assertNotEquals(self.lang_class.new_digest_subject, None)
+
+class Language_fr_TestCase(Language_TestCase):
+    def setUp(self):
+        self.lang_class = Lang.fr
+
+class Language_nl_TestCase(Language_TestCase):
+    def setUp(self):
+        self.lang_class = Lang.nl
+
+class Language_es_TestCase(Language_TestCase):
+    def setUp(self):
+        self.lang_class = Lang.es
+
+class Language_pl_TestCase(Language_TestCase):
+    def setUp(self):
+        self.lang_class = Lang.pl
+
 def suite():
-    return unittest.makeSuite(Lang_TestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(Lang_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(Language_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(Language_fr_TestCase, 'test'))
+#    suite.addTest(unittest.makeSuite(Language_nl_TestCase, 'test'))
+#    suite.addTest(unittest.makeSuite(Language_es_TestCase, 'test'))
+#    suite.addTest(unittest.makeSuite(Language_pl_TestCase, 'test'))
+#    suite.addTest(unittest.makeSuite(Language_cs_TestCase, 'test'))
+    return suite
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
