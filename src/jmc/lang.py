@@ -128,15 +128,15 @@ class Lang(jcl.lang.Lang):
         connection_label = u"%s verbinding '%s'"
         update_account_message_subject = u"Verbinding %s '%s' werd bijgewerkt"
         update_account_message_body = u"Geregistreerd met gebruikersnaam '%s'"\
-                                      "en wachtwoord '%s' op '%s'"
+                                      u"en wachtwoord '%s' op '%s'"
         new_account_message_subject = u"Nieuwe %s verbinding '%s' aangemaakt"
         new_account_message_body = u"Geregistreerd met " \
-                                   "gebruikersnaam '%s' en wachtwoord '%s' op '%s'"
+                                   u"gebruikersnaam '%s' en wachtwoord '%s' op '%s'"
         ask_password_subject = u"Wachtwoordaanvraag"
         ask_password_body = u"Antwoord dit bericht met het volgende wachtwoord" \
-                            "voor de volgende account: \n" \
-                            "\thost = %s\n" \
-                            "\tlogin = %s\n"
+                            u"voor de volgende account: \n" \
+                            u"\thost = %s\n" \
+                            u"\tlogin = %s\n"
         password_saved_for_session = u"Het wachtwoord zal worden bewaard tijdens uw Jabber-sessie"
         check_error_subject = u"Fout tijdens controle op e-mails."
         check_error_body = u"Fout tijdens controle op e-mails:\n\t%s"
@@ -295,15 +295,15 @@ class Lang(jcl.lang.Lang):
         connection_label = u"%s соединение '%s'"
         update_account_message_subject = u"Данные для  %s обновлены '%s'"
         update_account_message_body = u"Зарегистрирован с логином '%s' и " \
-                                      "паролем '%s' на '%s'"
+                                      u"паролем '%s' на '%s'"
         new_account_message_subject = u"Новое %s соединение '%s' создано"
         new_account_message_body = u"Перерегистрирован с " \
-                                   "логином '%s' и паролем '%s' на '%s'"
+                                   u"логином '%s' и паролем '%s' на '%s'"
         ask_password_subject = u"Запрос пароля"
         ask_password_body = u"Ответьте на это сообщение с паролем " \
-                            "для следующей учетной записи: \n" \
-                            "\tХост = %s\n" \
-                            "\tЛогин = %s\n"
+                            u"для следующей учетной записи: \n" \
+                            u"\tХост = %s\n" \
+                            u"\tЛогин = %s\n"
         password_saved_for_session = u"Пароль будет сохранен только на время Вашей сессии."
         check_error_subject = u"Ошибка при проверке почты."
         check_error_body = u"Возникла ошибка при проверке почты:\n\t%s"
