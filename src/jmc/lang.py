@@ -266,3 +266,46 @@ class Lang(jcl.lang.Lang):
         check_error_body = u"Nějaká chyba nastala při kontrole emailů:\n\t%s"
         new_mail_subject = u"Nový email od %s"
         new_digest_subject = u"%i má nový(é) email(y)"
+
+    class ru:
+        # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_ru_TestCase, 'test') line
+        register_title = u"Учетные данные соединения"
+        register_instructions = u"Введите данные для соединения"
+        account_name = u"Имя соединения"
+        account_login = u"Логин@gmail.ru"
+        account_password = u"Пароль"
+        account_password_store = u"Сохранять пароль на сервере?"
+        account_host = u"Хост"
+        account_port = u"Порт (обычно, 110)"
+        account_type = u"Тип учетной записи"
+        account_mailbox = u"Путь к почтовому ящику (IMAP)"
+        account_ffc_action = u"Действие для состояния 'Free For Chat'"
+        account_online_action = u"Действие для состояния 'Online'"
+        account_away_action = u"Действие для состояния 'Away'"
+        account_xa_action = u"Действие для состояния 'Not Available'"
+        account_dnd_action = u"Действие для состояния 'Do not Disturb'"
+        account_offline_action = u"Действие для состояния 'Offline'"
+        account_check_interval = u"Интервал проверки почты (в минутах)"
+        account_live_email_only = u"Сообщать о письмах только на момент подключения"
+        action_nothing = u"Не делать ничего"
+        action_retrieve = u"Показать почту"
+        action_digest = u"Показать уведомление"
+        update_title = u"Уточнение параметров"
+        update_instructions = u"Изменяем соединение '%s'"
+        connection_label = u"%s соединение '%s'"
+        update_account_message_subject = u"Данные для  %s обновлены '%s'"
+        update_account_message_body = u"Зарегистрирован с логином '%s' и " \
+                                      "паролем '%s' на '%s'"
+        new_account_message_subject = u"Новое %s соединение '%s' создано"
+        new_account_message_body = u"Перерегистрирован с " \
+                                   "логином '%s' и паролем '%s' на '%s'"
+        ask_password_subject = u"Запрос пароля"
+        ask_password_body = u"Ответьте на это сообщение с паролем " \
+                            "для следующей учетной записи: \n" \
+                            "\tХост = %s\n" \
+                            "\tЛогин = %s\n"
+        password_saved_for_session = u"Пароль будет сохранен только на время Вашей сессии."
+        check_error_subject = u"Ошибка при проверке почты."
+        check_error_body = u"Возникла ошибка при проверке почты:\n\t%s"
+        new_mail_subject = u"Новая почта от %s"
+        new_digest_subject = u"%i новое(ые) письмо(а)"
