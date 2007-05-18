@@ -20,41 +20,15 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-import logging
 import sys
-
 reload(sys)
 sys.setdefaultencoding('utf-8')
 del sys.setdefaultencoding
 
-from sqlobject import *
-from pyxmpp.message import Message
+import jmc
+from jmc.runner import JMCRunner
 
-from jcl.model import account
-from jcl.model.account import Account, PresenceAccount
-
-from jmc.jabber.component import MailComponent
-from jmc.model.account import MailAccount, IMAPAccount, POP3Account
-
-DB_PATH = "/tmp/jmc.db"
-DB_URL = DB_PATH# + "?debug=1&debugThreading=1"
-
-logger = logging.getLogger()
-logger.addHandler(logging.StreamHandler())
-logger.setLevel(logging.DEBUG)
-
-account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-Account.createTable(ifNotExists = True)
-PresenceAccount.createTable(ifNotExists = True)
-MailAccount.createTable(ifNotExists = True)
-IMAPAccount.createTable(ifNotExists = True)
-POP3Account.createTable(ifNotExists = True)
-del account.hub.threadConnection
-
-component = MailComponent("jmc.localhost", \
-                          "secret", \
-                          "127.0.0.1", \
-                          5347, \
-                          "sqlite://" + DB_URL)
-component.run()
-logger.debug("JMC is exiting")
+if __name__ == "__main__":
+    runner = JMCRunner("Jabber Mail Component", jmc.version)
+    runner.configure()
+    runner.run()
