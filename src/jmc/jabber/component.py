@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 ##
 ## component.py
 ## Login : David Rousselie <dax@happycoders.org>
@@ -22,13 +22,18 @@
 ## 
 
 import logging
+import re
+import sys
+
+from sqlobject import *
 
 from pyxmpp.message import Message
 
-from jcl.model.account import PresenceAccount
+from jcl.model.account import Account, PresenceAccount
+from jcl.jabber.component import Handler, DefaultSubscribeHandler, DefaultUnsubscribeHandler, DefaultPresenceHandler
 from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, HeadlineSender
 
-from jmc.model.account import MailAccount, IMAPAccount, POP3Account
+from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
 from jmc.lang import Lang
 
 class MailComponent(FeederComponent):
@@ -53,7 +58,16 @@ class MailComponent(FeederComponent):
                                  lang = lang)
         self.feeder = MailFeeder(self)
         self.sender = MailSender(self)
-        self.account_manager.account_classes = (IMAPAccount, POP3Account)
+        self.account_manager.account_classes = (IMAPAccount, POP3Account, SMTPAccount)
+
+    def authenticated(self):
+        """Register message handlers"""
+        FeederComponent.authenticated(self)        
+        self.msg_handlers += [SendMailMessageHandler(), RootSendMailMessageHandler()]
+        self.subscribe_handlers += [MailSubscribeHandler()]
+        self.unsubscribe_handlers += [MailUnsubscribeHandler()]
+        self.available_handlers += [DefaultPresenceHandler()]
+        self.unavailable_handlers += [DefaultPresenceHandler()]
 
 class MailFeeder(Feeder):
     """Email check"""
@@ -159,4 +173,80 @@ class MailSender(MessageSender, HeadlineSender):
             MessageSender.send(self, to_account, subject, body)
         elif to_account.action == MailAccount.DIGEST:
             HeadlineSender.send(self, to_account, subject, body)
+
+class MailHandler(Handler):
+    """Define filter for email address in JID"""
+
+    def __init__(self):
+        Handler.__init__(self)
+        self.dest_jid_regexp = re.compile(".*%.*")
+
+    def filter(self, stanza):
+        """Return empty array if JID match '.*%.*@componentJID'"""
+        if self.dest_jid_regexp.match(stanza.get_to().node):
+            bare_from_jid = unicode(stanza.get_from().bare())
+            accounts = Account.select(Account.q.user_jid == bare_from_jid)
+            if accounts.count() == 0:
+                raise Exception()
+            else:
+                default_account = accounts.newClause(SMTPAccount.q.default_account == True)
+                if default_account.count() > 0:
+                    return default_account
+                else:
+                    return accounts
+        return None
     
+class SendMailMessageHandler(MailHandler):
+    def __init__(self):
+        MailHandler.__init__(self)
+        self.__logger = logging.getLogger("jmc.jabber.component.SendMailMessageHandler")
+
+    def handle(self, message, lang, accounts):
+        to_email = replace(message.get_to().node, '%', '@', 1)
+        accounts[0].send_email(to_email, message.get_subject(), message.get_body())
+
+class RootSendMailMessageHandler(SendMailMessageHandler):
+    def __init__(self):
+        SendMailMessageHandler.__init__(self)
+        self.__logger = logging.getLogger("jmc.jabber.component.RootSendMailMessageHandler")
+        
+    def filter(self, message):
+        name = message.get_to().node
+        bare_from_jid = unicode(message.get_from().bare())
+        accounts = Account.select(\
+            AND(Account.q.name == name, \
+                    Account.q.user_jid == bare_from_jid))
+        if accounts.count() != 1:
+            self.__logger.error("Account " + name + " for user " + bare_from_jid + " must be uniq")
+        return accounts
+
+    def handle(self, message, lang, accounts):
+        # TODO : parse "headers", or advanced addressing
+        to_email = ""
+        accounts[0].send_email(to_email, message.get_subject(), message.get_body())
+
+class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
+    """Use DefaultSubscribeHandler handle method and MailHandler filter"""
+
+    def __init__(self):
+        DefaultSubscribeHandler.__init__(self)
+        MailHandler.__init__(self)
+
+    def filter(self, stanza):
+        return MailHandler.filter(self, stanza)
+
+    def handle(self, stanza, lang, accounts):
+        return DefaultSubscribeHandler.handle(self, stanza, lang, accounts)
+
+class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
+    """Use DefaultUnsubscribeHandler handle method and MailHandler filter"""
+
+    def __init__(self):
+        DefaultUnsubscribeHandler.__init__(self)
+        MailHandler.__init__(self)
+    
+    def filter(self, stanza):
+        return MailHandler.filter(self, stanza)
+
+    def handle(self, stanza, lang, accounts):
+        return DefaultUnsubscribeHandler.handle(self, stanza, lang, accounts)

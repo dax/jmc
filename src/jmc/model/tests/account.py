@@ -31,9 +31,9 @@ from sqlobject.dbconnection import TheURIOpener
 
 from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
-from jmc.model.account import MailAccount, POP3Account, IMAPAccount
+from jmc.model.account import MailAccount, POP3Account, IMAPAccount, SMTPAccount
 
-from jcl.model.tests.account import PresenceAccount_TestCase
+from jcl.model.tests.account import Account_TestCase, PresenceAccount_TestCase
 from jmc.model.tests import email_generator, server
 
 if sys.platform == "win32":
@@ -388,12 +388,17 @@ class IMAPAccount_TestCase(unittest.TestCase):
         register_fields = IMAPAccount.get_register_fields()
         self.assertEquals(len(register_fields), 16)
 
+class SMTPAccount_TestCase(Account_TestCase):
+    def test_get_register_fields(self):
+        register_fields = SMTPAccount.get_register_fields()
+        self.assertEquals(len(register_fields), 7)
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(MailAccount_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(POP3Account_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(IMAPAccount_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(SMTPAccount_TestCase, 'test'))
     return suite
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##
 ## test_component.py
 ## Login : <dax@happycoders.org>
@@ -27,17 +28,21 @@ import sys
 from sqlobject import *
 from sqlobject.dbconnection import TheURIOpener
 
+from pyxmpp.presence import Presence
+from pyxmpp.message import Message
+
 from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
+from jcl.jabber.tests.component import DefaultSubscribeHandler_TestCase, DefaultUnsubscribeHandler_TestCase
 
-from jmc.model.account import MailAccount, IMAPAccount, POP3Account
-from jmc.jabber.component import MailComponent
+from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
+from jmc.jabber.component import MailComponent, SendMailMessageHandler, RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, MailUnsubscribeHandler
 
 
 if sys.platform == "win32":
-   DB_PATH = "/c|/temp/test.db"
+   DB_PATH = "/c|/temp/jmc_test.db"
 else:
-   DB_PATH = "/tmp/test.db"
+   DB_PATH = "/tmp/jmc_test.db"
 DB_URL = DB_PATH# + "?debug=1&debugThreading=1"
 
 class MockStream(object):
@@ -148,6 +153,7 @@ class MailComponent_TestCase(unittest.TestCase):
         MailAccount.createTable(ifNotExists = True)
         IMAPAccount.createTable(ifNotExists = True)
         POP3Account.createTable(ifNotExists = True)
+        SMTPAccount.createTable(ifNotExists = True)
         MockIMAPAccount.createTable(ifNotExists = True)
         MockPOP3Account.createTable(ifNotExists = True)
         del account.hub.threadConnection
@@ -156,6 +162,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
         MockPOP3Account.dropTable(ifExists = True)
         MockIMAPAccount.dropTable(ifExists = True)
+        SMTPAccount.dropTable(ifExists = True)
         POP3Account.dropTable(ifExists = True)
         IMAPAccount.dropTable(ifExists = True)
         MailAccount.dropTable(ifExists = True)
@@ -502,9 +509,196 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
         del account.hub.threadConnection
-        
+
+class SendMailMessageHandler_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.handler = SendMailMessageHandler()
+
+    def test_handle(self):
+        # TODO
+        pass
+
+class RootSendMailMessageHandler_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.handler = RootSendMailMessageHandler()
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        Account.createTable(ifNotExists = True)
+        SMTPAccount.createTable(ifNotExists = True)
+        del account.hub.threadConnection
+    
+    def tearDown(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        SMTPAccount.dropTable(ifExists = True)
+        Account.dropTable(ifExists = True)
+        del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
+        account.hub.threadConnection.close()
+        del account.hub.threadConnection
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+
+    def test_filter(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account11", \
+                                   jid = "account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account12", \
+                                   jid = "account12@jcl.test.com")
+        message = Message(from_jid = "user1@test.com", \
+                             to_jid = "account11@jcl.test.com", \
+                             stanza_type = "normal", \
+                             body = "message")
+        accounts = self.handler.filter(message)
+        self.assertEquals(accounts.count(), 1)
+        del account.hub.threadConnection
+
+    def test_filter_wrong_dest(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account11", \
+                                   jid = "account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account12", \
+                                   jid = "account12@jcl.test.com")
+        message = Message(from_jid = "user1@test.com", \
+                             to_jid = "user2%test.com@jcl.test.com", \
+                             stanza_type = "normal", \
+                             body = "message")
+        accounts = self.handler.filter(message)
+        self.assertEquals(accounts.count(), 0)
+        del account.hub.threadConnection
+
+    def test_filter_wrong_user(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account11", \
+                                   jid = "account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account12", \
+                                   jid = "account12@jcl.test.com")
+        message = Message(from_jid = "user2@test.com", \
+                             to_jid = "account11@jcl.test.com", \
+                             stanza_type = "normal", \
+                             body = "message")
+        accounts = self.handler.filter(message)
+        self.assertEquals(accounts.count(), 0)
+        del account.hub.threadConnection
+
+class MailHandler_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.handler = MailHandler()
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        Account.createTable(ifNotExists = True)
+        SMTPAccount.createTable(ifNotExists = True)
+        del account.hub.threadConnection
+    
+    def tearDown(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        SMTPAccount.dropTable(ifExists = True)
+        Account.dropTable(ifExists = True)
+        del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
+        account.hub.threadConnection.close()
+        del account.hub.threadConnection
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+
+    def test_filter(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account11", \
+                                   jid = "account11@jcl.test.com")
+        account11.default_account = True
+        account12 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account12", \
+                                   jid = "account12@jcl.test.com")
+        message = Message(from_jid = "user1@test.com", \
+                             to_jid = "user2%test.com@jcl.test.com", \
+                             stanza_type = "normal", \
+                             body = "message")
+        accounts = self.handler.filter(message)
+        self.assertNotEquals(accounts, None)
+        self.assertEquals(accounts.count(), 1)
+        self.assertEquals(accounts[0].name, "account11")
+        del account.hub.threadConnection
+
+    def test_filter_no_default(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account11", \
+                                   jid = "account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account12", \
+                                   jid = "account12@jcl.test.com")
+        message = Message(from_jid = "user1@test.com", \
+                             to_jid = "user2%test.com@jcl.test.com", \
+                             stanza_type = "normal", \
+                             body = "message")
+        accounts = self.handler.filter(message)
+        self.assertNotEquals(accounts, None)
+        self.assertEquals(accounts.count(), 2)
+        self.assertEquals(accounts[0].name, "account11")
+        del account.hub.threadConnection
+
+    def test_filter_wrong_dest(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account11", \
+                                   jid = "account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account12", \
+                                   jid = "account12@jcl.test.com")
+        message = Message(from_jid = "user1@test.com", \
+                             to_jid = "user2test.com@jcl.test.com", \
+                             stanza_type = "normal", \
+                             body = "message")
+        accounts = self.handler.filter(message)
+        self.assertEquals(accounts, None)
+        del account.hub.threadConnection
+
+    def test_filter_wrong_account(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account11", \
+                                   jid = "account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid = "user1@test.com", \
+                                   name = "account12", \
+                                   jid = "account12@jcl.test.com")
+        message = Message(from_jid = "user3@test.com", \
+                             to_jid = "user2%test.com@jcl.test.com", \
+                             stanza_type = "normal", \
+                             body = "message")
+        try:
+           accounts = self.handler.filter(message)
+        except Exception, e:
+           self.assertNotEquals(e, None)
+           return
+        finally:
+           del account.hub.threadConnection
+        self.fail("No exception catched")
+
+class MailSubscribeHandler_TestCase(DefaultSubscribeHandler_TestCase, MailHandler_TestCase):
+    def setUp(self):
+        MailHandler_TestCase.setUp(self)
+        self.handler = MailSubscribeHandler()
+
+class MailUnsubscribeHandler_TestCase(DefaultUnsubscribeHandler_TestCase, MailHandler_TestCase):
+    def setUp(self):
+        MailHandler_TestCase.setUp(self)
+        self.handler = MailUnsubscribeHandler()
+
 def suite():
-    return unittest.makeSuite(MailComponent_TestCase, 'test')
+    suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(MailComponent_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(SendMailMessageHandler_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(RootSendMailMessageHandler_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(MailHandler_TestCase, 'test')) 
+    suite.addTest(unittest.makeSuite(MailUnsubscribeHandler_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(MailSubscribeHandler_TestCase, 'test'))
+    return suite
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

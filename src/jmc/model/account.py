@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##
 ## account.py
 ## Login : <dax@happycoders.org>
@@ -158,7 +159,7 @@ class MailAccount(PresenceAccount):
         self.__logger = logging.getLogger("jmc.model.account.MailAccount")
         self.connection = None
         self.connected = False
-        self.default_lang_class = Lang.en # TODO: use String
+        self.default_lang_class = Lang.en
     
     def _get_register_fields(cls, real_class = None):
         """See Account._get_register_fields
@@ -338,7 +339,7 @@ class MailAccount(PresenceAccount):
         raise NotImplementedError
 
 class IMAPAccount(MailAccount):
-    mailbox = StringCol(default = "INBOX") # TODO : set default INBOX in reg_form (use get_register_fields last field ?)
+    mailbox = StringCol(default = "INBOX")
 
     def _get_register_fields(cls, real_class = None):
         """See Account._get_register_fields
@@ -515,3 +516,59 @@ class POP3Account(MailAccount):
         self.get_mail_list()
         self.lastmail = self.nb_mail
         
+
+class SMTPAccount(Account):
+    """Send email account"""
+
+    login = StringCol(default = "")
+    password = StringCol(default = None)
+    host = StringCol(default = "localhost")
+    port = IntCol(default = 110)
+    ssl = BoolCol(default = False)
+    store_password = BoolCol(default = True)
+    waiting_password_reply = BoolCol(default = False)
+    default_from = StringCol(default = "nobody@localhost")
+    default_account = BoolCol(default = False)
+
+    def _init(self, *args, **kw):
+        """SMTPAccount init
+        Initialize class attributes"""
+        Account._init(self, *args, **kw)
+        self.__logger = logging.getLogger("jmc.model.account.SMTPAccount")
+
+    def _get_register_fields(cls, real_class = None):
+        """See Account._get_register_fields
+        """
+        def password_post_func(password, default_func):
+            if password is None or password == "":
+                return None
+            return password
+
+        if real_class is None:
+            real_class = cls
+        return Account.get_register_fields(real_class) + \
+            [("login", "text-single", None, \
+                  lambda field_value, default_func: account.mandatory_field(field_value), \
+                  lambda : ""), \
+                 ("password", "text-private", None, password_post_func, \
+                      lambda : ""), \
+                 ("host", "text-single", None, \
+                      lambda field_value, default_func: account.mandatory_field(field_value), \
+                      lambda : ""), \
+                 ("port", "text-single", None, \
+                      account.int_post_func, \
+                      lambda : real_class.get_default_port()), \
+                 ("ssl", "boolean", None, \
+                      account.default_post_func, \
+                      lambda : False), \
+                 ("default_from", "text-single", None, \
+                      lambda field_value, default_func: account.mandatory_field(field_value), \
+                      lambda : ""), \
+                 ("store_password", "boolean", None, \
+                      account.default_post_func, \
+                      lambda : True)]
+    
+    get_register_fields = classmethod(_get_register_fields)
+
+    def send_email(self, to_email, subject, body):
+        pass

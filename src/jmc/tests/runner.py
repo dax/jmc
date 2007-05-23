@@ -33,7 +33,7 @@ from jcl.model.account import Account, PresenceAccount
 
 import jmc
 from jmc.runner import JMCRunner
-from jmc.model.account import MailAccount, IMAPAccount, POP3Account
+from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
 
 if sys.platform == "win32":
    DB_PATH = "/c|/temp/test.db"
@@ -136,6 +136,7 @@ class JMCRunner_TestCase(JCLRunner_TestCase):
         MailAccount.dropTable()
         IMAPAccount.dropTable()
         POP3Account.dropTable()
+        SMTPAccount.dropTable()
         del account.hub.threadConnection
         os.unlink(DB_PATH)
         self.assertFalse(os.access("/tmp/jmc.pid", os.F_OK))

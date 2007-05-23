@@ -22,7 +22,7 @@
 
 from jcl.runner import JCLRunner
 
-from jmc.model.account import MailAccount, IMAPAccount, POP3Account
+from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
 from jmc.jabber.component import MailComponent
 from jmc.lang import Lang
 
@@ -48,6 +48,7 @@ class JMCRunner(JCLRunner):
         MailAccount.createTable(ifNotExists = True)
         IMAPAccount.createTable(ifNotExists = True)
         POP3Account.createTable(ifNotExists = True)
+        SMTPAccount.createTable(ifNotExists = True)
 
     def run(self):
         def run_func():

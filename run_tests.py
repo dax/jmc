@@ -44,7 +44,7 @@ def suite():
 if __name__ == '__main__':
     logger = logging.getLogger()
     logger.addHandler(logging.StreamHandler())
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.CRITICAL)
     
     coverage.erase()
     coverage.start()
