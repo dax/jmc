@@ -61,6 +61,13 @@ class Lang(jcl.lang.Lang):
         type_imap_name = u"IMAP accounts"
         type_pop3_name = u"POP3 accounts"
 
+        send_mail_error_no_to_header_subject = u"No header \"TO\" found"
+        send_mail_error_no_to_header_body = u"No header \"TO\" found in receive message.\n" \
+            u"Please use following syntax to specify destination email address:\n" \
+            u"TO: user@test.com\n"
+        send_mail_ok_subject = u"Email sent"
+        send_mail_ok_body = u"Your email was sent to %s."
+
     class fr(jcl.lang.Lang.fr):
         component_name = u"Jabber Mail Component"
         register_title = u"Enregistrement d'une nouvelle connexion à un " \
@@ -98,6 +105,15 @@ class Lang(jcl.lang.Lang):
 
         type_imap_name = u"comptes IMAP"
         type_pop3_name = u"comptes POP3"
+
+        send_mail_error_no_to_header_subject = u"L'en-tête \"TO\" n'a pas été "\
+            u"trouvé"
+        send_mail_error_no_to_header_body = u"L'en-tête \"TO\" n'a pas été " \
+            u"trouvé dans le message envoyé.\n" \
+            u"Utiliser la syntax suivante pour spécifier l'adresse email du " \
+            u"destinataire :\nTO: user@test.com\n"
+        send_mail_ok_subject = u"Email envoyé"
+        send_mail_ok_body = u"Votre email a été envoyé à %s."
 
     class nl(jcl.lang.Lang.nl):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_nl_TestCase, 'test') line

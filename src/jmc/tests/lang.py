@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 ##
 ## test_lang.py
 ## Login : David Rousselie <david.rousselie@happycoders.org>
@@ -104,6 +104,13 @@ class Language_TestCase(jcl.tests.lang.Language_TestCase):
 
         self.assertNotEquals(self.lang_class.new_mail_subject, None)
         self.assertNotEquals(self.lang_class.new_digest_subject, None)
+
+        self.assertNotEquals(self.lang_class.send_mail_error_no_to_header_subject,
+                             None)
+        self.assertNotEquals(self.lang_class.send_mail_error_no_to_header_body,
+                             None)
+        self.assertNotEquals(self.lang_class.send_mail_ok_subject, None)
+        self.assertNotEquals(self.lang_class.send_mail_ok_body, None)
 
 class Language_fr_TestCase(Language_TestCase):
     def setUp(self):

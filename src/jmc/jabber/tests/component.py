@@ -37,7 +37,7 @@ from jcl.jabber.tests.component import DefaultSubscribeHandler_TestCase, Default
 
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
 from jmc.jabber.component import MailComponent, SendMailMessageHandler, RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, MailUnsubscribeHandler
-
+from jmc.lang import Lang
 
 if sys.platform == "win32":
    DB_PATH = "/c|/temp/jmc_test.db"
@@ -515,8 +515,28 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
         self.handler = SendMailMessageHandler()
 
     def test_handle(self):
-        # TODO
-        pass
+        message = Message(from_jid="user1@test.com",
+                          to_jid="user%test.com@jcl.test.com",
+                          subject="message subject",
+                          body="message body")
+        class MockSMTPAccount(object):
+            def send_email(self, to_email, subject, body):
+                self.to_email = to_email
+                self.subject = subject
+                self.body = body
+        accounts = [MockSMTPAccount()]
+        result = self.handler.handle(message, Lang.en, accounts)
+        self.assertEquals(accounts[0].to_email, "user@test.com")
+        self.assertEquals(accounts[0].subject, "message subject")
+        self.assertEquals(accounts[0].body, "message body")
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].stanza_type, "message")
+        self.assertEquals(result[0].get_from(), "user%test.com@jcl.test.com")
+        self.assertEquals(result[0].get_to(), "user1@test.com")
+        self.assertEquals(result[0].get_subject(), 
+                          Lang.en.send_mail_ok_subject)
+        self.assertEquals(result[0].get_body(), 
+                          Lang.en.send_mail_ok_body % ("user@test.com"))
 
 class RootSendMailMessageHandler_TestCase(unittest.TestCase):
     def setUp(self):
@@ -585,6 +605,52 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         accounts = self.handler.filter(message)
         self.assertEquals(accounts.count(), 0)
         del account.hub.threadConnection
+
+    def test_handle_email_found_in_header(self):
+        message = Message(from_jid="user1@test.com",
+                          to_jid="jcl.test.com",
+                          subject="message subject",
+                          body="to: user@test.com\n" \
+                             "message body")
+        class MockSMTPAccount(object):
+            def send_email(self, to_email, subject, body):
+                self.to_email = to_email
+                self.subject = subject
+                self.body = body
+        accounts = [MockSMTPAccount()]
+        result = self.handler.handle(message, Lang.en, accounts)
+        self.assertEquals(accounts[0].to_email, "user@test.com")
+        self.assertEquals(accounts[0].subject, "message subject")
+        self.assertEquals(accounts[0].body, "message body")
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].get_type(), None)
+        self.assertEquals(result[0].get_from(), "jcl.test.com")
+        self.assertEquals(result[0].get_to(), "user1@test.com")
+        self.assertEquals(result[0].get_subject(), 
+                          Lang.en.send_mail_ok_subject)
+        self.assertEquals(result[0].get_body(), 
+                          Lang.en.send_mail_ok_body % ("user@test.com"))
+
+    def test_handle_email_not_found_in_header(self):
+        message = Message(from_jid="user1@test.com",
+                          to_jid="jcl.test.com",
+                          subject="message subject",
+                          body="message body")
+        class MockSMTPAccount(object):
+            def send_email(self, to_email, subject, body):
+                self.to_email = to_email
+                self.subject = subject
+                self.body = body
+        accounts = [MockSMTPAccount()]
+        result = self.handler.handle(message, Lang.en, accounts)
+        self.assertEquals(len(result), 1)
+        self.assertEquals(result[0].get_type(), "error")
+        self.assertEquals(result[0].get_from(), "jcl.test.com")
+        self.assertEquals(result[0].get_to(), "user1@test.com")
+        self.assertEquals(result[0].get_subject(), 
+                          Lang.en.send_mail_error_no_to_header_subject)
+        self.assertEquals(result[0].get_body(), 
+                          Lang.en.send_mail_error_no_to_header_body)
 
 class MailHandler_TestCase(unittest.TestCase):
     def setUp(self):

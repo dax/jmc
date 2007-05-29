@@ -59,10 +59,6 @@ class MailComponent(FeederComponent):
         self.feeder = MailFeeder(self)
         self.sender = MailSender(self)
         self.account_manager.account_classes = (IMAPAccount, POP3Account, SMTPAccount)
-
-    def authenticated(self):
-        """Register message handlers"""
-        FeederComponent.authenticated(self)        
         self.msg_handlers += [SendMailMessageHandler(), RootSendMailMessageHandler()]
         self.subscribe_handlers += [MailSubscribeHandler()]
         self.unsubscribe_handlers += [MailUnsubscribeHandler()]
@@ -201,13 +197,22 @@ class SendMailMessageHandler(MailHandler):
         MailHandler.__init__(self)
         self.__logger = logging.getLogger("jmc.jabber.component.SendMailMessageHandler")
 
+    def send_mail_result(self, message, lang, to_email):
+        return [Message(from_jid=message.get_to(),
+                        to_jid=message.get_from(),
+                        subject=lang.send_mail_ok_subject,
+                        body=lang.send_mail_ok_body % (to_email))]
+
     def handle(self, message, lang, accounts):
-        to_email = replace(message.get_to().node, '%', '@', 1)
+        to_node = message.get_to().node
+        to_email = to_node.replace('%', '@', 1)
         accounts[0].send_email(to_email, message.get_subject(), message.get_body())
+        return self.send_mail_result(message, lang, to_email)
 
 class RootSendMailMessageHandler(SendMailMessageHandler):
     def __init__(self):
         SendMailMessageHandler.__init__(self)
+        self.to_regexp = re.compile("^\s*(to|TO)\s*:\s*(?P<to_email>.*)")
         self.__logger = logging.getLogger("jmc.jabber.component.RootSendMailMessageHandler")
         
     def filter(self, message):
@@ -221,9 +226,27 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
         return accounts
 
     def handle(self, message, lang, accounts):
-        # TODO : parse "headers", or advanced addressing
-        to_email = ""
-        accounts[0].send_email(to_email, message.get_subject(), message.get_body())
+        to_email = None
+        lines = message.get_body().split('\n')
+        message_body = []
+        while to_email is None \
+                and lines:
+            line = lines.pop(0)
+            match = self.to_regexp.match(line)
+            if match:
+                to_email = match.group("to_email")
+            else:
+                message_body.append(line)
+        message_body.extend(lines)
+        if to_email is not None:
+            accounts[0].send_email(to_email, message.get_subject(), "".join(message_body))
+            return self.send_mail_result(message, lang, to_email)
+        else:
+            return [Message(from_jid=message.get_to(),
+                            to_jid=message.get_from(),
+                            stanza_type="error",
+                            subject=lang.send_mail_error_no_to_header_subject,
+                            body=lang.send_mail_error_no_to_header_body)]
 
 class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
     """Use DefaultSubscribeHandler handle method and MailHandler filter"""
