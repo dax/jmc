@@ -39,6 +39,10 @@ from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
     SMTPAccount
 from jmc.lang import Lang
 
+class NoAccountError(Exception):
+    """Error raised when no corresponding account is found."""
+    pass
+
 class MailComponent(FeederComponent):
     """Jabber Mail Component main implementation"""
 
@@ -194,13 +198,13 @@ class MailHandler(Handler):
         Handler.__init__(self)
         self.dest_jid_regexp = re.compile(".*%.*")
 
-    def filter(self, stanza):
+    def filter(self, stanza, lang):
         """Return empty array if JID match '.*%.*@componentJID'"""
         if self.dest_jid_regexp.match(stanza.get_to().node):
             bare_from_jid = unicode(stanza.get_from().bare())
             accounts = Account.select(Account.q.user_jid == bare_from_jid)
             if accounts.count() == 0:
-                raise Exception()
+                raise NoAccountError()
             else:
                 default_account = accounts.newClause(\
                     SMTPAccount.q.default_account == True)
@@ -237,7 +241,7 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
         self.__logger = logging.getLogger(\
             "jmc.jabber.component.RootSendMailMessageHandler")
 
-    def filter(self, message):
+    def filter(self, message, lang):
         name = message.get_to().node
         bare_from_jid = unicode(message.get_from().bare())
         accounts = Account.select(\
@@ -279,8 +283,8 @@ class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
         DefaultSubscribeHandler.__init__(self)
         MailHandler.__init__(self)
 
-    def filter(self, stanza):
-        return MailHandler.filter(self, stanza)
+    def filter(self, stanza, lang):
+        return MailHandler.filter(self, stanza, lang)
 
     def handle(self, stanza, lang, accounts):
         return DefaultSubscribeHandler.handle(self, stanza, lang, accounts)
@@ -292,8 +296,8 @@ class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
         DefaultUnsubscribeHandler.__init__(self)
         MailHandler.__init__(self)
 
-    def filter(self, stanza):
-        return MailHandler.filter(self, stanza)
+    def filter(self, stanza, lang):
+        return MailHandler.filter(self, stanza, lang)
 
     def handle(self, stanza, lang, accounts):
         return DefaultUnsubscribeHandler.handle(self, stanza, lang, accounts)

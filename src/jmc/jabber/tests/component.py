@@ -33,10 +33,14 @@ from pyxmpp.message import Message
 
 from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
-from jcl.jabber.tests.component import DefaultSubscribeHandler_TestCase, DefaultUnsubscribeHandler_TestCase
+from jcl.jabber.tests.component import DefaultSubscribeHandler_TestCase, \
+    DefaultUnsubscribeHandler_TestCase
 
-from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
-from jmc.jabber.component import MailComponent, SendMailMessageHandler, RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, MailUnsubscribeHandler
+from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
+    SMTPAccount
+from jmc.jabber.component import MailComponent, SendMailMessageHandler, \
+    RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, \
+    MailUnsubscribeHandler, NoAccountError
 from jmc.lang import Lang
 
 if sys.platform == "win32":
@@ -569,7 +573,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         message = Message(from_jid="user1@test.com",
                           to_jid="account11@jcl.test.com",
                           body="message")
-        accounts = self.handler.filter(message)
+        accounts = self.handler.filter(message, None)
         self.assertEquals(accounts.count(), 1)
         del account.hub.threadConnection
 
@@ -584,7 +588,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         message = Message(from_jid="user1@test.com",
                           to_jid="user2%test.com@jcl.test.com",
                           body="message")
-        accounts = self.handler.filter(message)
+        accounts = self.handler.filter(message, None)
         self.assertEquals(accounts.count(), 0)
         del account.hub.threadConnection
 
@@ -599,7 +603,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         message = Message(from_jid="user2@test.com",
                           to_jid="account11@jcl.test.com",
                           body="message")
-        accounts = self.handler.filter(message)
+        accounts = self.handler.filter(message, None)
         self.assertEquals(accounts.count(), 0)
         del account.hub.threadConnection
 
@@ -681,7 +685,7 @@ class MailHandler_TestCase(unittest.TestCase):
         message = Message(from_jid = "user1@test.com", \
                              to_jid = "user2%test.com@jcl.test.com", \
                              body = "message")
-        accounts = self.handler.filter(message)
+        accounts = self.handler.filter(message, None)
         self.assertNotEquals(accounts, None)
         self.assertEquals(accounts.count(), 1)
         self.assertEquals(accounts[0].name, "account11")
@@ -698,7 +702,7 @@ class MailHandler_TestCase(unittest.TestCase):
         message = Message(from_jid = "user1@test.com", \
                              to_jid = "user2%test.com@jcl.test.com", \
                              body = "message")
-        accounts = self.handler.filter(message)
+        accounts = self.handler.filter(message, None)
         self.assertNotEquals(accounts, None)
         self.assertEquals(accounts.count(), 2)
         self.assertEquals(accounts[0].name, "account11")
@@ -715,7 +719,7 @@ class MailHandler_TestCase(unittest.TestCase):
         message = Message(from_jid = "user1@test.com", \
                              to_jid = "user2test.com@jcl.test.com", \
                              body = "message")
-        accounts = self.handler.filter(message)
+        accounts = self.handler.filter(message, None)
         self.assertEquals(accounts, None)
         del account.hub.threadConnection
 
@@ -731,13 +735,13 @@ class MailHandler_TestCase(unittest.TestCase):
                              to_jid = "user2%test.com@jcl.test.com", \
                              body = "message")
         try:
-           accounts = self.handler.filter(message)
-        except Exception, e:
+           accounts = self.handler.filter(message, None)
+        except NoAccountError, e:
            self.assertNotEquals(e, None)
            return
         finally:
            del account.hub.threadConnection
-        self.fail("No exception catched")
+        self.fail("No exception 'NoAccountError' catched")
 
 class MailSubscribeHandler_TestCase(DefaultSubscribeHandler_TestCase, MailHandler_TestCase):
     def setUp(self):
