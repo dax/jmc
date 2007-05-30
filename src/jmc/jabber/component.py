@@ -2,24 +2,24 @@
 ##
 ## component.py
 ## Login : David Rousselie <dax@happycoders.org>
-## Started on  Fri Jan  7 11:06:42 2005 
+## Started on  Fri Jan  7 11:06:42 2005
 ## $Id: component.py,v 1.12 2005/09/18 20:24:07 dax Exp $
-## 
-## Copyright (C) 2005 
+##
+## Copyright (C) 2005
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-## 
+##
 
 import logging
 import re
@@ -30,10 +30,13 @@ from sqlobject import *
 from pyxmpp.message import Message
 
 from jcl.model.account import Account, PresenceAccount
-from jcl.jabber.component import Handler, DefaultSubscribeHandler, DefaultUnsubscribeHandler, DefaultPresenceHandler
-from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, HeadlineSender
+from jcl.jabber.component import Handler, DefaultSubscribeHandler, \
+    DefaultUnsubscribeHandler, DefaultPresenceHandler
+from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, \
+    HeadlineSender
 
-from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
+from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
+    SMTPAccount
 from jmc.lang import Lang
 
 class MailComponent(FeederComponent):
@@ -47,19 +50,22 @@ class MailComponent(FeederComponent):
                  db_connection_str,
                  lang = Lang()):
         """Use FeederComponent behavior and setup feeder and sender
-        attributes
+        attributes.
         """
-        FeederComponent.__init__(self, \
-                                 jid, \
-                                 secret, \
-                                 server, \
-                                 port, \
+        FeederComponent.__init__(self,
+                                 jid,
+                                 secret,
+                                 server,
+                                 port,
                                  db_connection_str,
-                                 lang = lang)
+                                 lang=lang)
         self.feeder = MailFeeder(self)
         self.sender = MailSender(self)
-        self.account_manager.account_classes = (IMAPAccount, POP3Account, SMTPAccount)
-        self.msg_handlers += [SendMailMessageHandler(), RootSendMailMessageHandler()]
+        self.account_manager.account_classes = (IMAPAccount,
+                                                POP3Account,
+                                                SMTPAccount)
+        self.msg_handlers += [SendMailMessageHandler(),
+                              RootSendMailMessageHandler()]
         self.subscribe_handlers += [MailSubscribeHandler()]
         self.unsubscribe_handlers += [MailUnsubscribeHandler()]
         self.available_handlers += [DefaultPresenceHandler()]
@@ -76,11 +82,15 @@ class MailFeeder(Feeder):
     def initialize_live_email(self, _account):
         """For live email checking account, mark emails received while
         offline as read.
-        Return a boolean to continue mail checking or not (if waiting for password)"""
+        Return a boolean to continue mail checking or not
+        (if waiting for password).
+        """
         if _account.password is None:
             if not _account.waiting_password_reply:
-                self.component.send_stanzas(self.component.account_manager.ask_password(_account, \
-                                                                                       _account.default_lang_class))
+                account_manager = self.component.account_manager
+                self.component.send_stanzas(\
+                    account_manager.ask_password(_account,
+                                                 _account.default_lang_class))
             return False
         try:
             _account.connect()
@@ -101,7 +111,8 @@ class MailFeeder(Feeder):
 
     def feed(self, _account):
         """Check for new emails for given MailAccount and return a list of
-        those emails or a summary"""
+        those emails or a summary.
+        """
 	self.__logger.debug("MailFeeder.feed")
         result = []
         if _account.first_check and _account.live_email_only:
@@ -115,21 +126,25 @@ class MailFeeder(Feeder):
             if action != PresenceAccount.DO_NOTHING:
                 try:
                     if _account.password is None:
-                        self.component.send_stanzas(self.component.account_manager.ask_password(_account, \
-                                                                                                    _account.default_lang_class))
+                        account_manager = self.component.account_manager
+                        self.component.send_stanzas(\
+                            account_manager.ask_password(_account,
+                                                         _account.default_lang_class))
                         return result
                     self.__logger.debug("Checking " + _account.name)
                     self.__logger.debug("\t" + _account.login \
-                                        + "@" + _account.host)
+                                            + "@" + _account.host)
                     _account.connect()
                     mail_list = _account.get_mail_list()
+                    default_lang_class = _account.default_lang_class
                     if action == MailAccount.RETRIEVE:
                         # TODO : use generator (yield)
                         mail_index = _account.get_next_mail_index(mail_list)
                         while mail_index is not None:
                             (body, email_from) = _account.get_mail(mail_index)
-                            result.append((_account.default_lang_class.new_mail_subject % (email_from), \
-                                                  body))
+                            result.append((default_lang_class.new_mail_subject\
+                                               % (email_from),
+                                           body))
                             mail_index = _account.get_next_mail_index(mail_list)
                     elif action == MailAccount.DIGEST:
                         body = ""
@@ -138,15 +153,17 @@ class MailFeeder(Feeder):
                         while mail_index is not None:
                             (tmp_body, from_email) = \
                                        _account.get_mail_summary(mail_index)
-                            body += tmp_body + "\n----------------------------------\n"
+                            body += tmp_body
+                            body += "\n----------------------------------\n"
                             mail_index = _account.get_next_mail_index(mail_list)
                             new_mail_count += 1
                         if body != "":
-                            result.append((_account.default_lang_class.new_digest_subject % (new_mail_count), \
-                                                  body))
+                            result.append((default_lang_class.new_digest_subject\
+                                               % (new_mail_count),
+                                           body))
                     else:
-                        raise Exception("Unkown action: " + str(action)
-                                        + "\nPlease reconfigure account.")
+                        raise Exception("Unkown action: " + str(action) \
+                                            + "\nPlease reconfigure account.")
                     _account.disconnect()
                     _account.in_error = False
                     self.__logger.debug("\nCHECK_MAIL ends " + _account.jid)
@@ -162,7 +179,7 @@ class MailFeeder(Feeder):
 
 class MailSender(MessageSender, HeadlineSender):
     """Send emails messages to jabber users"""
-    
+
     def send(self, to_account, subject, body):
         """Send given emails (in data) as Jabber messages"""
         if to_account.action == MailAccount.RETRIEVE:
@@ -185,17 +202,19 @@ class MailHandler(Handler):
             if accounts.count() == 0:
                 raise Exception()
             else:
-                default_account = accounts.newClause(SMTPAccount.q.default_account == True)
+                default_account = accounts.newClause(\
+                    SMTPAccount.q.default_account == True)
                 if default_account.count() > 0:
                     return default_account
                 else:
                     return accounts
         return None
-    
+
 class SendMailMessageHandler(MailHandler):
     def __init__(self):
         MailHandler.__init__(self)
-        self.__logger = logging.getLogger("jmc.jabber.component.SendMailMessageHandler")
+        self.__logger = logging.getLogger(\
+            "jmc.jabber.component.SendMailMessageHandler")
 
     def send_mail_result(self, message, lang, to_email):
         return [Message(from_jid=message.get_to(),
@@ -206,23 +225,27 @@ class SendMailMessageHandler(MailHandler):
     def handle(self, message, lang, accounts):
         to_node = message.get_to().node
         to_email = to_node.replace('%', '@', 1)
-        accounts[0].send_email(to_email, message.get_subject(), message.get_body())
+        accounts[0].send_email(to_email,
+                               message.get_subject(),
+                               message.get_body())
         return self.send_mail_result(message, lang, to_email)
 
 class RootSendMailMessageHandler(SendMailMessageHandler):
     def __init__(self):
         SendMailMessageHandler.__init__(self)
         self.to_regexp = re.compile("^\s*(to|TO)\s*:\s*(?P<to_email>.*)")
-        self.__logger = logging.getLogger("jmc.jabber.component.RootSendMailMessageHandler")
-        
+        self.__logger = logging.getLogger(\
+            "jmc.jabber.component.RootSendMailMessageHandler")
+
     def filter(self, message):
         name = message.get_to().node
         bare_from_jid = unicode(message.get_from().bare())
         accounts = Account.select(\
-            AND(Account.q.name == name, \
-                    Account.q.user_jid == bare_from_jid))
+            AND(Account.q.name == name,
+                Account.q.user_jid == bare_from_jid))
         if accounts.count() != 1:
-            self.__logger.error("Account " + name + " for user " + bare_from_jid + " must be uniq")
+            self.__logger.error("Account " + name + " for user " + \
+                                    bare_from_jid + " must be uniq")
         return accounts
 
     def handle(self, message, lang, accounts):
@@ -239,7 +262,8 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
                 message_body.append(line)
         message_body.extend(lines)
         if to_email is not None:
-            accounts[0].send_email(to_email, message.get_subject(), "".join(message_body))
+            accounts[0].send_email(to_email, message.get_subject(),
+                                   "\n".join(message_body))
             return self.send_mail_result(message, lang, to_email)
         else:
             return [Message(from_jid=message.get_to(),
@@ -267,7 +291,7 @@ class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
     def __init__(self):
         DefaultUnsubscribeHandler.__init__(self)
         MailHandler.__init__(self)
-    
+
     def filter(self, stanza):
         return MailHandler.filter(self, stanza)
 

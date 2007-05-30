@@ -560,48 +560,45 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
 
     def test_filter(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        account11 = SMTPAccount(user_jid = "user1@test.com", \
-                                   name = "account11", \
-                                   jid = "account11@jcl.test.com")
-        account12 = SMTPAccount(user_jid = "user1@test.com", \
-                                   name = "account12", \
-                                   jid = "account12@jcl.test.com")
-        message = Message(from_jid = "user1@test.com", \
-                             to_jid = "account11@jcl.test.com", \
-                             stanza_type = "normal", \
-                             body = "message")
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid="user1@test.com",
+                                name="account12",
+                                jid="account12@jcl.test.com")
+        message = Message(from_jid="user1@test.com",
+                          to_jid="account11@jcl.test.com",
+                          body="message")
         accounts = self.handler.filter(message)
         self.assertEquals(accounts.count(), 1)
         del account.hub.threadConnection
 
     def test_filter_wrong_dest(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        account11 = SMTPAccount(user_jid = "user1@test.com", \
-                                   name = "account11", \
-                                   jid = "account11@jcl.test.com")
-        account12 = SMTPAccount(user_jid = "user1@test.com", \
-                                   name = "account12", \
-                                   jid = "account12@jcl.test.com")
-        message = Message(from_jid = "user1@test.com", \
-                             to_jid = "user2%test.com@jcl.test.com", \
-                             stanza_type = "normal", \
-                             body = "message")
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid="user1@test.com",
+                                name="account12",
+                                jid="account12@jcl.test.com")
+        message = Message(from_jid="user1@test.com",
+                          to_jid="user2%test.com@jcl.test.com",
+                          body="message")
         accounts = self.handler.filter(message)
         self.assertEquals(accounts.count(), 0)
         del account.hub.threadConnection
 
     def test_filter_wrong_user(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        account11 = SMTPAccount(user_jid = "user1@test.com", \
-                                   name = "account11", \
-                                   jid = "account11@jcl.test.com")
-        account12 = SMTPAccount(user_jid = "user1@test.com", \
-                                   name = "account12", \
-                                   jid = "account12@jcl.test.com")
-        message = Message(from_jid = "user2@test.com", \
-                             to_jid = "account11@jcl.test.com", \
-                             stanza_type = "normal", \
-                             body = "message")
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid="user1@test.com",
+                                name="account12",
+                                jid="account12@jcl.test.com")
+        message = Message(from_jid="user2@test.com",
+                          to_jid="account11@jcl.test.com",
+                          body="message")
         accounts = self.handler.filter(message)
         self.assertEquals(accounts.count(), 0)
         del account.hub.threadConnection
@@ -611,7 +608,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
                           to_jid="jcl.test.com",
                           subject="message subject",
                           body="to: user@test.com\n" \
-                             "message body")
+                             "message body\nother line")
         class MockSMTPAccount(object):
             def send_email(self, to_email, subject, body):
                 self.to_email = to_email
@@ -621,7 +618,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         result = self.handler.handle(message, Lang.en, accounts)
         self.assertEquals(accounts[0].to_email, "user@test.com")
         self.assertEquals(accounts[0].subject, "message subject")
-        self.assertEquals(accounts[0].body, "message body")
+        self.assertEquals(accounts[0].body, "message body\nother line")
         self.assertEquals(len(result), 1)
         self.assertEquals(result[0].get_type(), None)
         self.assertEquals(result[0].get_from(), "jcl.test.com")
@@ -683,7 +680,6 @@ class MailHandler_TestCase(unittest.TestCase):
                                    jid = "account12@jcl.test.com")
         message = Message(from_jid = "user1@test.com", \
                              to_jid = "user2%test.com@jcl.test.com", \
-                             stanza_type = "normal", \
                              body = "message")
         accounts = self.handler.filter(message)
         self.assertNotEquals(accounts, None)
@@ -701,7 +697,6 @@ class MailHandler_TestCase(unittest.TestCase):
                                    jid = "account12@jcl.test.com")
         message = Message(from_jid = "user1@test.com", \
                              to_jid = "user2%test.com@jcl.test.com", \
-                             stanza_type = "normal", \
                              body = "message")
         accounts = self.handler.filter(message)
         self.assertNotEquals(accounts, None)
@@ -719,7 +714,6 @@ class MailHandler_TestCase(unittest.TestCase):
                                    jid = "account12@jcl.test.com")
         message = Message(from_jid = "user1@test.com", \
                              to_jid = "user2test.com@jcl.test.com", \
-                             stanza_type = "normal", \
                              body = "message")
         accounts = self.handler.filter(message)
         self.assertEquals(accounts, None)
@@ -735,7 +729,6 @@ class MailHandler_TestCase(unittest.TestCase):
                                    jid = "account12@jcl.test.com")
         message = Message(from_jid = "user3@test.com", \
                              to_jid = "user2%test.com@jcl.test.com", \
-                             stanza_type = "normal", \
                              body = "message")
         try:
            accounts = self.handler.filter(message)
