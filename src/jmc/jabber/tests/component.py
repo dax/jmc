@@ -35,12 +35,13 @@ from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
 from jcl.jabber.tests.component import DefaultSubscribeHandler_TestCase, \
     DefaultUnsubscribeHandler_TestCase
+from jcl.jabber.tests.feeder import FeederMock, SenderMock
 
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
     SMTPAccount
 from jmc.jabber.component import MailComponent, SendMailMessageHandler, \
     RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, \
-    MailUnsubscribeHandler, NoAccountError
+    MailUnsubscribeHandler, NoAccountError, MailFeederHandler
 from jmc.lang import Lang
 
 if sys.platform == "win32":
@@ -192,7 +193,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.waiting_password_reply)
         account11.live_email_only = True
         account11.password = None
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 1)
@@ -217,7 +218,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.waiting_password_reply = True
         account11.live_email_only = True
         account11.password = None
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertTrue(account11.first_check)
         self.assertTrue(account11.waiting_password_reply)
@@ -237,7 +238,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.first_check = False
         self.assertEquals(account11.lastcheck, 0)
         account11.interval = 2
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 1)
         del account.hub.threadConnection
@@ -251,7 +252,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.first_check = False
         account11.lastcheck = 1
         account11.interval = 2
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 0)
         del account.hub.threadConnection
@@ -268,7 +269,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.interval = 2
         account11.password = None
         self.assertFalse(account11.waiting_password_reply)
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertFalse(account11.in_error)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
@@ -292,7 +293,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.interval = 2
         account11.password = "password"
         account11.get_mail_list = lambda: []
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertTrue(account11.in_error)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
@@ -316,7 +317,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.interval = 2
         account11.password = "password"
         account11.get_mail_list = lambda: []
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertFalse(account11.in_error)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 0)
@@ -341,7 +342,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.password = "password"
         account11.get_mail_list = lambda: [0, 1]
         account11.get_mail = mock_get_mail
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertFalse(account11.in_error)
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
@@ -370,7 +371,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.interval = 2
         account11.password = "password"
         account11.get_mail_list = lambda: []
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertFalse(account11.in_error)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 0)
@@ -395,7 +396,7 @@ class MailComponent_TestCase(unittest.TestCase):
         account11.password = "password"
         account11.get_mail_list = lambda: [0, 1]
         account11.get_mail_summary = mock_get_mail_summary
-        result = self.comp.feeder.feed(account11)
+        result = self.comp.handler.feeder.feed(account11)
         self.assertFalse(account11.in_error)
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
@@ -422,7 +423,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, True)
         self.assertFalse(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
@@ -445,7 +446,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, False)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 1)
@@ -472,7 +473,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, False)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 1)
@@ -499,7 +500,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.in_error)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
         self.assertFalse(continue_checking)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 1)
@@ -753,6 +754,53 @@ class MailUnsubscribeHandler_TestCase(DefaultUnsubscribeHandler_TestCase, MailHa
         MailHandler_TestCase.setUp(self)
         self.handler = MailUnsubscribeHandler()
 
+class MailFeederHandler_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.handler = MailFeederHandler(FeederMock(), SenderMock())
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        Account.createTable(ifNotExists=True)
+        PresenceAccount.createTable(ifNotExists=True)
+        MailAccount.createTable(ifNotExists=True)
+        IMAPAccount.createTable(ifNotExists=True)
+        POP3Account.createTable(ifNotExists=True)
+        SMTPAccount.createTable(ifNotExists=True)
+        del account.hub.threadConnection
+
+    def tearDown(self):
+        self.handler = None
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        SMTPAccount.dropTable(ifExists=True)
+        IMAPAccount.dropTable(ifExists=True)
+        POP3Account.dropTable(ifExists=True)
+        MailAccount.dropTable(ifExists=True)
+        PresenceAccount.dropTable(ifExists=True)
+        Account.dropTable(ifExists=True)
+        del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
+        account.hub.threadConnection.close()
+        del account.hub.threadConnection
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+
+    def test_filter(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        account13 = IMAPAccount(user_jid="user3@test.com",
+                                name="account13",
+                                jid="account13@jcl.test.com")
+        account12 = POP3Account(user_jid="user2@test.com",
+                                name="account12",
+                                jid="account12@jcl.test.com")
+        accounts = self.handler.filter(None, None)
+        # SQLObject > 0.8 is needed
+        self.assertEquals(accounts.count(), 2)
+        self.assertEquals(accounts[0].name, "account12")
+        self.assertEquals(accounts[1].name, "account13")
+        del account.hub.threadConnection
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(MailComponent_TestCase, 'test'))
@@ -761,6 +809,7 @@ def suite():
     suite.addTest(unittest.makeSuite(MailHandler_TestCase, 'test')) 
     suite.addTest(unittest.makeSuite(MailUnsubscribeHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailSubscribeHandler_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(MailFeederHandler_TestCase, 'test'))
     return suite
 
 if __name__ == '__main__':

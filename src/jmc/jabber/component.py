@@ -33,7 +33,7 @@ from jcl.model.account import Account, PresenceAccount
 from jcl.jabber.component import Handler, DefaultSubscribeHandler, \
     DefaultUnsubscribeHandler, DefaultPresenceHandler
 from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, \
-    HeadlineSender
+    HeadlineSender, FeederHandler
 
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
     SMTPAccount
@@ -63,8 +63,7 @@ class MailComponent(FeederComponent):
                                  port,
                                  db_connection_str,
                                  lang=lang)
-        self.feeder = MailFeeder(self)
-        self.sender = MailSender(self)
+        self.handler = MailFeederHandler(MailFeeder(self), MailSender(self))
         self.account_manager.account_classes = (IMAPAccount,
                                                 POP3Account,
                                                 SMTPAccount)
@@ -299,5 +298,12 @@ class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
     def filter(self, stanza, lang_class):
         return MailHandler.filter(self, stanza, lang_class)
 
-    def handle(self, stanza, lang, accounts):
-        return DefaultUnsubscribeHandler.handle(self, stanza, lang, accounts)
+    def handle(self, stanza, lang_class, accounts):
+        return DefaultUnsubscribeHandler.handle(self, stanza, lang_class, accounts)
+
+class MailFeederHandler(FeederHandler):
+    def filter(self, stanza, lang_class):
+        """Return only email account type to check mail from
+        """
+        accounts = MailAccount.select(orderBy="user_jid")
+        return accounts
