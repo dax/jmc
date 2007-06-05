@@ -244,12 +244,15 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
     def filter(self, message, lang_class):
         name = message.get_to().node
         bare_from_jid = unicode(message.get_from().bare())
-        accounts = Account.select(\
-            AND(Account.q.name == name,
-                Account.q.user_jid == bare_from_jid))
+        accounts = SMTPAccount.select(\
+            AND(SMTPAccount.q.default_account == True,
+                SMTPAccount.q.user_jid == bare_from_jid))
         if accounts.count() != 1:
-            self.__logger.error("Account " + name + " for user " + \
-                                    bare_from_jid + " must be uniq")
+            self.__logger.error("No default account found for user " +
+                                str(bare_from_jid))
+        if accounts.count() == 0:
+            accounts = SMTPAccount.select(\
+                SMTPAccount.q.user_jid == bare_from_jid)
         return accounts
 
     def handle(self, message, lang_class, accounts):

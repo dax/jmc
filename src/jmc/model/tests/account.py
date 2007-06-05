@@ -391,7 +391,7 @@ class IMAPAccount_TestCase(unittest.TestCase):
 class SMTPAccount_TestCase(Account_TestCase):
     def test_get_register_fields(self):
         register_fields = SMTPAccount.get_register_fields()
-        self.assertEquals(len(register_fields), 7)
+        self.assertEquals(len(register_fields), 8)
 
 def suite():
     suite = unittest.TestSuite()

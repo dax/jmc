@@ -568,6 +568,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
+        account11.default_account = True
         account12 = SMTPAccount(user_jid="user1@test.com",
                                 name="account12",
                                 jid="account12@jcl.test.com")
@@ -576,6 +577,22 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
                           body="message")
         accounts = self.handler.filter(message, None)
         self.assertEquals(accounts.count(), 1)
+        del account.hub.threadConnection
+
+    def test_filter_no_default_account(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid="user1@test.com",
+                                name="account12",
+                                jid="account12@jcl.test.com")
+        message = Message(from_jid="user1@test.com",
+                          to_jid="account11@jcl.test.com",
+                          body="message")
+        accounts = self.handler.filter(message, None)
+        self.assertEquals(accounts.count(), 2)
+        self.assertEquals(accounts[0].name, "account11")
         del account.hub.threadConnection
 
     def test_filter_wrong_dest(self):
@@ -590,7 +607,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
                           to_jid="user2%test.com@jcl.test.com",
                           body="message")
         accounts = self.handler.filter(message, None)
-        self.assertEquals(accounts.count(), 0)
+        self.assertEquals(accounts.count(), 2)
         del account.hub.threadConnection
 
     def test_filter_wrong_user(self):

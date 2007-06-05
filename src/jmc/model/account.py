@@ -578,8 +578,7 @@ class SMTPAccount(Account):
             real_class = cls
         return Account.get_register_fields(real_class) + \
             [("login", "text-single", None,
-              lambda field_value, default_func: \
-                  account.mandatory_field(field_value),
+              account.default_post_func,
               lambda : ""),
              ("password", "text-private", None, password_post_func,
               lambda : ""),
@@ -599,7 +598,10 @@ class SMTPAccount(Account):
               lambda : ""),
              ("store_password", "boolean", None,
               account.default_post_func,
-              lambda : True)]
+              lambda : True),
+             ("default_account", "boolean", None,
+              account.default_post_func,
+              lambda : False)]
     
     get_register_fields = classmethod(_get_register_fields)
 
