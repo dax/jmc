@@ -198,7 +198,7 @@ class MailHandler(Handler):
         Handler.__init__(self)
         self.dest_jid_regexp = re.compile(".*%.*")
 
-    def filter(self, stanza, lang):
+    def filter(self, stanza, lang_class):
         """Return empty array if JID match '.*%.*@componentJID'"""
         if self.dest_jid_regexp.match(stanza.get_to().node):
             bare_from_jid = unicode(stanza.get_from().bare())
@@ -220,19 +220,19 @@ class SendMailMessageHandler(MailHandler):
         self.__logger = logging.getLogger(\
             "jmc.jabber.component.SendMailMessageHandler")
 
-    def send_mail_result(self, message, lang, to_email):
+    def send_mail_result(self, message, lang_class, to_email):
         return [Message(from_jid=message.get_to(),
                         to_jid=message.get_from(),
-                        subject=lang.send_mail_ok_subject,
-                        body=lang.send_mail_ok_body % (to_email))]
+                        subject=lang_class.send_mail_ok_subject,
+                        body=lang_class.send_mail_ok_body % (to_email))]
 
-    def handle(self, message, lang, accounts):
+    def handle(self, message, lang_class, accounts):
         to_node = message.get_to().node
         to_email = to_node.replace('%', '@', 1)
         accounts[0].send_email(to_email,
                                message.get_subject(),
                                message.get_body())
-        return self.send_mail_result(message, lang, to_email)
+        return self.send_mail_result(message, lang_class, to_email)
 
 class RootSendMailMessageHandler(SendMailMessageHandler):
     def __init__(self):
@@ -241,7 +241,7 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
         self.__logger = logging.getLogger(\
             "jmc.jabber.component.RootSendMailMessageHandler")
 
-    def filter(self, message, lang):
+    def filter(self, message, lang_class):
         name = message.get_to().node
         bare_from_jid = unicode(message.get_from().bare())
         accounts = Account.select(\
@@ -252,7 +252,7 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
                                     bare_from_jid + " must be uniq")
         return accounts
 
-    def handle(self, message, lang, accounts):
+    def handle(self, message, lang_class, accounts):
         to_email = None
         lines = message.get_body().split('\n')
         message_body = []
@@ -268,13 +268,13 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
         if to_email is not None:
             accounts[0].send_email(to_email, message.get_subject(),
                                    "\n".join(message_body))
-            return self.send_mail_result(message, lang, to_email)
+            return self.send_mail_result(message, lang_class, to_email)
         else:
             return [Message(from_jid=message.get_to(),
                             to_jid=message.get_from(),
                             stanza_type="error",
-                            subject=lang.send_mail_error_no_to_header_subject,
-                            body=lang.send_mail_error_no_to_header_body)]
+                            subject=lang_class.send_mail_error_no_to_header_subject,
+                            body=lang_class.send_mail_error_no_to_header_body)]
 
 class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
     """Use DefaultSubscribeHandler handle method and MailHandler filter"""
@@ -283,11 +283,11 @@ class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
         DefaultSubscribeHandler.__init__(self)
         MailHandler.__init__(self)
 
-    def filter(self, stanza, lang):
-        return MailHandler.filter(self, stanza, lang)
+    def filter(self, stanza, lang_class):
+        return MailHandler.filter(self, stanza, lang_class)
 
-    def handle(self, stanza, lang, accounts):
-        return DefaultSubscribeHandler.handle(self, stanza, lang, accounts)
+    def handle(self, stanza, lang_class, accounts):
+        return DefaultSubscribeHandler.handle(self, stanza, lang_class, accounts)
 
 class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
     """Use DefaultUnsubscribeHandler handle method and MailHandler filter"""
@@ -296,8 +296,8 @@ class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
         DefaultUnsubscribeHandler.__init__(self)
         MailHandler.__init__(self)
 
-    def filter(self, stanza, lang):
-        return MailHandler.filter(self, stanza, lang)
+    def filter(self, stanza, lang_class):
+        return MailHandler.filter(self, stanza, lang_class)
 
     def handle(self, stanza, lang, accounts):
         return DefaultUnsubscribeHandler.handle(self, stanza, lang, accounts)
