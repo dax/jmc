@@ -692,6 +692,22 @@ class MailHandler_TestCase(unittest.TestCase):
         self.assertEquals(accounts[0].name, "account11")
         del account.hub.threadConnection
 
+    def test_filter_root(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        account11.default_account = True
+        account12 = SMTPAccount(user_jid="user1@test.com",
+                                name="account12",
+                                jid="account12@jcl.test.com")
+        message = Message(from_jid="user1@test.com",
+                          to_jid="jcl.test.com",
+                          body="message")
+        accounts = self.handler.filter(message, None)
+        self.assertEquals(accounts, None)
+        del account.hub.threadConnection
+
     def test_filter_no_default(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
         account11 = SMTPAccount(user_jid = "user1@test.com", \

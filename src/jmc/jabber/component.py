@@ -199,7 +199,8 @@ class MailHandler(Handler):
 
     def filter(self, stanza, lang_class):
         """Return empty array if JID match '.*%.*@componentJID'"""
-        if self.dest_jid_regexp.match(stanza.get_to().node):
+        node = stanza.get_to().node
+        if node is not None and self.dest_jid_regexp.match(node):
             bare_from_jid = unicode(stanza.get_from().bare())
             accounts = Account.select(Account.q.user_jid == bare_from_jid)
             if accounts.count() == 0:
