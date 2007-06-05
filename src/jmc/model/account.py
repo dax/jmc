@@ -560,6 +560,12 @@ class SMTPAccount(Account):
         Account._init(self, *args, **kw)
         self.__logger = logging.getLogger("jmc.model.account.SMTPAccount")
 
+    def _get_default_port(cls):
+        """Return default SMTP server port"""
+        return 25
+    
+    get_default_port = classmethod(_get_default_port)
+
     def _get_register_fields(cls, real_class=None):
         """See Account._get_register_fields
         """
