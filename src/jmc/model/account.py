@@ -181,28 +181,28 @@ class MailAccount(PresenceAccount):
             [("login", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
                   account.mandatory_field(field_value),
-              lambda : ""),
+              lambda bare_from_jid: ""),
              ("password", "text-private", None, password_post_func,
-              lambda : ""),
+              lambda bare_from_jid: ""),
              ("host", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
                   account.mandatory_field(field_value),
-              lambda : ""),
+              lambda bare_from_jid: ""),
              ("port", "text-single", None,
               account.int_post_func,
-              lambda : real_class.get_default_port()),
+              lambda bare_from_jid: real_class.get_default_port()),
              ("ssl", "boolean", None,
               account.default_post_func,
-              lambda : False),
+              lambda bare_from_jid: False),
              ("store_password", "boolean", None,
               account.default_post_func,
-              lambda : True),
+              lambda bare_from_jid: True),
              ("live_email_only", "boolean", None,
               account.default_post_func,
-              lambda : False),
+              lambda bare_from_jid: False),
              ("interval", "text-single", None,
               account.int_post_func,
-              lambda : 5)]
+              lambda bare_from_jid: 5)]
     
     get_register_fields = classmethod(_get_register_fields)
 
@@ -369,7 +369,7 @@ class IMAPAccount(MailAccount):
         return MailAccount.get_register_fields(real_class) + \
             [("mailbox", "text-single", None,
               account.default_post_func,
-              lambda : "INBOX")]
+              lambda bare_from_jid: "INBOX")]
     
     get_register_fields = classmethod(_get_register_fields)
 
@@ -574,29 +574,29 @@ class SMTPAccount(Account):
         return Account.get_register_fields(real_class) + \
             [("login", "text-single", None,
               account.default_post_func,
-              lambda : ""),
+              lambda bare_from_jid: ""),
              ("password", "text-private", None, password_post_func,
-              lambda : ""),
+              lambda bare_from_jid: ""),
              ("host", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
                   account.mandatory_field(field_value),
-              lambda : ""),
+              lambda bare_from_jid: ""),
              ("port", "text-single", None,
               account.int_post_func,
-              lambda : real_class.get_default_port()),
+              lambda bare_from_jid: real_class.get_default_port()),
              ("ssl", "boolean", None,
               account.default_post_func,
-              lambda : False),
+              lambda bare_from_jid: False),
              ("default_from", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
                   account.mandatory_field(field_value),
-              lambda : ""),
+              lambda bare_from_jid: ""),
              ("store_password", "boolean", None,
               account.default_post_func,
-              lambda : True),
+              lambda bare_from_jid: True),
              ("default_account", "boolean", None,
               account.default_post_func,
-              lambda : False)]
+              lambda bare_from_jid: False)]
     
     get_register_fields = classmethod(_get_register_fields)
 
