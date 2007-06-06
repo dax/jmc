@@ -55,11 +55,15 @@ class Lang(jcl.lang.Lang):
         field_dnd_action_2 = field_action_2
         field_offline_action_2 = field_action_2
 
+        field_default_from = u"Your email address"
+        field_default_account = u"Default SMTP account"
+
         new_mail_subject = u"New email from %s"
         new_digest_subject = u"%i new email(s)"
 
         type_imap_name = u"IMAP accounts"
         type_pop3_name = u"POP3 accounts"
+        type_smtp_name = u"SMTP accounts"
 
         send_mail_error_no_to_header_subject = u"No header \"TO\" found"
         send_mail_error_no_to_header_body = u"No header \"TO\" found in receive message.\n" \
@@ -100,11 +104,15 @@ class Lang(jcl.lang.Lang):
         field_dnd_action_2 = field_action_2
         field_offline_action_2 = field_action_2
 
+        field_default_from = u"Votre adresse email"
+        field_default_account = u"Compte SMTP par défaut"
+
         new_mail_subject = u"Nouvel email de %s"
         new_digest_subject = u"%i nouveau(x) email(s)"
 
         type_imap_name = u"comptes IMAP"
         type_pop3_name = u"comptes POP3"
+        type_smtp_name = u"comptes SMTP"
 
         send_mail_error_no_to_header_subject = u"L'en-tête \"TO\" n'a pas été "\
             u"trouvé"

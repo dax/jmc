@@ -102,8 +102,15 @@ class Language_TestCase(jcl.tests.lang.Language_TestCase):
         self.assertNotEquals(self.lang_class.field_dnd_action_2, None)
         self.assertNotEquals(self.lang_class.field_offline_action_2, None)
 
+        self.assertNotEquals(self.lang_class.field_default_from, None)
+        self.assertNotEquals(self.lang_class.field_default_account, None)
+
         self.assertNotEquals(self.lang_class.new_mail_subject, None)
         self.assertNotEquals(self.lang_class.new_digest_subject, None)
+
+        self.assertNotEquals(self.lang_class.type_imap_name, None)
+        self.assertNotEquals(self.lang_class.type_pop3_name, None)
+        self.assertNotEquals(self.lang_class.type_smtp_name, None)
 
         self.assertNotEquals(self.lang_class.send_mail_error_no_to_header_subject,
                              None)
