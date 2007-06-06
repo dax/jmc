@@ -33,7 +33,8 @@ from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
 from jmc.model.account import MailAccount, POP3Account, IMAPAccount, SMTPAccount
 
-from jcl.model.tests.account import Account_TestCase, PresenceAccount_TestCase
+from jcl.model.tests.account import Account_TestCase, \
+    PresenceAccount_TestCase, InheritableAccount_TestCase
 from jmc.model.tests import email_generator, server
 
 if sys.platform == "win32":
@@ -145,11 +146,7 @@ class MailAccount_TestCase(PresenceAccount_TestCase):
                    u"Encoded multipart3 with no charset (éàê)\n", \
                    u"encoded from (éàê)"))
 
-    def test_get_register_fields(self):
-        register_fields = MailAccount.get_register_fields()
-        self.assertEquals(len(register_fields), 15)
-
-class POP3Account_TestCase(unittest.TestCase):
+class POP3Account_TestCase(InheritableAccount_TestCase):
     def setUp(self):
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
@@ -167,6 +164,7 @@ class POP3Account_TestCase(unittest.TestCase):
         self.pop3_account.port = 1110
         self.pop3_account.ssl = False
         del account.hub.threadConnection
+        self.account_class = POP3Account
         
     def tearDown(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
@@ -275,11 +273,7 @@ class POP3Account_TestCase(unittest.TestCase):
                                      u"mymessage\n", \
                                      u"user@test.com")))
 
-    def test_get_register_fields(self):
-        register_fields = POP3Account.get_register_fields()
-        self.assertEquals(len(register_fields), 15)
-
-class IMAPAccount_TestCase(unittest.TestCase):
+class IMAPAccount_TestCase(InheritableAccount_TestCase):
     def setUp(self):
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
@@ -297,6 +291,7 @@ class IMAPAccount_TestCase(unittest.TestCase):
         self.imap_account.port = 1143
         self.imap_account.ssl = False
         del account.hub.threadConnection
+        self.account_class = IMAPAccount
 
     def tearDown(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
@@ -383,15 +378,11 @@ class IMAPAccount_TestCase(unittest.TestCase):
                               lambda self: self.assertEquals(self.imap_account.get_mail(1), \
                                                              (u"From : None\nSubject : None\n\nbody text\r\n\n", \
                                                               u"None")))
-        
-    def test_get_register_fields(self):
-        register_fields = IMAPAccount.get_register_fields()
-        self.assertEquals(len(register_fields), 16)
 
 class SMTPAccount_TestCase(Account_TestCase):
-    def test_get_register_fields(self):
-        register_fields = SMTPAccount.get_register_fields()
-        self.assertEquals(len(register_fields), 8)
+    def setUp(self):
+        Account_TestCase.setUp(self)
+        self.account_class = SMTPAccount
 
 def suite():
     suite = unittest.TestSuite()

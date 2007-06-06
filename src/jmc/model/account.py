@@ -170,7 +170,7 @@ class MailAccount(PresenceAccount):
     def _get_register_fields(cls, real_class=None):
         """See Account._get_register_fields
         """
-        def password_post_func(password, default_func):
+        def password_post_func(password, default_func, bare_from_jid):
             if password is None or password == "":
                 return None
             return password
@@ -179,13 +179,13 @@ class MailAccount(PresenceAccount):
             real_class = cls
         return PresenceAccount.get_register_fields(real_class) + \
             [("login", "text-single", None,
-              lambda field_value, default_func: \
+              lambda field_value, default_func, bare_from_jid: \
                   account.mandatory_field(field_value),
               lambda : ""),
              ("password", "text-private", None, password_post_func,
               lambda : ""),
              ("host", "text-single", None,
-              lambda field_value, default_func: \
+              lambda field_value, default_func, bare_from_jid: \
                   account.mandatory_field(field_value),
               lambda : ""),
              ("port", "text-single", None,
@@ -364,11 +364,6 @@ class IMAPAccount(MailAccount):
     def _get_register_fields(cls, real_class=None):
         """See Account._get_register_fields
         """
-        def password_post_func(password):
-            if password is None or password == "":
-                return None
-            return password
-
         if real_class is None:
             real_class = cls
         return MailAccount.get_register_fields(real_class) + \
@@ -569,7 +564,7 @@ class SMTPAccount(Account):
     def _get_register_fields(cls, real_class=None):
         """See Account._get_register_fields
         """
-        def password_post_func(password, default_func):
+        def password_post_func(password, default_func, bare_from_jid):
             if password is None or password == "":
                 return None
             return password
@@ -583,7 +578,7 @@ class SMTPAccount(Account):
              ("password", "text-private", None, password_post_func,
               lambda : ""),
              ("host", "text-single", None,
-              lambda field_value, default_func: \
+              lambda field_value, default_func, bare_from_jid: \
                   account.mandatory_field(field_value),
               lambda : ""),
              ("port", "text-single", None,
@@ -593,7 +588,7 @@ class SMTPAccount(Account):
               account.default_post_func,
               lambda : False),
              ("default_from", "text-single", None,
-              lambda field_value, default_func: \
+              lambda field_value, default_func, bare_from_jid: \
                   account.mandatory_field(field_value),
               lambda : ""),
              ("store_password", "boolean", None,
