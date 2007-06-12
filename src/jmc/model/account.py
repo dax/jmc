@@ -33,6 +33,7 @@ import socket
 
 from sqlobject.inheritance import InheritableSQLObject
 from sqlobject.col import StringCol, IntCol, BoolCol
+from sqlobject.sqlbuilder import AND
 
 from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
@@ -569,6 +570,36 @@ class SMTPAccount(Account):
                 return None
             return password
 
+        def default_account_default_func(bare_from_jid):
+            accounts = SMTPAccount.select(\
+                AND(SMTPAccount.q.default_account == True,
+                    SMTPAccount.q.user_jid == bare_from_jid))
+            if accounts.count() == 0:
+                return True
+            else:
+                return False
+
+        def default_account_post_func(value, default_func, bare_from_jid):
+            accounts = SMTPAccount.select(\
+                AND(SMTPAccount.q.default_account == True,
+                    SMTPAccount.q.user_jid == bare_from_jid))
+            already_default_account = (accounts.count() != 0)
+            if isinstance(value, str):
+                value = value.lower()
+                bool_value = (value == "true" or value == "1")
+            else:
+                bool_value = value
+            if bool_value:
+                if already_default_account:
+                    for _account in accounts:
+                        _account.default_account = False
+                return True
+            else:
+                if not already_default_account:
+                    return True
+                else:
+                    return False
+
         if real_class is None:
             real_class = cls
         return Account.get_register_fields(real_class) + \
@@ -595,8 +626,8 @@ class SMTPAccount(Account):
               account.default_post_func,
               lambda bare_from_jid: True),
              ("default_account", "boolean", None,
-              account.default_post_func,
-              lambda bare_from_jid: False)]
+              default_account_post_func,
+              default_account_default_func)]
     
     get_register_fields = classmethod(_get_register_fields)
 
