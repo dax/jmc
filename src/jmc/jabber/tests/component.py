@@ -4,18 +4,18 @@
 ## Login : <dax@happycoders.org>
 ## Started on  Wed Feb 14 18:04:49 2007 David Rousselie
 ## $Id$
-## 
+##
 ## Copyright (C) 2007 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -41,7 +41,8 @@ from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
     SMTPAccount
 from jmc.jabber.component import MailComponent, SendMailMessageHandler, \
     RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, \
-    MailUnsubscribeHandler, NoAccountError, MailFeederHandler
+    MailUnsubscribeHandler, NoAccountError, MailFeederHandler, \
+    MailPresenceHandler
 from jmc.lang import Lang
 
 if sys.platform == "win32":
@@ -115,20 +116,20 @@ class MockMailAccount(object):
         self.has_connected = False
         self.marked_all_as_read = False
         self._action = PresenceAccount.DO_NOTHING
-        
+
     def connect(self):
         self.connected = True
         self.has_connected = True
 
     def mark_all_as_read(self):
         self.marked_all_as_read = True
-    
+
     def disconnect(self):
         self.connected = False
 
     def get_action(self):
         return self._action
-    
+
     action = property(get_action)
 
 class MockIMAPAccount(MockMailAccount, IMAPAccount):
@@ -206,7 +207,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
         del account.hub.threadConnection
-        
+
     def test_feed_live_email_init_no_password2(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
@@ -242,7 +243,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 1)
         del account.hub.threadConnection
-        
+
     def test_feed_interval_check(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
@@ -304,7 +305,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         del account.hub.threadConnection
-        
+
     def test_feed_retrieve_no_mail(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
@@ -459,7 +460,7 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
         del account.hub.threadConnection
-    
+
     def test_initialize_live_email_mark_as_read_error(self):
         def raiser():
             raise Exception
@@ -538,9 +539,9 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
         self.assertEquals(result[0].stanza_type, "message")
         self.assertEquals(result[0].get_from(), "user%test.com@jcl.test.com")
         self.assertEquals(result[0].get_to(), "user1@test.com")
-        self.assertEquals(result[0].get_subject(), 
+        self.assertEquals(result[0].get_subject(),
                           Lang.en.send_mail_ok_subject)
-        self.assertEquals(result[0].get_body(), 
+        self.assertEquals(result[0].get_body(),
                           Lang.en.send_mail_ok_body % ("user@test.com"))
 
 class RootSendMailMessageHandler_TestCase(unittest.TestCase):
@@ -552,7 +553,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         Account.createTable(ifNotExists = True)
         SMTPAccount.createTable(ifNotExists = True)
         del account.hub.threadConnection
-    
+
     def tearDown(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
         SMTPAccount.dropTable(ifExists = True)
@@ -645,9 +646,9 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         self.assertEquals(result[0].get_type(), None)
         self.assertEquals(result[0].get_from(), "jcl.test.com")
         self.assertEquals(result[0].get_to(), "user1@test.com")
-        self.assertEquals(result[0].get_subject(), 
+        self.assertEquals(result[0].get_subject(),
                           Lang.en.send_mail_ok_subject)
-        self.assertEquals(result[0].get_body(), 
+        self.assertEquals(result[0].get_body(),
                           Lang.en.send_mail_ok_body % ("user@test.com"))
 
     def test_handle_email_not_found_in_header(self):
@@ -666,9 +667,9 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         self.assertEquals(result[0].get_type(), "error")
         self.assertEquals(result[0].get_from(), "jcl.test.com")
         self.assertEquals(result[0].get_to(), "user1@test.com")
-        self.assertEquals(result[0].get_subject(), 
+        self.assertEquals(result[0].get_subject(),
                           Lang.en.send_mail_error_no_to_header_subject)
-        self.assertEquals(result[0].get_body(), 
+        self.assertEquals(result[0].get_body(),
                           Lang.en.send_mail_error_no_to_header_body)
 
 class MailHandler_TestCase(unittest.TestCase):
@@ -680,7 +681,7 @@ class MailHandler_TestCase(unittest.TestCase):
         Account.createTable(ifNotExists = True)
         SMTPAccount.createTable(ifNotExists = True)
         del account.hub.threadConnection
-    
+
     def tearDown(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
         SMTPAccount.dropTable(ifExists = True)
@@ -759,15 +760,15 @@ class MailHandler_TestCase(unittest.TestCase):
 
     def test_filter_wrong_account(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        account11 = SMTPAccount(user_jid = "user1@test.com", \
-                                   name = "account11", \
-                                   jid = "account11@jcl.test.com")
-        account12 = SMTPAccount(user_jid = "user1@test.com", \
-                                   name = "account12", \
-                                   jid = "account12@jcl.test.com")
-        message = Message(from_jid = "user3@test.com", \
-                             to_jid = "user2%test.com@jcl.test.com", \
-                             body = "message")
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid="user1@test.com",
+                                name="account12",
+                                jid="account12@jcl.test.com")
+        message = Message(from_jid="user3@test.com",
+                          to_jid="user2%test.com@jcl.test.com",
+                          body="message")
         try:
            accounts = self.handler.filter(message, None)
         except NoAccountError, e:
@@ -776,6 +777,31 @@ class MailHandler_TestCase(unittest.TestCase):
         finally:
            del account.hub.threadConnection
         self.fail("No exception 'NoAccountError' catched")
+
+class MailPresenceHandler_TestCase(unittest.TestCase):
+    def setUp(self):
+        self.handler = MailPresenceHandler()
+
+    def test_filter(self):
+        message = Message(from_jid="user1@test.com",
+                          to_jid="user11%test.com@jcl.test.com",
+                          body="message")
+        result = self.handler.filter(message, None)
+        self.assertNotEquals(result, None)
+
+    def test_filter_wrong_dest(self):
+        message = Message(from_jid="user1@test.com",
+                          to_jid="user11@jcl.test.com",
+                          body="message")
+        result = self.handler.filter(message, None)
+        self.assertEquals(result, None)
+
+    def test_filter_wrong_dest2(self):
+        message = Message(from_jid="user1@test.com",
+                          to_jid="jcl.test.com",
+                          body="message")
+        result = self.handler.filter(message, None)
+        self.assertEquals(result, None)
 
 class MailSubscribeHandler_TestCase(DefaultSubscribeHandler_TestCase, MailHandler_TestCase):
     def setUp(self):
@@ -797,7 +823,7 @@ class MailSubscribeHandler_TestCase(DefaultSubscribeHandler_TestCase, MailHandle
         legacy_jids = LegacyJID.select()
         self.assertEquals(legacy_jids.count(), 1)
         del account.hub.threadConnection
-        
+
 class MailUnsubscribeHandler_TestCase(DefaultUnsubscribeHandler_TestCase, MailHandler_TestCase):
     def setUp(self):
         MailHandler_TestCase.setUp(self)
@@ -895,9 +921,10 @@ def suite():
     suite.addTest(unittest.makeSuite(MailComponent_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(SendMailMessageHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(RootSendMailMessageHandler_TestCase, 'test'))
-    suite.addTest(unittest.makeSuite(MailHandler_TestCase, 'test')) 
+    suite.addTest(unittest.makeSuite(MailHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailUnsubscribeHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailSubscribeHandler_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(MailPresenceHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailFeederHandler_TestCase, 'test'))
     return suite
 

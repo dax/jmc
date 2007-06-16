@@ -71,8 +71,8 @@ class MailComponent(FeederComponent):
                               RootSendMailMessageHandler()]
         self.subscribe_handlers += [MailSubscribeHandler()]
         self.unsubscribe_handlers += [MailUnsubscribeHandler()]
-        self.available_handlers += [DefaultPresenceHandler()]
-        self.unavailable_handlers += [DefaultPresenceHandler()]
+        self.available_handlers += [MailPresenceHandler()]
+        self.unavailable_handlers += [MailPresenceHandler()]
 
 class MailFeeder(Feeder):
     """Email check"""
@@ -212,6 +212,20 @@ class MailHandler(Handler):
                     return default_account
                 else:
                     return accounts
+        return None
+
+class MailPresenceHandler(DefaultPresenceHandler):
+    """Define filter for legacy JIDs presence handling"""
+    def __init__(self):
+        Handler.__init__(self)
+        self.dest_jid_regexp = re.compile(".*%.*")
+
+    def filter(self, stanza, lang_class):
+        """Return empty array if JID match '.*%.*@componentJID'"""
+        node = stanza.get_to().node
+        if node is not None and self.dest_jid_regexp.match(node):
+            bare_from_jid = unicode(stanza.get_from().bare())
+            return [] # Not None
         return None
 
 class SendMailMessageHandler(MailHandler):
