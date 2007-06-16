@@ -32,7 +32,7 @@ from pyxmpp.presence import Presence
 from pyxmpp.message import Message
 
 from jcl.model import account
-from jcl.model.account import Account, PresenceAccount
+from jcl.model.account import Account, PresenceAccount, LegacyJID
 from jcl.jabber.tests.component import DefaultSubscribeHandler_TestCase, \
     DefaultUnsubscribeHandler_TestCase
 from jcl.jabber.tests.feeder import FeederMock, SenderMock
@@ -781,11 +781,67 @@ class MailSubscribeHandler_TestCase(DefaultSubscribeHandler_TestCase, MailHandle
     def setUp(self):
         MailHandler_TestCase.setUp(self)
         self.handler = MailSubscribeHandler()
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        LegacyJID.createTable(ifNotExists=True)
+        del account.hub.threadConnection
 
+    def test_handle(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        presence = Presence(from_jid="user1@test.com",
+                            to_jid="user1%test.com@jcl.test.com",
+                            stanza_type="subscribe")
+        result = self.handler.handle(presence, Lang.en, [account11])
+        legacy_jids = LegacyJID.select()
+        self.assertEquals(legacy_jids.count(), 1)
+        del account.hub.threadConnection
+        
 class MailUnsubscribeHandler_TestCase(DefaultUnsubscribeHandler_TestCase, MailHandler_TestCase):
     def setUp(self):
         MailHandler_TestCase.setUp(self)
         self.handler = MailUnsubscribeHandler()
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        LegacyJID.createTable(ifNotExists=True)
+        del account.hub.threadConnection
+
+    def test_handle(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jcl.test.com")
+        account12 = SMTPAccount(user_jid="user1@test.com",
+                                name="account12",
+                                jid="account12@jcl.test.com")
+        account2 = SMTPAccount(user_jid="user2@test.com",
+                               name="account2",
+                               jid="account2@jcl.test.com")
+        presence = Presence(from_jid="user1@test.com",
+                            to_jid="u111%test.com@jcl.test.com",
+                            stanza_type="unsubscribe")
+        legacy_jid111 = LegacyJID(legacy_address="u111@test.com",
+                                  jid="u111%test.com@jcl.test.com",
+                                  account=account11)
+        legacy_jid112 = LegacyJID(legacy_address="u112@test.com",
+                                  jid="u112%test.com@jcl.test.com",
+                                  account=account11)
+        legacy_jid121 = LegacyJID(legacy_address="u121@test.com",
+                                  jid="u121%test.com@jcl.test.com",
+                                  account=account12)
+        legacy_jid122 = LegacyJID(legacy_address="u122@test.com",
+                                  jid="u122%test.com@jcl.test.com",
+                                  account=account12)
+        legacy_jid21 = LegacyJID(legacy_address="u21@test.com",
+                                 jid="u21%test.com@jcl.test.com",
+                                 account=account2)
+        result = self.handler.handle(presence, Lang.en, [account11])
+        legacy_jids = LegacyJID.select()
+        self.assertEquals(legacy_jids.count(), 4)
+        removed_legacy_jid = LegacyJID.select(\
+           LegacyJID.q.jid == "u111%test.com@jcl.test.com")
+        self.assertEquals(removed_legacy_jid.count(), 0)
+        del account.hub.threadConnection
 
 class MailFeederHandler_TestCase(unittest.TestCase):
     def setUp(self):

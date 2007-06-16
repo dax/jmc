@@ -29,7 +29,7 @@ from sqlobject import *
 
 from pyxmpp.message import Message
 
-from jcl.model.account import Account, PresenceAccount
+from jcl.model.account import Account, PresenceAccount, LegacyJID
 from jcl.jabber.component import Handler, DefaultSubscribeHandler, \
     DefaultUnsubscribeHandler, DefaultPresenceHandler
 from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, \
@@ -235,6 +235,8 @@ class SendMailMessageHandler(MailHandler):
         return self.send_mail_result(message, lang_class, to_email)
 
 class RootSendMailMessageHandler(SendMailMessageHandler):
+    """Handle message sent to root JID"""
+    
     def __init__(self):
         SendMailMessageHandler.__init__(self)
         self.to_regexp = re.compile("^\s*(to|TO)\s*:\s*(?P<to_email>.*)")
@@ -280,7 +282,9 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
                             body=lang_class.send_mail_error_no_to_header_body)]
 
 class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
-    """Use DefaultSubscribeHandler handle method and MailHandler filter"""
+    """Use DefaultSubscribeHandler handle method and MailHandler filter.
+    Filter email address in JID. Accept and add to LegacyJID table.
+    """
 
     def __init__(self):
         DefaultSubscribeHandler.__init__(self)
@@ -290,10 +294,17 @@ class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
         return MailHandler.filter(self, stanza, lang_class)
 
     def handle(self, stanza, lang_class, accounts):
-        return DefaultSubscribeHandler.handle(self, stanza, lang_class, accounts)
+        result = DefaultSubscribeHandler.handle(self, stanza, lang_class, accounts)
+        to_node = stanza.get_to().node
+        to_email = to_node.replace('%', '@', 1)
+        LegacyJID(legacy_address=to_email,
+                  jid=unicode(stanza.get_to()),
+                  account=accounts[0])
+        return result
 
 class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
-    """Use DefaultUnsubscribeHandler handle method and MailHandler filter"""
+    """Use DefaultUnsubscribeHandler handle method and MailHandler filter.
+    """
 
     def __init__(self):
         DefaultUnsubscribeHandler.__init__(self)
@@ -303,7 +314,12 @@ class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
         return MailHandler.filter(self, stanza, lang_class)
 
     def handle(self, stanza, lang_class, accounts):
-        return DefaultUnsubscribeHandler.handle(self, stanza, lang_class, accounts)
+        result = DefaultUnsubscribeHandler.handle(self, stanza, lang_class, accounts)
+        legacy_jid = LegacyJID.select(\
+           LegacyJID.q.jid == unicode(stanza.get_to()))
+        if legacy_jid.count() == 1:
+            legacy_jid[0].destroySelf()
+        return result
 
 class MailFeederHandler(FeederHandler):
     def filter(self, stanza, lang_class):
