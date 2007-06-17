@@ -544,7 +544,7 @@ class SMTPAccount(Account):
     password = StringCol(default=None)
     host = StringCol(default="localhost")
     port = IntCol(default=110)
-    ssl = BoolCol(default=False)
+    tls = BoolCol(default=False)
     store_password = BoolCol(default=True)
     waiting_password_reply = BoolCol(default=False)
     default_from = StringCol(default="nobody@localhost")
@@ -615,7 +615,7 @@ class SMTPAccount(Account):
              ("port", "text-single", None,
               account.int_post_func,
               lambda bare_from_jid: real_class.get_default_port()),
-             ("ssl", "boolean", None,
+             ("tls", "boolean", None,
               account.default_post_func,
               lambda bare_from_jid: False),
              ("default_from", "text-single", None,

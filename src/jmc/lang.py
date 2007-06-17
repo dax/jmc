@@ -34,6 +34,7 @@ class Lang(jcl.lang.Lang):
         field_host = u"Host"
         field_port = u"Port"
         field_ssl = u"Secure connection (SSL)"
+        field_tls = u"Secure connection (TLS)"
         field_store_password = u"Store password on Jabber server?"
         field_live_email_only = u"Reports only emails received while connected to Jabber"
         field_interval = u"Mail check interval (in minutes)"
@@ -82,6 +83,7 @@ class Lang(jcl.lang.Lang):
         field_host = u"Adresse du serveur email"
         field_port = u"Port du serveur email"
         field_ssl = u"Connexion sécurisé (SSL)"
+        field_tls = u"Connexion sécurisé (TLS)"
         field_store_password = u"Sauvegarder le mot de passe sur le serveur Jabber ?"
         field_live_email_only = u"Vérifier les nouveaux emails seulement " \
             "lorsqu'une session Jabber est ouverte"

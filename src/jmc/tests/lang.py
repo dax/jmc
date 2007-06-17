@@ -81,6 +81,7 @@ class Language_TestCase(jcl.tests.lang.Language_TestCase):
         self.assertNotEquals(self.lang_class.field_host, None)
         self.assertNotEquals(self.lang_class.field_port, None)
         self.assertNotEquals(self.lang_class.field_ssl, None)
+        self.assertNotEquals(self.lang_class.field_tls, None)
         self.assertNotEquals(self.lang_class.field_store_password, None)
         self.assertNotEquals(self.lang_class.field_live_email_only, None)
         self.assertNotEquals(self.lang_class.field_interval, None)
