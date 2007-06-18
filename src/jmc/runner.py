@@ -62,5 +62,7 @@ class JMCRunner(JCLRunner):
                                       lang = Lang(self.language))
             MailAccount.default_encoding = self.mail_default_encoding
             component.check_interval = self.check_interval
+            component.disco_identity.set_category("gateway")
+            component.disco_identity.set_type("smtp")
             component.run()
         self._run(run_func)

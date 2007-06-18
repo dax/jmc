@@ -27,8 +27,10 @@ del sys.setdefaultencoding
 
 import jmc
 from jmc.runner import JMCRunner
+from jmc.lang import Lang
 
 if __name__ == "__main__":
-    runner = JMCRunner("Jabber Mail Component", jmc.version)
+    runner = JMCRunner(Lang().get_default_lang_class().component_name,
+                       jmc.version)
     runner.configure()
     runner.run()

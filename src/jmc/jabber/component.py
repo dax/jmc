@@ -31,7 +31,7 @@ from pyxmpp.message import Message
 
 from jcl.model.account import Account, PresenceAccount, LegacyJID
 from jcl.jabber.component import Handler, DefaultSubscribeHandler, \
-    DefaultUnsubscribeHandler, DefaultPresenceHandler
+    DefaultUnsubscribeHandler, DefaultPresenceHandler, AccountManager
 from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, \
     HeadlineSender, FeederHandler
 
@@ -52,7 +52,7 @@ class MailComponent(FeederComponent):
                  server,
                  port,
                  db_connection_str,
-                 lang = Lang()):
+                 lang=Lang()):
         """Use FeederComponent behavior and setup feeder and sender
         attributes.
         """
@@ -64,6 +64,7 @@ class MailComponent(FeederComponent):
                                  db_connection_str,
                                  lang=lang)
         self.handler = MailFeederHandler(MailFeeder(self), MailSender(self))
+        self.account_manager = MailAccountManager(self)
         self.account_manager.account_classes = (IMAPAccount,
                                                 POP3Account,
                                                 SMTPAccount)
@@ -73,6 +74,16 @@ class MailComponent(FeederComponent):
         self.unsubscribe_handlers += [MailUnsubscribeHandler()]
         self.available_handlers += [MailPresenceHandler()]
         self.unavailable_handlers += [MailPresenceHandler()]
+
+class MailAccountManager(AccountManager):
+    """JMC specific account behavior"""
+
+    def root_disco_get_info(self, name, category, type):
+        """Add jabber:iq:gateway support"""
+        disco_info = AccountManager.root_disco_get_info(self, name, category, type)
+        disco_info.add_feature("jabber:iq:gateway")
+        disco_info.add_identity(name, "headline", "newmail")
+        return disco_info
 
 class MailFeeder(Feeder):
     """Email check"""
@@ -252,7 +263,7 @@ class SendMailMessageHandler(MailHandler):
 
 class RootSendMailMessageHandler(SendMailMessageHandler):
     """Handle message sent to root JID"""
-    
+
     def __init__(self):
         SendMailMessageHandler.__init__(self)
         self.to_regexp = re.compile("^\s*(to|TO|To)\s*:\s*(?P<to_email>.*)")

@@ -42,7 +42,7 @@ from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
 from jmc.jabber.component import MailComponent, SendMailMessageHandler, \
     RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, \
     MailUnsubscribeHandler, NoAccountError, MailFeederHandler, \
-    MailPresenceHandler
+    MailPresenceHandler, MailAccountManager
 from jmc.lang import Lang
 
 if sys.platform == "win32":
@@ -549,6 +549,15 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
         self.assertEquals(result[0].get_body(),
                           Lang.en.send_mail_ok_body % ("user@test.com"))
 
+class MailAccountManager_TestCase(unittest.TestCase):
+    def test_root_disco_get_info(self):
+        mam = MailAccountManager(None)
+        disco_info = mam.root_disco_get_info("JMC", "gateway", "smtp")
+        self.assertTrue(disco_info.has_feature("jabber:iq:gateway"))
+        self.assertEquals(len(disco_info.get_identities()), 2)
+        self.assertTrue(disco_info.identity_is("gateway", "smtp"))
+        self.assertTrue(disco_info.identity_is("headline", "newmail"))
+
 class RootSendMailMessageHandler_TestCase(unittest.TestCase):
     def setUp(self):
         self.handler = RootSendMailMessageHandler()
@@ -916,6 +925,7 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(MailComponent_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(SendMailMessageHandler_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(MailAccountManager_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(RootSendMailMessageHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailUnsubscribeHandler_TestCase, 'test'))
