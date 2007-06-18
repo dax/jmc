@@ -243,9 +243,11 @@ class SendMailMessageHandler(MailHandler):
     def handle(self, message, lang_class, accounts):
         to_node = message.get_to().node
         to_email = to_node.replace('%', '@', 1)
-        accounts[0].send_email(to_email,
-                               message.get_subject(),
-                               message.get_body())
+        accounts[0].send_email(\
+            accounts[0].create_email(accounts[0].default_from,
+                                     to_email,
+                                     message.get_subject(),
+                                     message.get_body()))
         return self.send_mail_result(message, lang_class, to_email)
 
 class RootSendMailMessageHandler(SendMailMessageHandler):
@@ -253,7 +255,7 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
     
     def __init__(self):
         SendMailMessageHandler.__init__(self)
-        self.to_regexp = re.compile("^\s*(to|TO)\s*:\s*(?P<to_email>.*)")
+        self.to_regexp = re.compile("^\s*(to|TO|To)\s*:\s*(?P<to_email>.*)")
         self.__logger = logging.getLogger(\
             "jmc.jabber.component.RootSendMailMessageHandler")
 
@@ -285,8 +287,11 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
                 message_body.append(line)
         message_body.extend(lines)
         if to_email is not None:
-            accounts[0].send_email(to_email, message.get_subject(),
-                                   "\n".join(message_body))
+            accounts[0].send_email(\
+                accounts[0].create_email(accounts[0].default_from,
+                                         to_email,
+                                         message.get_subject(),
+                                         "\n".join(message_body)))
             return self.send_mail_result(message, lang_class, to_email)
         else:
             return [Message(from_jid=message.get_to(),

@@ -4,18 +4,18 @@
 ## Login : <dax@happycoders.org>
 ## Started on  Fri Jan 19 18:21:44 2007 David Rousselie
 ## $Id$
-## 
+##
 ## Copyright (C) 2007 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -24,12 +24,15 @@
 import sys
 import logging
 import email
-import email.Header
+from email.Header import Header
+from email.MIMEText import MIMEText
+from email.MIMEMultipart import MIMEMultipart
 import traceback
 
 import poplib
 import imaplib
 import socket
+import smtplib
 
 from sqlobject.inheritance import InheritableSQLObject
 from sqlobject.col import StringCol, IntCol, BoolCol
@@ -80,9 +83,9 @@ class MYPOP3(poplib.POP3):
         self.port = port
         msg = "getaddrinfo returns an empty list"
         self.sock = None
-        for res in socket.getaddrinfo(self.host, 
-                                      self.port, 
-                                      0, 
+        for res in socket.getaddrinfo(self.host,
+                                      self.port,
+                                      0,
                                       socket.SOCK_STREAM):
             af, socktype, proto, canonname, sa = res
             try:
@@ -103,7 +106,7 @@ class MYPOP3(poplib.POP3):
         self.welcome = self._getresp()
 
 class MYPOP3_SSL(poplib.POP3_SSL):
-    def __init__(self, host, port=poplib.POP3_SSL_PORT, keyfile=None, 
+    def __init__(self, host, port=poplib.POP3_SSL_PORT, keyfile=None,
                  certfile=None):
         self.host = host
         self.port = port
@@ -112,7 +115,7 @@ class MYPOP3_SSL(poplib.POP3_SSL):
         self.buffer = ""
         msg = "getaddrinfo returns an empty list"
         self.sock = None
-        for res in socket.getaddrinfo(self.host, self.port, 0, 
+        for res in socket.getaddrinfo(self.host, self.port, 0,
                                       socket.SOCK_STREAM):
             af, socktype, proto, canonname, sa = res
             try:
@@ -154,11 +157,11 @@ class MailAccount(PresenceAccount):
     interval = IntCol(default=5)
     store_password = BoolCol(default=True)
     live_email_only = BoolCol(default=False)
-    
+
     lastcheck = IntCol(default=0)
     waiting_password_reply = BoolCol(default=False)
     first_check = BoolCol(default=True)
-    
+
     def _init(self, *args, **kw):
         """MailAccount init
         Initialize class attributes"""
@@ -167,7 +170,7 @@ class MailAccount(PresenceAccount):
         self.connection = None
         self.connected = False
         self.default_lang_class = Lang.en
-    
+
     def _get_register_fields(cls, real_class=None):
         """See Account._get_register_fields
         """
@@ -204,13 +207,13 @@ class MailAccount(PresenceAccount):
              ("interval", "text-single", None,
               account.int_post_func,
               lambda bare_from_jid: 5)]
-    
+
     get_register_fields = classmethod(_get_register_fields)
 
     def _get_default_port(cls):
         return 42
     get_default_port = classmethod(_get_default_port)
-    
+
     def _get_presence_actions_fields(cls):
         """See PresenceAccount._get_presence_actions_fields
         """
@@ -226,7 +229,7 @@ class MailAccount(PresenceAccount):
                                MailAccount.DIGEST),
                 'offline_action': (cls.possibles_actions,
                                    PresenceAccount.DO_NOTHING)}
-    
+
     get_presence_actions_fields = classmethod(_get_presence_actions_fields)
 
     def get_decoded_part(self, part, charset_hint):
@@ -255,7 +258,7 @@ class MailAccount(PresenceAccount):
                                         (type, value, stack, 5))
 
         return result
-            
+
     def format_message(self, email_msg, include_body = True):
         from_decoded = email.Header.decode_header(email_msg["From"])
         charset_hint = None
@@ -312,7 +315,7 @@ class MailAccount(PresenceAccount):
                                 print >>sys.stderr, \
                                     "".join(traceback.format_exception
                                             (type, value, stack, 5))
-                                
+
         result += u"\n\n"
 
         if include_body:
@@ -329,7 +332,7 @@ class MailAccount(PresenceAccount):
 
     def format_message_summary(self, email_msg):
         return self.format_message(email_msg, False)
-        
+
     def get_status_msg(self):
 	return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
 	    unicode(self.port)
@@ -371,13 +374,13 @@ class IMAPAccount(MailAccount):
             [("mailbox", "text-single", None,
               account.default_post_func,
               lambda bare_from_jid: "INBOX")]
-    
+
     get_register_fields = classmethod(_get_register_fields)
 
     def _get_default_port(cls):
         """Return default IMAP server port"""
         return 143
-    
+
     get_default_port = classmethod(_get_default_port)
 
     def _init(self, *args, **kw):
@@ -388,7 +391,7 @@ class IMAPAccount(MailAccount):
 	if self.ssl:
 	    return "imaps"
 	return "imap"
-	    
+
     def get_status(self):
 	return MailAccount.get_status(self) + "/" + self.mailbox
 
@@ -426,7 +429,7 @@ class IMAPAccount(MailAccount):
             return self.format_message(\
                 email.message_from_string(data[0][1]))
 	return u"Error while fetching mail " + str(index)
-	
+
     def get_mail_summary(self, index):
 	self.__logger.debug("Getting mail summary " + str(index))
 	typ, data = self.connection.select(self.mailbox, True)
@@ -444,13 +447,13 @@ class IMAPAccount(MailAccount):
 
     def mark_all_as_read(self):
         self.get_mail_list()
-    
+
     type = property(get_type)
 
 class POP3Account(MailAccount):
     nb_mail = IntCol(default=0)
     lastmail = IntCol(default=0)
-    
+
     def _init(self, *args, **kw):
 	MailAccount._init(self, *args, **kw)
         self.__logger = logging.getLogger("jmc.model.account.POP3Account")
@@ -458,7 +461,7 @@ class POP3Account(MailAccount):
     def _get_default_port(cls):
         """Return default POP3 server port"""
         return 110
-    
+
     get_default_port = classmethod(_get_default_port)
 
     def get_type(self):
@@ -470,7 +473,7 @@ class POP3Account(MailAccount):
 
     def connect(self):
 	self.__logger.debug("Connecting to POP3 server "
-                            + self.login + "@" + self.host + ":" + 
+                            + self.login + "@" + self.host + ":" +
                             str(self.port) + ". SSL=" + str(self.ssl))
 	if self.ssl:
 	    self.connection = MYPOP3_SSL(self.host, self.port)
@@ -482,7 +485,7 @@ class POP3Account(MailAccount):
 	  self.connection.user(self.login)
 	  self.connection.pass_(self.password)
         self.connected = True
-	
+
 
     def disconnect(self):
 	self.__logger.debug("Disconnecting from POP3 server "
@@ -493,7 +496,7 @@ class POP3Account(MailAccount):
     def get_mail_list(self):
 	self.__logger.debug("Getting mail list")
 	count, size = self.connection.stat()
-        self.nb_mail = count 
+        self.nb_mail = count
         return [str(i) for i in range(1, count + 1)]
 
     def get_mail(self, index):
@@ -535,7 +538,7 @@ class POP3Account(MailAccount):
     def mark_all_as_read(self):
         self.get_mail_list()
         self.lastmail = self.nb_mail
-        
+
 
 class SMTPAccount(Account):
     """Send email account"""
@@ -559,7 +562,7 @@ class SMTPAccount(Account):
     def _get_default_port(cls):
         """Return default SMTP server port"""
         return 25
-    
+
     get_default_port = classmethod(_get_default_port)
 
     def _get_register_fields(cls, real_class=None):
@@ -628,12 +631,55 @@ class SMTPAccount(Account):
              ("default_account", "boolean", None,
               default_account_post_func,
               default_account_default_func)]
-    
+
     get_register_fields = classmethod(_get_register_fields)
 
-    def send_email(self, to_email, subject, body):
+    def create_email(self, from_email, to_email, subject, body):
+        """Create new email"""
+        email = MIMEText(body)
+        email['Subject'] = Header(str(subject))
+        email['From'] = Header(str(from_email))
+        email['To'] = Header(str(to_email))
+        return email
+
+    def __say_hello(self, connection):
+        if not (200 <= connection.ehlo()[0] <= 299):
+            (code, resp) = connection.helo()
+            if not (200 <= code <= 299):
+                raise SMTPHeloError(code, resp)
+
+    def send_email(self, email):
+        """Send email according to current account parameters"""
         self.__logger.debug("Sending email:\n"
-                            "From: " + self.default_from + "\n" +
-                            "To: " + to_email + "\n" +
-                            "Subject: " + subject + "\n\n" +
-                            body)
+                            + str(email))
+        smtp_connection = smtplib.SMTP()
+        if self.__logger.getEffectiveLevel() == logging.DEBUG:
+            smtp_connection.set_debuglevel(1)
+        smtp_connection.connect(self.host, self.port)
+        self.__say_hello(smtp_connection)
+        if self.tls:
+            smtp_connection.starttls()
+            self.__say_hello(smtp_connection)
+        if self.login is not None and len(self.login) > 0:
+            auth_methods = smtp_connection.esmtp_features["auth"].split()
+            auth_methods.reverse()
+            current_error = None
+            for auth_method in auth_methods:
+                self.__logger.debug("Trying to authenticate using "
+                                    + auth_method + " method")
+                smtp_connection.esmtp_features["auth"] = auth_method
+                try:
+                    smtp_connection.login(self.login, self.password)
+                    current_error = None
+                    self.__logger.debug("Successfuly to authenticate using "
+                                        + auth_method + " method")
+                    break
+                except smtplib.SMTPAuthenticationError, error:
+                    self.__logger.debug("Failed to authenticate using "
+                                        + auth_method + " method")
+                    current_error = error
+            if current_error is not None:
+                raise current_error
+        smtp_connection.sendmail(str(email['From']), str(email['To']),
+                                 email.as_string())
+        smtp_connection.quit()

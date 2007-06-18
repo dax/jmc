@@ -1,20 +1,20 @@
 ##
 ## dummy_server.py
 ## Login : David Rousselie <david.rousselie@happycoders.org>
-## Started on  Fri May 13 12:53:17 2005 
+## Started on  Fri May 13 12:53:17 2005
 ## $Id: dummy_server.py,v 1.1 2005/07/11 20:39:31 dax Exp $
-## 
-## Copyright (C) 2005 
+##
+## Copyright (C) 2005
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -75,7 +75,7 @@ class DummyServer:
         self.responses = None
         self.queries = None
         self.real_queries = []
-        
+
     def serve(self):
         conn = None
         try:
@@ -150,7 +150,7 @@ class XMLDummyServer(DummyServer):
                             r = self._reader.feed(data)
                     except:
                         type, value, stack = sys.exc_info()
-                        print "".join (traceback.format_exception 
+                        print "".join (traceback.format_exception
                                        (type, value, stack, 5))
                         raise
                     # TODO verify got all data </stream>
@@ -175,7 +175,7 @@ class XMLDummyServer(DummyServer):
                 self.socket = None
         except:
             type, value, stack = sys.exc_info()
-            print "".join (traceback.format_exception 
+            print "".join (traceback.format_exception
                            (type, value, stack, 5))
             raise
 
@@ -205,5 +205,5 @@ def test():
 
 if __name__ == '__main__':
     test()
-    
+
 

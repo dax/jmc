@@ -142,6 +142,16 @@ class MockPOP3Account(MockMailAccount, POP3Account):
         IMAPAccount._init(self, *args, **kw)
         MockMailAccount._init(self)
 
+class MockSMTPAccount(object):
+    def __init__(self):
+        self.default_from = "user1@test.com"
+      
+    def create_email(self, from_email, to_email, subject, body):
+        return (from_email, to_email, subject, body)
+             
+    def send_email(self, email):
+        self.email = email
+
 class MailComponent_TestCase(unittest.TestCase):
     def setUp(self):
         if os.path.exists(DB_PATH):
@@ -525,16 +535,11 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
                           to_jid="user%test.com@jcl.test.com",
                           subject="message subject",
                           body="message body")
-        class MockSMTPAccount(object):
-            def send_email(self, to_email, subject, body):
-                self.to_email = to_email
-                self.subject = subject
-                self.body = body
         accounts = [MockSMTPAccount()]
         result = self.handler.handle(message, Lang.en, accounts)
-        self.assertEquals(accounts[0].to_email, "user@test.com")
-        self.assertEquals(accounts[0].subject, "message subject")
-        self.assertEquals(accounts[0].body, "message body")
+        self.assertEquals(accounts[0].email[1], "user@test.com")
+        self.assertEquals(accounts[0].email[2], "message subject")
+        self.assertEquals(accounts[0].email[3], "message body")
         self.assertEquals(len(result), 1)
         self.assertEquals(result[0].stanza_type, "message")
         self.assertEquals(result[0].get_from(), "user%test.com@jcl.test.com")
@@ -632,16 +637,12 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
                           subject="message subject",
                           body="to: user@test.com\n" \
                              "message body\nother line")
-        class MockSMTPAccount(object):
-            def send_email(self, to_email, subject, body):
-                self.to_email = to_email
-                self.subject = subject
-                self.body = body
         accounts = [MockSMTPAccount()]
         result = self.handler.handle(message, Lang.en, accounts)
-        self.assertEquals(accounts[0].to_email, "user@test.com")
-        self.assertEquals(accounts[0].subject, "message subject")
-        self.assertEquals(accounts[0].body, "message body\nother line")
+        self.assertEquals(accounts[0].email[1], "user@test.com")
+        self.assertEquals(accounts[0].email[2], "message subject")
+        self.assertEquals(accounts[0].email[3],
+                          "message body\nother line")
         self.assertEquals(len(result), 1)
         self.assertEquals(result[0].get_type(), None)
         self.assertEquals(result[0].get_from(), "jcl.test.com")
@@ -656,11 +657,6 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
                           to_jid="jcl.test.com",
                           subject="message subject",
                           body="message body")
-        class MockSMTPAccount(object):
-            def send_email(self, to_email, subject, body):
-                self.to_email = to_email
-                self.subject = subject
-                self.body = body
         accounts = [MockSMTPAccount()]
         result = self.handler.handle(message, Lang.en, accounts)
         self.assertEquals(len(result), 1)

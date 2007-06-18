@@ -4,18 +4,18 @@
 ## Login : <dax@happycoders.org>
 ## Started on  Wed Feb 14 08:23:17 2007 David Rousselie
 ## $Id$
-## 
+##
 ## Copyright (C) 2007 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -168,7 +168,7 @@ class POP3Account_TestCase(InheritableAccount_TestCase):
         self.pop3_account.ssl = False
         del account.hub.threadConnection
         self.account_class = POP3Account
-        
+
     def tearDown(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
         POP3Account.dropTable(ifExists = True)
@@ -210,7 +210,7 @@ class POP3Account_TestCase(InheritableAccount_TestCase):
         return inner
 
     test_connection = make_test()
-    
+
     test_get_mail_list = \
         make_test(["+OK 2 20\r\n"], \
                   ["STAT\r\n"], \
@@ -340,7 +340,7 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
             self.imap_account.disconnect()
             self.failUnless(self.server.verify_queries())
         return inner
-            
+
     test_connection = make_test()
 
     test_get_mail_list = make_test([lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" +\
@@ -433,7 +433,7 @@ class SMTPAccount_TestCase(Account_TestCase):
         value = post_func("False", None, "user1@test.com")
         self.assertTrue(value)
         del account.hub.threadConnection
-        
+
     def test_default_account_post_func_true(self):
         account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
         account11 = SMTPAccount(user_jid="user1@test.com",
@@ -465,6 +465,194 @@ class SMTPAccount_TestCase(Account_TestCase):
         self.assertFalse(value)
         self.assertTrue(account12.default_account)
         del account.hub.threadConnection
+
+    def test_create_email(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
+        account11 = SMTPAccount(user_jid="user1@test.com",
+                                name="account11",
+                                jid="account11@jmc.test.com")
+        del account.hub.threadConnection
+        email = account11.create_email("from@test.com",
+                                       "to@test.com",
+                                       "subject",
+                                       "body")
+        self.assertEqual(email['From'], "from@test.com")
+        self.assertEqual(email['To'], "to@test.com")
+        self.assertEqual(email['Subject'], "subject")
+        self.assertEqual(email.get_payload(), "body")
+
+    def make_test(self, responses=None, queries=None, core=None):
+        def inner():
+            self.server = server.DummyServer("localhost", 1025)
+            thread.start_new_thread(self.server.serve, ())
+            self.server.responses = []
+            if responses:
+                self.server.responses += responses
+            self.server.responses += ["221 localhost closing connection\r\n"]
+            self.server.queries = []
+            if queries:
+                self.server.queries += queries
+            self.server.queries += ["quit\r\n"]
+            if core:
+                account.hub.threadConnection = connectionForURI('sqlite://'
+                                                                + self.db_url)
+                core(self)
+                del account.hub.threadConnection
+            self.failUnless(self.server.verify_queries())
+        return inner
+
+    def test_send_email_esmtp_no_auth(self):
+       account.hub.threadConnection = connectionForURI('sqlite://'
+                                                       + self.db_url)
+       smtp_account = SMTPAccount(user_jid="user1@test.com",
+                                  name="account11",
+                                  jid="account11@jmc.test.com")
+       smtp_account.host = "localhost"
+       smtp_account.port = 1025
+       del account.hub.threadConnection
+       email = smtp_account.create_email("from@test.com",
+                                         "to@test.com",
+                                         "subject",
+                                         "body")
+       test_func = self.make_test(["220 localhost ESMTP\r\n",
+                                   "250-localhost Hello 127.0.0.1\r\n"
+                                   + "250-SIZE 52428800\r\n"
+                                   + "250-PIPELINING\r\n"
+                                   + "250 HELP\r\n",
+                                   "250 OK\r\n",
+                                   "250 Accepted\r\n",
+                                   "354 Enter message\r\n",
+                                   None, None, None, None,
+                                   None, None, None, None,
+                                   "250 OK\r\n"],
+                                  ["ehlo \[127.0.0.1\]\r\n",
+                                   "mail FROM:<" + str(email['From']) + ">.*",
+                                   "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                   "data\r\n"] +
+                                   email.as_string().split("\n") + [".\r\n"],
+                                  lambda self: \
+                                  smtp_account.send_email(email))
+       test_func()
+
+    def test_send_email_no_auth(self):
+       account.hub.threadConnection = connectionForURI('sqlite://'
+                                                       + self.db_url)
+       smtp_account = SMTPAccount(user_jid="user1@test.com",
+                                  name="account11",
+                                  jid="account11@jmc.test.com")
+       smtp_account.host = "localhost"
+       smtp_account.port = 1025
+       del account.hub.threadConnection
+       email = smtp_account.create_email("from@test.com",
+                                         "to@test.com",
+                                         "subject",
+                                         "body")
+       test_func = self.make_test(["220 localhost SMTP\r\n",
+                                   "504 ESMTP not supported\r\n",
+                                   "250-localhost Hello 127.0.0.1\r\n"
+                                   + "250-SIZE 52428800\r\n"
+                                   + "250-PIPELINING\r\n"
+                                   + "250 HELP\r\n",
+                                   "250 OK\r\n",
+                                   "250 Accepted\r\n",
+                                   "354 Enter message\r\n",
+                                   None, None, None, None,
+                                   None, None, None, None,
+                                   "250 OK\r\n"],
+                                  ["ehlo \[127.0.0.1\]\r\n",
+                                   "helo \[127.0.0.1\]\r\n",
+                                   "mail FROM:<" + str(email['From']) + ">.*",
+                                   "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                   "data\r\n"] +
+                                   email.as_string().split("\n") + [".\r\n"],
+                                  lambda self: \
+                                  smtp_account.send_email(email))
+       test_func()
+
+    def test_send_email_esmtp_auth(self):
+       account.hub.threadConnection = connectionForURI('sqlite://'
+                                                       + self.db_url)
+       smtp_account = SMTPAccount(user_jid="user1@test.com",
+                                  name="account11",
+                                  jid="account11@jmc.test.com")
+       smtp_account.host = "localhost"
+       smtp_account.port = 1025
+       smtp_account.login = "user"
+       smtp_account.password = "pass"
+       del account.hub.threadConnection
+       email = smtp_account.create_email("from@test.com",
+                                         "to@test.com",
+                                         "subject",
+                                         "body")
+       test_func = self.make_test(["220 localhost ESMTP\r\n",
+                                   "250-localhost Hello 127.0.0.1\r\n"
+                                   + "250-SIZE 52428800\r\n"
+                                   + "250-AUTH PLAIN LOGIN CRAM-MD5\r\n"
+                                   + "250-PIPELINING\r\n"
+                                   + "250 HELP\r\n",
+                                   "334 ZGF4IDNmNDM2NzY0YzBhNjgyMTQ1MzhhZGNiMjE2YTYxZjRm\r\n",
+                                   "235 Authentication succeeded\r\n",
+                                   "250 OK\r\n",
+                                   "250 Accepted\r\n",
+                                   "354 Enter message\r\n",
+                                   None, None, None, None,
+                                   None, None, None, None,
+                                   "250 OK\r\n"],
+                                  ["ehlo \[127.0.0.1\]\r\n",
+                                   "AUTH CRAM-MD5\r\n",
+                                   ".*\r\n",
+                                   "mail FROM:<" + str(email['From']) + ">.*",
+                                   "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                   "data\r\n"] +
+                                   email.as_string().split("\n") + [".\r\n"],
+                                  lambda self: \
+                                  smtp_account.send_email(email))
+       test_func()
+
+    def test_send_email_esmtp_auth_method2(self):
+       account.hub.threadConnection = connectionForURI('sqlite://'
+                                                       + self.db_url)
+       smtp_account = SMTPAccount(user_jid="user1@test.com",
+                                  name="account11",
+                                  jid="account11@jmc.test.com")
+       smtp_account.host = "localhost"
+       smtp_account.port = 1025
+       smtp_account.login = "user"
+       smtp_account.password = "pass"
+       del account.hub.threadConnection
+       email = smtp_account.create_email("from@test.com",
+                                         "to@test.com",
+                                         "subject",
+                                         "body")
+       test_func = self.make_test(["220 localhost ESMTP\r\n",
+                                   "250-localhost Hello 127.0.0.1\r\n"
+                                   + "250-SIZE 52428800\r\n"
+                                   + "250-AUTH PLAIN LOGIN CRAM-MD5\r\n"
+                                   + "250-PIPELINING\r\n"
+                                   + "250 HELP\r\n",
+                                   "334 ZGF4IDNmNDM2NzY0YzBhNjgyMTQ1MzhhZGNiMjE2YTYxZjRm\r\n",
+                                   "535 Incorrect Authentication data\r\n",
+                                   "334 asd235r4\r\n",
+                                   "235 Authentication succeeded\r\n",
+                                   "250 OK\r\n",
+                                   "250 Accepted\r\n",
+                                   "354 Enter message\r\n",
+                                   None, None, None, None,
+                                   None, None, None, None,
+                                   "250 OK\r\n"],
+                                  ["ehlo \[127.0.0.1\]\r\n",
+                                   "AUTH CRAM-MD5\r\n",
+                                   ".*\r\n",
+                                   "AUTH LOGIN .*\r\n",
+                                   ".*\r\n",
+                                   "mail FROM:<" + str(email['From']) + ">.*",
+                                   "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                   "data\r\n"] +
+                                   email.as_string().split("\n") + [".\r\n"],
+                                  lambda self: \
+                                  smtp_account.send_email(email))
+       test_func()
+
 
 def suite():
     suite = unittest.TestSuite()
