@@ -637,6 +637,8 @@ class SMTPAccount(Account):
     def create_email(self, from_email, to_email, subject, body):
         """Create new email"""
         email = MIMEText(body)
+        if subject is None:
+            subject = ""
         email['Subject'] = Header(str(subject))
         email['From'] = Header(str(from_email))
         email['To'] = Header(str(to_email))
