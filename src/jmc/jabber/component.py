@@ -28,6 +28,7 @@ import sys
 from sqlobject import *
 
 from pyxmpp.message import Message
+from pyxmpp.jid import JID
 
 from jcl.model.account import Account, PresenceAccount, LegacyJID
 from jcl.jabber.component import Handler, DefaultSubscribeHandler, \
@@ -156,7 +157,8 @@ class MailFeeder(Feeder):
                         mail_index = _account.get_next_mail_index(mail_list)
                         while mail_index is not None:
                             (body, email_from) = _account.get_mail(mail_index)
-                            result.append((default_lang_class.new_mail_subject\
+                            result.append((email_from,
+                                           default_lang_class.new_mail_subject\
                                                % (email_from),
                                            body))
                             mail_index = _account.get_next_mail_index(mail_list)
@@ -172,7 +174,8 @@ class MailFeeder(Feeder):
                             mail_index = _account.get_next_mail_index(mail_list)
                             new_mail_count += 1
                         if body != "":
-                            result.append((default_lang_class.new_digest_subject\
+                            result.append((None,
+                                           default_lang_class.new_digest_subject\
                                                % (new_mail_count),
                                            body))
                     else:
@@ -191,15 +194,34 @@ class MailFeeder(Feeder):
                     self.component.send_error(_account, e)
         return result
 
-class MailSender(MessageSender, HeadlineSender):
+class MailSender(HeadlineSender):
     """Send emails messages to jabber users"""
 
-    def send(self, to_account, subject, body):
+    def send(self, to_account, data):
+        """Call MessageSender send method"""
+        MessageSender.send(self, to_account, data)
+        
+    def create_message(self, to_account, data):
         """Send given emails (in data) as Jabber messages"""
+        email_from, subject, body = data
         if to_account.action == MailAccount.RETRIEVE:
-            MessageSender.send(self, to_account, subject, body)
+            message = MessageSender.create_message(self, to_account,
+                                                   (subject, body))
+            msg_node = message.get_node()
+            addresses_node = msg_node.newChild(None, "addresses", None)
+            address_ns = addresses_node.newNs("http://jabber.org/protocol/address", None)
+            addresses_node.setNs(address_ns)
+            replyto_address_node = addresses_node.newChild(address_ns, "address", None)
+            replyto_address_node.setProp("type", "replyto")
+            replyto_jid = email_from.replace('@', '%', 1) + "@" \
+                          + unicode(JID(to_account.jid).domain)
+            replyto_address_node.setProp("jid", replyto_jid)
         elif to_account.action == MailAccount.DIGEST:
-            HeadlineSender.send(self, to_account, subject, body)
+            message = HeadlineSender.create_message(self, to_account,
+                                                    subject, body)
+        else:
+            message = None
+        return message
 
 class MailHandler(Handler):
     """Define filter for email address in JID"""

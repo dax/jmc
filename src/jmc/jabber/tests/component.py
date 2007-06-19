@@ -42,7 +42,7 @@ from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
 from jmc.jabber.component import MailComponent, SendMailMessageHandler, \
     RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, \
     MailUnsubscribeHandler, NoAccountError, MailFeederHandler, \
-    MailPresenceHandler, MailAccountManager
+    MailPresenceHandler, MailAccountManager, MailSender
 from jmc.lang import Lang
 
 if sys.platform == "win32":
@@ -145,10 +145,10 @@ class MockPOP3Account(MockMailAccount, POP3Account):
 class MockSMTPAccount(object):
     def __init__(self):
         self.default_from = "user1@test.com"
-      
+
     def create_email(self, from_email, to_email, subject, body):
         return (from_email, to_email, subject, body)
-             
+
     def send_email(self, email):
         self.email = email
 
@@ -339,12 +339,12 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_retrieve_mail(self):
         def mock_get_mail(index):
-            return [("body1", "from1@test.com"), \
+            return [("body1", "from1@test.com"),
                     ("body2", "from2@test.com")][index]
         account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11._action = MailAccount.RETRIEVE
         account11.status = account.ONLINE
         account11.first_check = False
@@ -360,14 +360,18 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
         self.assertEquals(len(result), 2)
-        self.assertEquals(result[0][0], \
+        self.assertEquals(result[0][0],
+                          "from1@test.com")
+        self.assertEquals(result[0][1],
                           account11.default_lang_class.new_mail_subject \
                           % ("from1@test.com"))
-        self.assertEquals(result[0][1], "body1")
-        self.assertEquals(result[1][0], \
+        self.assertEquals(result[0][2], "body1")
+        self.assertEquals(result[1][0],
+                          "from2@test.com")
+        self.assertEquals(result[1][1], \
                           account11.default_lang_class.new_mail_subject \
                           % ("from2@test.com"))
-        self.assertEquals(result[1][1], "body2")
+        self.assertEquals(result[1][2], "body2")
         del account.hub.threadConnection
 
     def test_feed_digest_no_mail(self):
@@ -414,10 +418,10 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
         self.assertEquals(len(result), 1)
-        self.assertEquals(result[0][0], \
+        self.assertEquals(result[0][1], \
                           account11.default_lang_class.new_digest_subject \
                           % (2))
-        self.assertEquals(result[0][1], \
+        self.assertEquals(result[0][2], \
                           "body1\n----------------------------------\nbody2\n----------------------------------\n")
         del account.hub.threadConnection
 
@@ -677,6 +681,54 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         self.assertEquals(result[0].get_body(),
                           Lang.en.send_mail_error_no_to_header_body)
 
+class MailSender_TestCase(unittest.TestCase):
+    def setUp(self):
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        Account.createTable(ifNotExists=True)
+        PresenceAccount.createTable(ifNotExists=True)
+        MailAccount.createTable(ifNotExists=True)
+        IMAPAccount.createTable(ifNotExists=True)
+        POP3Account.createTable(ifNotExists=True)
+        del account.hub.threadConnection
+
+    def tearDown(self):
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        POP3Account.dropTable(ifExists=True)
+        IMAPAccount.dropTable(ifExists=True)
+        MailAccount.dropTable(ifExists=True)
+        PresenceAccount.dropTable(ifExists=True)
+        Account.dropTable(ifExists=True)
+        del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
+        account.hub.threadConnection.close()
+        del account.hub.threadConnection
+        if os.path.exists(DB_PATH):
+            os.unlink(DB_PATH)
+
+    def test_create_message(self):
+        mail_sender = MailSender()
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = IMAPAccount(user_jid="test1@test.com",
+                                name="account11",
+                                jid="account11@jmc.test.com")
+        account11.online_action = MailAccount.RETRIEVE
+        account11.status = account.ONLINE
+        message = mail_sender.create_message(account11, ("from@test.com",
+                                                         "subject",
+                                                         "message body"))
+        self.assertEquals(message.get_to(), account11.user_jid)
+        del account.hub.threadConnection
+        self.assertEquals(message.get_subject(), "subject")
+        self.assertEquals(message.get_body(), "message body")
+        addresses = message.xpath_eval("add:addresses/add:address",
+                                       {"add": "http://jabber.org/protocol/address"})
+        self.assertEquals(len(addresses), 1)
+        self.assertEquals(addresses[0].prop("type"),
+                          "replyto")
+        self.assertEquals(addresses[0].prop("jid"),
+                          "from%test.com@jmc.test.com")
+
 class MailHandler_TestCase(unittest.TestCase):
     def setUp(self):
         self.handler = MailHandler()
@@ -927,6 +979,7 @@ def suite():
     suite.addTest(unittest.makeSuite(SendMailMessageHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailAccountManager_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(RootSendMailMessageHandler_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(MailSender_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailUnsubscribeHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailSubscribeHandler_TestCase, 'test'))
