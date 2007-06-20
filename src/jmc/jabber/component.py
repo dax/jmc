@@ -219,7 +219,7 @@ class MailSender(HeadlineSender):
             replyto_address_node.setProp("jid", replyto_jid)
         elif to_account.action == MailAccount.DIGEST:
             message = HeadlineSender.create_message(self, to_account,
-                                                    subject, body)
+                                                    (subject, body))
         else:
             message = None
         return message

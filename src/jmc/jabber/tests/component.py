@@ -729,6 +729,23 @@ class MailSender_TestCase(unittest.TestCase):
         self.assertEquals(addresses[0].prop("jid"),
                           "from%test.com@jmc.test.com")
 
+    def test_create_message_digest(self):
+        mail_sender = MailSender()
+        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        account11 = IMAPAccount(user_jid="test1@test.com",
+                                name="account11",
+                                jid="account11@jmc.test.com")
+        account11.online_action = MailAccount.DIGEST
+        account11.status = account.ONLINE
+        message = mail_sender.create_message(account11, ("from@test.com",
+                                                         "subject",
+                                                         "message body"))
+        self.assertEquals(message.get_to(), account11.user_jid)
+        del account.hub.threadConnection
+        self.assertEquals(message.get_subject(), "subject")
+        self.assertEquals(message.get_body(), "message body")
+        self.assertEquals(message.get_type(), "headline")
+
 class MailHandler_TestCase(unittest.TestCase):
     def setUp(self):
         self.handler = MailHandler()
