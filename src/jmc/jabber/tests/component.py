@@ -556,7 +556,7 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
 class MailAccountManager_TestCase(unittest.TestCase):
     def test_root_disco_get_info(self):
         mam = MailAccountManager(None)
-        disco_info = mam.root_disco_get_info("JMC", "gateway", "smtp")
+        disco_info = mam.root_disco_get_info(None, "JMC", "gateway", "smtp")
         self.assertTrue(disco_info.has_feature("jabber:iq:gateway"))
         self.assertEquals(len(disco_info.get_identities()), 2)
         self.assertTrue(disco_info.identity_is("gateway", "smtp"))

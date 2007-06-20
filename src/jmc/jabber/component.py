@@ -79,9 +79,10 @@ class MailComponent(FeederComponent):
 class MailAccountManager(AccountManager):
     """JMC specific account behavior"""
 
-    def root_disco_get_info(self, name, category, type):
+    def root_disco_get_info(self, node, name, category, type):
         """Add jabber:iq:gateway support"""
-        disco_info = AccountManager.root_disco_get_info(self, name, category, type)
+        disco_info = AccountManager.root_disco_get_info(self, node, name,
+                                                        category, type)
         disco_info.add_feature("jabber:iq:gateway")
         disco_info.add_identity(name, "headline", "newmail")
         return disco_info
