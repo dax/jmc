@@ -38,11 +38,14 @@ from jcl.jabber.tests.component import DefaultSubscribeHandler_TestCase, \
 from jcl.jabber.tests.feeder import FeederMock, SenderMock
 
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
-    SMTPAccount
-from jmc.jabber.component import MailComponent, SendMailMessageHandler, \
-    RootSendMailMessageHandler, MailHandler, MailSubscribeHandler, \
-    MailUnsubscribeHandler, NoAccountError, MailFeederHandler, \
-    MailPresenceHandler, MailAccountManager, MailSender
+     SMTPAccount, NoAccountError
+from jmc.jabber import MailHandler
+from jmc.jabber.message import SendMailMessageHandler, \
+     RootSendMailMessageHandler
+from jmc.jabber.presence import MailSubscribeHandler, \
+     MailUnsubscribeHandler, MailPresenceHandler
+from jmc.jabber.component import MailComponent, MailFeederHandler, \
+     MailAccountManager, MailSender
 from jmc.lang import Lang
 
 if sys.platform == "win32":

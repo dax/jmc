@@ -45,6 +45,10 @@ from jmc.lang import Lang
 IMAP4_TIMEOUT = 10
 POP3_TIMEOUT = 10
 
+class NoAccountError(Exception):
+    """Error raised when no corresponding account is found."""
+    pass
+
 ## All MY* classes are implemented to add a timeout (settimeout)
 ## while connecting
 class MYIMAP4(imaplib.IMAP4):
