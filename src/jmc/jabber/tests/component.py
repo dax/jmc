@@ -31,9 +31,10 @@ from sqlobject.dbconnection import TheURIOpener
 from pyxmpp.presence import Presence
 from pyxmpp.message import Message
 
+import jcl.model as model
 from jcl.model import account
 from jcl.model.account import Account, PresenceAccount, LegacyJID
-from jcl.jabber.tests.component import DefaultSubscribeHandler_TestCase, \
+from jcl.jabber.tests.presence import DefaultSubscribeHandler_TestCase, \
     DefaultUnsubscribeHandler_TestCase
 from jcl.jabber.tests.feeder import FeederMock, SenderMock
 
@@ -45,7 +46,7 @@ from jmc.jabber.message import SendMailMessageHandler, \
 from jmc.jabber.presence import MailSubscribeHandler, \
      MailUnsubscribeHandler, MailPresenceHandler
 from jmc.jabber.component import MailComponent, MailFeederHandler, \
-     MailAccountManager, MailSender
+     MailSender
 from jmc.lang import Lang
 
 if sys.platform == "win32":
@@ -55,12 +56,12 @@ else:
 DB_URL = DB_PATH# + "?debug=1&debugThreading=1"
 
 class MockStream(object):
-    def __init__(self, \
-                 jid = "",
-                 secret = "",
-                 server = "",
-                 port = "",
-                 keepalive = True):
+    def __init__(self,
+                 jid="",
+                 secret="",
+                 server="",
+                 port="",
+                 keepalive=True):
         self.sent = []
         self.connection_started = False
         self.connection_stopped = False
@@ -73,9 +74,9 @@ class MockStream(object):
     def set_iq_set_handler(self, iq_type, ns, handler):
         if not iq_type in ["query"]:
             raise Exception("IQ type unknown: " + iq_type)
-        if not ns in ["jabber:iq:version", \
-                      "jabber:iq:register", \
-                      "http://jabber.org/protocol/disco#items", \
+        if not ns in ["jabber:iq:version",
+                      "jabber:iq:register",
+                      "http://jabber.org/protocol/disco#items",
                       "http://jabber.org/protocol/disco#info"]:
             raise Exception("Unknown namespace: " + ns)
         if handler is None:
@@ -84,12 +85,12 @@ class MockStream(object):
     set_iq_get_handler = set_iq_set_handler
 
     def set_presence_handler(self, status, handler):
-        if not status in ["available", \
-                          "unavailable", \
-                          "probe", \
-                          "subscribe", \
-                          "subscribed", \
-                          "unsubscribe", \
+        if not status in ["available",
+                          "unavailable",
+                          "probe",
+                          "subscribe",
+                          "subscribed",
+                          "unsubscribe",
                           "unsubscribed"]:
             raise Exception("Status unknown: " + status)
         if handler is None:
@@ -162,34 +163,34 @@ class MailComponent_TestCase(unittest.TestCase):
         self.comp = MailComponent("jmc.test.com",
                                  "password",
                                  "localhost",
-                                 "5347",
-                                 'sqlite://' + DB_URL)
+                                 "5347")
         self.comp.stream = MockStream()
         self.comp.stream_class = MockStream
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        Account.createTable(ifNotExists = True)
-        PresenceAccount.createTable(ifNotExists = True)
-        MailAccount.createTable(ifNotExists = True)
-        IMAPAccount.createTable(ifNotExists = True)
-        POP3Account.createTable(ifNotExists = True)
-        SMTPAccount.createTable(ifNotExists = True)
-        MockIMAPAccount.createTable(ifNotExists = True)
-        MockPOP3Account.createTable(ifNotExists = True)
-        del account.hub.threadConnection
+        model.db_connection_str = 'sqlite://' + DB_URL
+        model.db_connect()
+        Account.createTable(ifNotExists=True)
+        PresenceAccount.createTable(ifNotExists=True)
+        MailAccount.createTable(ifNotExists=True)
+        IMAPAccount.createTable(ifNotExists=True)
+        POP3Account.createTable(ifNotExists=True)
+        SMTPAccount.createTable(ifNotExists=True)
+        MockIMAPAccount.createTable(ifNotExists=True)
+        MockPOP3Account.createTable(ifNotExists=True)
+        model.db_disconnect()
 
     def tearDown(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        MockPOP3Account.dropTable(ifExists = True)
-        MockIMAPAccount.dropTable(ifExists = True)
-        SMTPAccount.dropTable(ifExists = True)
-        POP3Account.dropTable(ifExists = True)
-        IMAPAccount.dropTable(ifExists = True)
-        MailAccount.dropTable(ifExists = True)
-        PresenceAccount.dropTable(ifExists = True)
-        Account.dropTable(ifExists = True)
+        model.db_connect()
+        MockPOP3Account.dropTable(ifExists=True)
+        MockIMAPAccount.dropTable(ifExists=True)
+        SMTPAccount.dropTable(ifExists=True)
+        POP3Account.dropTable(ifExists=True)
+        IMAPAccount.dropTable(ifExists=True)
+        MailAccount.dropTable(ifExists=True)
+        PresenceAccount.dropTable(ifExists=True)
+        Account.dropTable(ifExists=True)
         del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
 
@@ -197,10 +198,10 @@ class MailComponent_TestCase(unittest.TestCase):
     # 'feed' test methods
     ###########################################################################
     def test_feed_live_email_init_no_password(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        model.db_connect()
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11.status = account.ONLINE
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.in_error)
@@ -219,10 +220,10 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_live_email_init_no_password2(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -241,10 +242,10 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
         self.assertEquals(len(self.comp.stream.sent), 0)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_interval_no_check(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -255,10 +256,10 @@ class MailComponent_TestCase(unittest.TestCase):
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 1)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_interval_check(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -269,10 +270,10 @@ class MailComponent_TestCase(unittest.TestCase):
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 0)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_no_password(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -293,10 +294,10 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_unknown_action(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -317,10 +318,10 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_retrieve_no_mail(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -338,13 +339,13 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_retrieve_mail(self):
         def mock_get_mail(index):
             return [("body1", "from1@test.com"),
                     ("body2", "from2@test.com")][index]
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid="test1@test.com",
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -375,10 +376,10 @@ class MailComponent_TestCase(unittest.TestCase):
                           account11.default_lang_class.new_mail_subject \
                           % ("from2@test.com"))
         self.assertEquals(result[1][2], "body2")
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_digest_no_mail(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -396,13 +397,13 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_feed_digest_mail(self):
         def mock_get_mail_summary(index):
             return [("body1", "from1@test.com"), \
                     ("body2", "from2@test.com")][index]
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -426,13 +427,13 @@ class MailComponent_TestCase(unittest.TestCase):
                           % (2))
         self.assertEquals(result[0][2], \
                           "body1\n----------------------------------\nbody2\n----------------------------------\n")
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     ###########################################################################
     # 'initialize_live_email' test methods
     ###########################################################################
     def test_initialize_live_email(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -449,12 +450,12 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_initialize_live_email_connection_error(self):
         def raiser():
             raise Exception
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -476,12 +477,12 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_initialize_live_email_mark_as_read_error(self):
         def raiser():
             raise Exception
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -503,12 +504,12 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_initialize_live_email_disconnection_error(self):
         def raiser():
             raise Exception
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = MockIMAPAccount(user_jid = "test1@test.com", \
                                     name = "account11", \
                                     jid = "account11@jmc.test.com")
@@ -531,11 +532,11 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
 class SendMailMessageHandler_TestCase(unittest.TestCase):
     def setUp(self):
-        self.handler = SendMailMessageHandler()
+        self.handler = SendMailMessageHandler(None)
 
     def test_handle(self):
         message = Message(from_jid="user1@test.com",
@@ -556,37 +557,29 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
         self.assertEquals(result[0].get_body(),
                           Lang.en.send_mail_ok_body % ("user@test.com"))
 
-class MailAccountManager_TestCase(unittest.TestCase):
-    def test_root_disco_get_info(self):
-        mam = MailAccountManager(None)
-        disco_info = mam.root_disco_get_info(None, "JMC", "gateway", "smtp")
-        self.assertTrue(disco_info.has_feature("jabber:iq:gateway"))
-        self.assertEquals(len(disco_info.get_identities()), 2)
-        self.assertTrue(disco_info.identity_is("gateway", "smtp"))
-        self.assertTrue(disco_info.identity_is("headline", "newmail"))
-
 class RootSendMailMessageHandler_TestCase(unittest.TestCase):
     def setUp(self):
-        self.handler = RootSendMailMessageHandler()
+        self.handler = RootSendMailMessageHandler(None)
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        Account.createTable(ifNotExists = True)
-        SMTPAccount.createTable(ifNotExists = True)
-        del account.hub.threadConnection
+        model.db_connection_str = 'sqlite://' + DB_URL
+        model.db_connect()
+        Account.createTable(ifNotExists=True)
+        SMTPAccount.createTable(ifNotExists=True)
+        model.db_disconnect()
 
     def tearDown(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        SMTPAccount.dropTable(ifExists = True)
-        Account.dropTable(ifExists = True)
+        model.db_connect()
+        SMTPAccount.dropTable(ifExists=True)
+        Account.dropTable(ifExists=True)
         del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
 
     def test_filter(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -599,10 +592,10 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
                           body="message")
         accounts = self.handler.filter(message, None)
         self.assertEquals(accounts.count(), 1)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_filter_no_default_account(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -615,10 +608,10 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
         accounts = self.handler.filter(message, None)
         self.assertEquals(accounts.count(), 2)
         self.assertEquals(accounts[0].name, "account11")
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_filter_wrong_dest(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -630,10 +623,10 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
                           body="message")
         accounts = self.handler.filter(message, None)
         self.assertEquals(accounts.count(), 2)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_filter_wrong_user(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -645,7 +638,7 @@ class RootSendMailMessageHandler_TestCase(unittest.TestCase):
                           body="message")
         accounts = self.handler.filter(message, None)
         self.assertEquals(accounts.count(), 0)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_handle_email_found_in_header(self):
         message = Message(from_jid="user1@test.com",
@@ -688,30 +681,31 @@ class MailSender_TestCase(unittest.TestCase):
     def setUp(self):
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connection_str = 'sqlite://' + DB_URL
+        model.db_connect()
         Account.createTable(ifNotExists=True)
         PresenceAccount.createTable(ifNotExists=True)
         MailAccount.createTable(ifNotExists=True)
         IMAPAccount.createTable(ifNotExists=True)
         POP3Account.createTable(ifNotExists=True)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def tearDown(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         POP3Account.dropTable(ifExists=True)
         IMAPAccount.dropTable(ifExists=True)
         MailAccount.dropTable(ifExists=True)
         PresenceAccount.dropTable(ifExists=True)
         Account.dropTable(ifExists=True)
         del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
 
     def test_create_message(self):
         mail_sender = MailSender()
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = IMAPAccount(user_jid="test1@test.com",
                                 name="account11",
                                 jid="account11@jmc.test.com")
@@ -721,7 +715,7 @@ class MailSender_TestCase(unittest.TestCase):
                                                          "subject",
                                                          "message body"))
         self.assertEquals(message.get_to(), account11.user_jid)
-        del account.hub.threadConnection
+        model.db_disconnect()
         self.assertEquals(message.get_subject(), "subject")
         self.assertEquals(message.get_body(), "message body")
         addresses = message.xpath_eval("add:addresses/add:address",
@@ -734,7 +728,7 @@ class MailSender_TestCase(unittest.TestCase):
 
     def test_create_message_digest(self):
         mail_sender = MailSender()
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = IMAPAccount(user_jid="test1@test.com",
                                 name="account11",
                                 jid="account11@jmc.test.com")
@@ -744,33 +738,34 @@ class MailSender_TestCase(unittest.TestCase):
                                                          "subject",
                                                          "message body"))
         self.assertEquals(message.get_to(), account11.user_jid)
-        del account.hub.threadConnection
+        model.db_disconnect()
         self.assertEquals(message.get_subject(), "subject")
         self.assertEquals(message.get_body(), "message body")
         self.assertEquals(message.get_type(), "headline")
 
 class MailHandler_TestCase(unittest.TestCase):
     def setUp(self):
-        self.handler = MailHandler()
+        self.handler = MailHandler(None)
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        Account.createTable(ifNotExists = True)
-        SMTPAccount.createTable(ifNotExists = True)
-        del account.hub.threadConnection
+        model.db_connection_str = 'sqlite://' + DB_URL
+        model.db_connect()
+        Account.createTable(ifNotExists=True)
+        SMTPAccount.createTable(ifNotExists=True)
+        model.db_disconnect()
 
     def tearDown(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
-        SMTPAccount.dropTable(ifExists = True)
-        Account.dropTable(ifExists = True)
+        model.db_connect()
+        SMTPAccount.dropTable(ifExists=True)
+        Account.dropTable(ifExists=True)
         del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
 
     def test_filter(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -785,10 +780,10 @@ class MailHandler_TestCase(unittest.TestCase):
         self.assertNotEquals(accounts, None)
         self.assertEquals(accounts.count(), 1)
         self.assertEquals(accounts[0].name, "account11")
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_filter_root(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -801,10 +796,10 @@ class MailHandler_TestCase(unittest.TestCase):
                           body="message")
         accounts = self.handler.filter(message, None)
         self.assertEquals(accounts, None)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_filter_no_default(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid = "user1@test.com", \
                                    name = "account11", \
                                    jid = "account11@jcl.test.com")
@@ -818,10 +813,10 @@ class MailHandler_TestCase(unittest.TestCase):
         self.assertNotEquals(accounts, None)
         self.assertEquals(accounts.count(), 2)
         self.assertEquals(accounts[0].name, "account11")
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_filter_wrong_dest(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid = "user1@test.com", \
                                    name = "account11", \
                                    jid = "account11@jcl.test.com")
@@ -833,10 +828,10 @@ class MailHandler_TestCase(unittest.TestCase):
                              body = "message")
         accounts = self.handler.filter(message, None)
         self.assertEquals(accounts, None)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_filter_wrong_account(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -852,12 +847,12 @@ class MailHandler_TestCase(unittest.TestCase):
            self.assertNotEquals(e, None)
            return
         finally:
-           del account.hub.threadConnection
+           model.db_disconnect()
         self.fail("No exception 'NoAccountError' catched")
 
 class MailPresenceHandler_TestCase(unittest.TestCase):
     def setUp(self):
-        self.handler = MailPresenceHandler()
+        self.handler = MailPresenceHandler(None)
 
     def test_filter(self):
         message = Message(from_jid="user1@test.com",
@@ -883,13 +878,13 @@ class MailPresenceHandler_TestCase(unittest.TestCase):
 class MailSubscribeHandler_TestCase(DefaultSubscribeHandler_TestCase, MailHandler_TestCase):
     def setUp(self):
         MailHandler_TestCase.setUp(self)
-        self.handler = MailSubscribeHandler()
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        self.handler = MailSubscribeHandler(None)
+        model.db_connect()
         LegacyJID.createTable(ifNotExists=True)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_handle(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -899,18 +894,18 @@ class MailSubscribeHandler_TestCase(DefaultSubscribeHandler_TestCase, MailHandle
         result = self.handler.handle(presence, Lang.en, [account11])
         legacy_jids = LegacyJID.select()
         self.assertEquals(legacy_jids.count(), 1)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
 class MailUnsubscribeHandler_TestCase(DefaultUnsubscribeHandler_TestCase, MailHandler_TestCase):
     def setUp(self):
         MailHandler_TestCase.setUp(self)
-        self.handler = MailUnsubscribeHandler()
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        self.handler = MailUnsubscribeHandler(None)
+        model.db_connect()
         LegacyJID.createTable(ifNotExists=True)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_handle(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -944,25 +939,26 @@ class MailUnsubscribeHandler_TestCase(DefaultUnsubscribeHandler_TestCase, MailHa
         removed_legacy_jid = LegacyJID.select(\
            LegacyJID.q.jid == "u111%test.com@jcl.test.com")
         self.assertEquals(removed_legacy_jid.count(), 0)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
 class MailFeederHandler_TestCase(unittest.TestCase):
     def setUp(self):
         self.handler = MailFeederHandler(FeederMock(), SenderMock())
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connection_str = 'sqlite://' + DB_URL
+        model.db_connect()
         Account.createTable(ifNotExists=True)
         PresenceAccount.createTable(ifNotExists=True)
         MailAccount.createTable(ifNotExists=True)
         IMAPAccount.createTable(ifNotExists=True)
         POP3Account.createTable(ifNotExists=True)
         SMTPAccount.createTable(ifNotExists=True)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def tearDown(self):
         self.handler = None
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         SMTPAccount.dropTable(ifExists=True)
         IMAPAccount.dropTable(ifExists=True)
         POP3Account.dropTable(ifExists=True)
@@ -970,13 +966,13 @@ class MailFeederHandler_TestCase(unittest.TestCase):
         PresenceAccount.dropTable(ifExists=True)
         Account.dropTable(ifExists=True)
         del TheURIOpener.cachedURIs['sqlite://' + DB_URL]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
 
     def test_filter(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + DB_URL)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jcl.test.com")
@@ -991,13 +987,12 @@ class MailFeederHandler_TestCase(unittest.TestCase):
         self.assertEquals(accounts.count(), 2)
         self.assertEquals(accounts[0].name, "account12")
         self.assertEquals(accounts[1].name, "account13")
-        del account.hub.threadConnection
+        model.db_disconnect()
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(MailComponent_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(SendMailMessageHandler_TestCase, 'test'))
-    suite.addTest(unittest.makeSuite(MailAccountManager_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(RootSendMailMessageHandler_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailSender_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailHandler_TestCase, 'test'))

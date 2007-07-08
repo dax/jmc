@@ -31,8 +31,8 @@ from jmc.jabber import MailHandler
 from jmc.model.account import SMTPAccount
 
 class SendMailMessageHandler(MailHandler):
-    def __init__(self):
-        MailHandler.__init__(self)
+    def __init__(self, component):
+        MailHandler.__init__(self, component)
         self.__logger = logging.getLogger(\
             "jmc.jabber.component.SendMailMessageHandler")
 
@@ -57,8 +57,8 @@ class SendMailMessageHandler(MailHandler):
 class RootSendMailMessageHandler(SendMailMessageHandler):
     """Handle message sent to root JID"""
 
-    def __init__(self):
-        SendMailMessageHandler.__init__(self)
+    def __init__(self, component):
+        SendMailMessageHandler.__init__(self, component)
         self.to_regexp = re.compile("^\s*(to|TO|To)\s*:\s*(?P<to_email>.*)")
         self.__logger = logging.getLogger(\
             "jmc.jabber.component.RootSendMailMessageHandler")

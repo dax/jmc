@@ -31,8 +31,9 @@ from jmc.jabber import MailHandler
 
 class MailPresenceHandler(DefaultPresenceHandler):
     """Define filter for legacy JIDs presence handling"""
-    def __init__(self):
-        Handler.__init__(self)
+
+    def __init__(self, component):
+        Handler.__init__(self, component)
         self.dest_jid_regexp = re.compile(".*%.*")
 
     def filter(self, stanza, lang_class):
@@ -44,13 +45,14 @@ class MailPresenceHandler(DefaultPresenceHandler):
         return None
 
 class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
-    """Use DefaultSubscribeHandler handle method and MailHandler filter.
+    """
+    Use DefaultSubscribeHandler handle method and MailHandler filter.
     Filter email address in JID. Accept and add to LegacyJID table.
     """
 
-    def __init__(self):
-        DefaultSubscribeHandler.__init__(self)
-        MailHandler.__init__(self)
+    def __init__(self, component):
+        DefaultSubscribeHandler.__init__(self, component)
+        MailHandler.__init__(self, component)
 
     def filter(self, stanza, lang_class):
         return MailHandler.filter(self, stanza, lang_class)
@@ -65,12 +67,13 @@ class MailSubscribeHandler(DefaultSubscribeHandler, MailHandler):
         return result
 
 class MailUnsubscribeHandler(DefaultUnsubscribeHandler, MailHandler):
-    """Use DefaultUnsubscribeHandler handle method and MailHandler filter.
+    """
+    Use DefaultUnsubscribeHandler handle method and MailHandler filter.
     """
 
-    def __init__(self):
-        DefaultUnsubscribeHandler.__init__(self)
-        MailHandler.__init__(self)
+    def __init__(self, component):
+        DefaultUnsubscribeHandler.__init__(self, component)
+        MailHandler.__init__(self, component)
 
     def filter(self, stanza, lang_class):
         return MailHandler.filter(self, stanza, lang_class)

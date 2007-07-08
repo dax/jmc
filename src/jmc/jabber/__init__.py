@@ -11,8 +11,8 @@ from jmc.model.account import NoAccountError, SMTPAccount
 class MailHandler(Handler):
     """Define filter for email address in JID"""
 
-    def __init__(self):
-        Handler.__init__(self)
+    def __init__(self, component):
+        Handler.__init__(self, component)
         self.dest_jid_regexp = re.compile(".*%.*")
 
     def filter(self, stanza, lang_class):

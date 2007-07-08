@@ -28,6 +28,7 @@ from sqlobject import *
 
 from jcl.tests.runner import JCLRunner_TestCase
 
+import jcl.model as model
 from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
 
@@ -129,7 +130,8 @@ class JMCRunner_TestCase(JCLRunner_TestCase):
         def do_nothing():
             pass
         self.runner._run(do_nothing)
-        account.hub.threadConnection = connectionForURI(self.runner.db_url)
+        model.db_connection_str = self.runner.db_url
+        model.db_connect()
         # dropTable should succeed because tables should exist
         Account.dropTable()
         PresenceAccount.dropTable()
@@ -137,7 +139,7 @@ class JMCRunner_TestCase(JCLRunner_TestCase):
         IMAPAccount.dropTable()
         POP3Account.dropTable()
         SMTPAccount.dropTable()
-        del account.hub.threadConnection
+        model.db_disconnect()
         os.unlink(DB_PATH)
         self.assertFalse(os.access("/tmp/jmc.pid", os.F_OK))
         

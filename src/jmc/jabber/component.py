@@ -30,11 +30,14 @@ from sqlobject import *
 from pyxmpp.message import Message
 from pyxmpp.jid import JID
 
+import jcl.jabber as jabber
 from jcl.model.account import Account, PresenceAccount, LegacyJID
+from jcl.jabber.disco import RootDiscoGetInfoHandler
 from jcl.jabber.component import Handler, AccountManager
 from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, \
     HeadlineSender, FeederHandler
 
+from jmc.jabber.disco import MailRootDiscoGetInfoHandler
 from jmc.jabber.message import SendMailMessageHandler, \
      RootSendMailMessageHandler
 from jmc.jabber.presence import MailSubscribeHandler, \
@@ -51,7 +54,6 @@ class MailComponent(FeederComponent):
                  secret,
                  server,
                  port,
-                 db_connection_str,
                  lang=Lang()):
         """Use FeederComponent behavior and setup feeder and sender
         attributes.
@@ -61,30 +63,20 @@ class MailComponent(FeederComponent):
                                  secret,
                                  server,
                                  port,
-                                 db_connection_str,
                                  lang=lang)
         self.handler = MailFeederHandler(MailFeeder(self), MailSender(self))
-        self.account_manager = MailAccountManager(self)
         self.account_manager.account_classes = (IMAPAccount,
                                                 POP3Account,
                                                 SMTPAccount)
-        self.msg_handlers += [SendMailMessageHandler(),
-                              RootSendMailMessageHandler()]
-        self.subscribe_handlers += [MailSubscribeHandler()]
-        self.unsubscribe_handlers += [MailUnsubscribeHandler()]
-        self.available_handlers += [MailPresenceHandler()]
-        self.unavailable_handlers += [MailPresenceHandler()]
-
-class MailAccountManager(AccountManager):
-    """JMC specific account behavior"""
-
-    def root_disco_get_info(self, node, name, category, type):
-        """Add jabber:iq:gateway support"""
-        disco_info = AccountManager.root_disco_get_info(self, node, name,
-                                                        category, type)
-        disco_info.add_feature("jabber:iq:gateway")
-        disco_info.add_identity(name, "headline", "newmail")
-        return disco_info
+        self.msg_handlers += [[SendMailMessageHandler(self),
+                               RootSendMailMessageHandler(self)]]
+        self.presence_subscribe_handlers += [[MailSubscribeHandler(self)]]
+        self.presence_unsubscribe_handlers += [[MailUnsubscribeHandler(self)]]
+        self.presence_available_handlers += [[MailPresenceHandler(self)]]
+        self.presence_unavailable_handlers += [[MailPresenceHandler(self)]]
+        jabber.replace_handlers(self.disco_get_info_handlers,
+                                RootDiscoGetInfoHandler,
+                                MailRootDiscoGetInfoHandler(self))
 
 class MailFeeder(Feeder):
     """Email check"""

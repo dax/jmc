@@ -33,11 +33,11 @@ class JMCRunner(JCLRunner):
         # define new options
         self.check_interval = 1
         self.mail_default_encoding = "iso-8859-1"
-        self.options += [("i:", "check-interval=", "jmc", \
-                          " INTERVAL\t\t\tInterval unit in minute between mail checks", \
-                          lambda arg: setattr(self, "check_interval", int(arg))), \
-                         ("e:", "mail-default-encoding=", "jmc", \
-                          " ENCODING\t\tDefault encoding of the component", \
+        self.options += [("i:", "check-interval=", "jmc",
+                          " INTERVAL\t\t\tInterval unit in minute between mail checks",
+                          lambda arg: setattr(self, "check_interval", int(arg))),
+                         ("e:", "mail-default-encoding=", "jmc",
+                          " ENCODING\t\tDefault encoding of the component",
                           lambda arg: setattr(self, "mail_default_encoding", arg))]
         # override JCL default
         self.service_jid = "jmc.localhost"
@@ -54,12 +54,11 @@ class JMCRunner(JCLRunner):
         
     def run(self):
         def run_func():
-            component = MailComponent(jid = self.service_jid, \
-                                      secret = self.secret, \
-                                      server = self.server, \
-                                      port = self.port, \
-                                      db_connection_str = self.db_url, \
-                                      lang = Lang(self.language))
+            component = MailComponent(jid=self.service_jid,
+                                      secret=self.secret,
+                                      server=self.server,
+                                      port=self.port,
+                                      lang=Lang(self.language))
             MailAccount.default_encoding = self.mail_default_encoding
             component.check_interval = self.check_interval
             component.disco_identity.set_category("gateway")

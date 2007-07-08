@@ -29,6 +29,7 @@ import sys
 from sqlobject import *
 from sqlobject.dbconnection import TheURIOpener
 
+import jcl.model as model
 from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
 from jmc.model.account import MailAccount, POP3Account, IMAPAccount, SMTPAccount
@@ -49,32 +50,33 @@ class MailAccount_TestCase(PresenceAccount_TestCase):
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
         self.db_url = DB_URL
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
-        Account.createTable(ifNotExists = True)
-        PresenceAccount.createTable(ifNotExists = True)
-        MailAccount.createTable(ifNotExists = True)
-        self.account = MailAccount(user_jid = "user1@test.com", \
-                                   name = "account1", \
-                                   jid = "account1@jmc.test.com")
-        del account.hub.threadConnection
+        model.db_connection_str = 'sqlite://' + self.db_url
+        model.db_connect()
+        Account.createTable(ifNotExists=True)
+        PresenceAccount.createTable(ifNotExists=True)
+        MailAccount.createTable(ifNotExists=True)
+        self.account = MailAccount(user_jid="user1@test.com",
+                                   name="account1",
+                                   jid="account1@jmc.test.com")
+        model.db_disconnect()
         self.account_class = MailAccount
 
     def tearDown(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
-        MailAccount.dropTable(ifExists = True)
-        PresenceAccount.dropTable(ifExists = True)
+        model.db_connect()
+        MailAccount.dropTable(ifExists=True)
+        PresenceAccount.dropTable(ifExists=True)
         Account.dropTable(ifExists = True)
         del TheURIOpener.cachedURIs['sqlite://' + self.db_url]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
 
     def make_test(email_type, tested_func, expected_res):
         def inner(self):
             encoded, multipart, header = email_type
-            email = email_generator.generate(encoded, \
-                                             multipart, \
+            email = email_generator.generate(encoded,
+                                             multipart,
                                              header)
             part = tested_func(self, email)
             self.assertEquals(part, expected_res)
@@ -153,91 +155,92 @@ class POP3Account_TestCase(InheritableAccount_TestCase):
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
         self.db_url = DB_URL
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
-        Account.createTable(ifNotExists = True)
-        PresenceAccount.createTable(ifNotExists = True)
-        MailAccount.createTable(ifNotExists = True)
-        POP3Account.createTable(ifNotExists = True)
-        self.pop3_account = POP3Account(user_jid = "user1@test.com", \
-                                       name = "account1", \
-                                       jid = "account1@jmc.test.com", \
-                                       login = "login")
+        model.db_connection_str = 'sqlite://' + self.db_url
+        model.db_connect()
+        Account.createTable(ifNotExists=True)
+        PresenceAccount.createTable(ifNotExists=True)
+        MailAccount.createTable(ifNotExists=True)
+        POP3Account.createTable(ifNotExists=True)
+        self.pop3_account = POP3Account(user_jid="user1@test.com",
+                                        name="account1",
+                                        jid="account1@jmc.test.com",
+                                        login="login")
         self.pop3_account.password = "pass"
         self.pop3_account.host = "localhost"
         self.pop3_account.port = 1110
         self.pop3_account.ssl = False
-        del account.hub.threadConnection
+        model.db_disconnect()
         self.account_class = POP3Account
 
     def tearDown(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
-        POP3Account.dropTable(ifExists = True)
-        MailAccount.dropTable(ifExists = True)
-        PresenceAccount.dropTable(ifExists = True)
-        Account.dropTable(ifExists = True)
+        model.db_connect()
+        POP3Account.dropTable(ifExists=True)
+        MailAccount.dropTable(ifExists=True)
+        PresenceAccount.dropTable(ifExists=True)
+        Account.dropTable(ifExists=True)
         del TheURIOpener.cachedURIs['sqlite://' + self.db_url]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
         self.server = None
         self.pop3_account = None
 
-    def make_test(responses = None, queries = None, core = None):
+    def make_test(responses=None, queries=None, core=None):
         def inner(self):
             self.server = server.DummyServer("localhost", 1110)
             thread.start_new_thread(self.server.serve, ())
-            self.server.responses = ["+OK connected\r\n", \
-                                     "+OK name is a valid mailbox\r\n", \
+            self.server.responses = ["+OK connected\r\n",
+                                     "+OK name is a valid mailbox\r\n",
                                      "+OK pass\r\n"]
             if responses:
                 self.server.responses += responses
-            self.server.queries = ["USER login\r\n", \
+            self.server.queries = ["USER login\r\n",
                                    "PASS pass\r\n"]
             if queries:
                 self.server.queries += queries
             self.server.queries += ["QUIT\r\n"]
             self.pop3_account.connect()
-            self.failUnless(self.pop3_account.connection, \
+            self.failUnless(self.pop3_account.connection,
                             "Cannot establish connection")
             if core:
-                account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
+                model.db_connect()
                 core(self)
-                del account.hub.threadConnection
+                model.db_disconnect()
             self.pop3_account.disconnect()
-            self.failUnless(self.server.verify_queries(), \
+            self.failUnless(self.server.verify_queries(),
                             "Sended queries does not match expected queries.")
         return inner
 
     test_connection = make_test()
 
     test_get_mail_list = \
-        make_test(["+OK 2 20\r\n"], \
-                  ["STAT\r\n"], \
+        make_test(["+OK 2 20\r\n"],
+                  ["STAT\r\n"],
                   lambda self: \
-                  self.assertEquals(self.pop3_account.get_mail_list(), \
-                                    ["1", "2"]))
+                      self.assertEquals(self.pop3_account.get_mail_list(),
+                                        ["1", "2"]))
 
     test_get_mail_summary = \
-        make_test(["+OK 10 octets\r\n" + \
-                   "From: user@test.com\r\n" + \
-                   "Subject: subject test\r\n\r\n" + \
+        make_test(["+OK 10 octets\r\n" +
+                   "From: user@test.com\r\n" +
+                   "Subject: subject test\r\n\r\n" +
                    "mymessage\r\n.\r\n",
-                   "+OK\r\n"], \
+                   "+OK\r\n"],
                   ["RETR 1\r\n",
-                   "RSET\r\n"], \
+                   "RSET\r\n"],
                   lambda self: \
-                  self.assertEquals(self.pop3_account.get_mail_summary(1), \
-                                    (u"From : user@test.com\n" + \
-                                     u"Subject : subject test\n\n", \
-                                     u"user@test.com")))
+                      self.assertEquals(self.pop3_account.get_mail_summary(1),
+                                        (u"From : user@test.com\n" +
+                                         u"Subject : subject test\n\n",
+                                         u"user@test.com")))
 
     test_get_mail = \
-        make_test(["+OK 10 octets\r\n" + \
-                   "From: user@test.com\r\n" + \
-                   "Subject: subject test\r\n\r\n" + \
+        make_test(["+OK 10 octets\r\n" +
+                   "From: user@test.com\r\n" +
+                   "Subject: subject test\r\n\r\n" +
                    "mymessage\r\n.\r\n",
-                   "+OK\r\n"], \
+                   "+OK\r\n"],
                   ["RETR 1\r\n",
                    "RSET\r\n"], \
                   lambda self: \
@@ -281,37 +284,38 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
         self.db_url = DB_URL
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
-        Account.createTable(ifNotExists = True)
-        PresenceAccount.createTable(ifNotExists = True)
-        MailAccount.createTable(ifNotExists = True)
-        IMAPAccount.createTable(ifNotExists = True)
-        self.imap_account = IMAPAccount(user_jid = "user1@test.com", \
-                                       name = "account1", \
-                                       jid = "account1@jmc.test.com", \
-                                       login = "login")
+        model.db_connection_str = 'sqlite://' + self.db_url
+        model.db_connect()
+        Account.createTable(ifNotExists=True)
+        PresenceAccount.createTable(ifNotExists=True)
+        MailAccount.createTable(ifNotExists=True)
+        IMAPAccount.createTable(ifNotExists=True)
+        self.imap_account = IMAPAccount(user_jid="user1@test.com",
+                                        name="account1",
+                                        jid="account1@jmc.test.com",
+                                        login="login")
         self.imap_account.password = "pass"
         self.imap_account.host = "localhost"
         self.imap_account.port = 1143
         self.imap_account.ssl = False
-        del account.hub.threadConnection
+        model.db_disconnect()
         self.account_class = IMAPAccount
 
     def tearDown(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
-        IMAPAccount.dropTable(ifExists = True)
-        MailAccount.dropTable(ifExists = True)
-        PresenceAccount.dropTable(ifExists = True)
-        Account.dropTable(ifExists = True)
+        model.db_connect()
+        IMAPAccount.dropTable(ifExists=True)
+        MailAccount.dropTable(ifExists=True)
+        PresenceAccount.dropTable(ifExists=True)
+        Account.dropTable(ifExists=True)
         del TheURIOpener.cachedURIs['sqlite://' + self.db_url]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
         self.server = None
         self.imap_account = None
 
-    def make_test(responses = None, queries = None, core = None):
+    def make_test(responses=None, queries=None, core=None):
         def inner(self):
             self.server = server.DummyServer("localhost", 1143)
             thread.start_new_thread(self.server.serve, ())
@@ -334,9 +338,9 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
             self.failUnless(self.imap_account.connection, \
                             "Cannot establish connection")
             if core:
-                account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
+                model.db_connect()
                 core(self)
-                del account.hub.threadConnection
+                model.db_disconnect()
             self.imap_account.disconnect()
             self.failUnless(self.server.verify_queries())
         return inner
@@ -388,26 +392,27 @@ class SMTPAccount_TestCase(Account_TestCase):
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
         self.db_url = DB_URL
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
-        Account.createTable(ifNotExists = True)
-        ExampleAccount.createTable(ifNotExists = True)
-        SMTPAccount.createTable(ifNotExists = True)
-        del account.hub.threadConnection
+        model.db_connection_str = 'sqlite://' + self.db_url
+        model.db_connect()
+        Account.createTable(ifNotExists=True)
+        ExampleAccount.createTable(ifNotExists=True)
+        SMTPAccount.createTable(ifNotExists=True)
+        model.db_disconnect()
         self.account_class = SMTPAccount
 
     def tearDown(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
-        SMTPAccount.dropTable(ifExists = True)
-        ExampleAccount.dropTable(ifExists = True)
-        Account.dropTable(ifExists = True)
+        model.db_connect()
+        SMTPAccount.dropTable(ifExists=True)
+        ExampleAccount.dropTable(ifExists=True)
+        Account.dropTable(ifExists=True)
         del TheURIOpener.cachedURIs['sqlite://' + self.db_url]
-        account.hub.threadConnection.close()
-        del account.hub.threadConnection
+        model.hub.threadConnection.close()
+        model.db_disconnect()
         if os.path.exists(DB_PATH):
             os.unlink(DB_PATH)
 
     def test_default_account_post_func_no_default_true(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jmc.test.com")
@@ -418,10 +423,10 @@ class SMTPAccount_TestCase(Account_TestCase):
             SMTPAccount.get_register_fields()[7]
         value = post_func("True", None, "user1@test.com")
         self.assertTrue(value)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_default_account_post_func_no_default_false(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jmc.test.com")
@@ -432,10 +437,10 @@ class SMTPAccount_TestCase(Account_TestCase):
             SMTPAccount.get_register_fields()[7]
         value = post_func("False", None, "user1@test.com")
         self.assertTrue(value)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_default_account_post_func_true(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jmc.test.com")
@@ -448,10 +453,10 @@ class SMTPAccount_TestCase(Account_TestCase):
         value = post_func("True", None, "user1@test.com")
         self.assertTrue(value)
         self.assertFalse(account12.default_account)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_default_account_post_func_false(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jmc.test.com")
@@ -464,14 +469,14 @@ class SMTPAccount_TestCase(Account_TestCase):
         value = post_func("False", None, "user1@test.com")
         self.assertFalse(value)
         self.assertTrue(account12.default_account)
-        del account.hub.threadConnection
+        model.db_disconnect()
 
     def test_create_email(self):
-        account.hub.threadConnection = connectionForURI('sqlite://' + self.db_url)
+        model.db_connect()
         account11 = SMTPAccount(user_jid="user1@test.com",
                                 name="account11",
                                 jid="account11@jmc.test.com")
-        del account.hub.threadConnection
+        model.db_disconnect()
         email = account11.create_email("from@test.com",
                                        "to@test.com",
                                        "subject",
@@ -494,22 +499,20 @@ class SMTPAccount_TestCase(Account_TestCase):
                 self.server.queries += queries
             self.server.queries += ["quit\r\n"]
             if core:
-                account.hub.threadConnection = connectionForURI('sqlite://'
-                                                                + self.db_url)
+                model.db_connect()
                 core(self)
-                del account.hub.threadConnection
+                model.db_disconnect()
             self.failUnless(self.server.verify_queries())
         return inner
 
     def test_send_email_esmtp_no_auth(self):
-       account.hub.threadConnection = connectionForURI('sqlite://'
-                                                       + self.db_url)
+       model.db_connect()
        smtp_account = SMTPAccount(user_jid="user1@test.com",
                                   name="account11",
                                   jid="account11@jmc.test.com")
        smtp_account.host = "localhost"
        smtp_account.port = 1025
-       del account.hub.threadConnection
+       model.db_disconnect()
        email = smtp_account.create_email("from@test.com",
                                          "to@test.com",
                                          "subject",
@@ -535,14 +538,13 @@ class SMTPAccount_TestCase(Account_TestCase):
        test_func()
 
     def test_send_email_no_auth(self):
-       account.hub.threadConnection = connectionForURI('sqlite://'
-                                                       + self.db_url)
+       model.db_connect()
        smtp_account = SMTPAccount(user_jid="user1@test.com",
                                   name="account11",
                                   jid="account11@jmc.test.com")
        smtp_account.host = "localhost"
        smtp_account.port = 1025
-       del account.hub.threadConnection
+       model.db_disconnect()
        email = smtp_account.create_email("from@test.com",
                                          "to@test.com",
                                          "subject",
@@ -570,8 +572,7 @@ class SMTPAccount_TestCase(Account_TestCase):
        test_func()
 
     def test_send_email_esmtp_auth(self):
-       account.hub.threadConnection = connectionForURI('sqlite://'
-                                                       + self.db_url)
+       model.db_connect()
        smtp_account = SMTPAccount(user_jid="user1@test.com",
                                   name="account11",
                                   jid="account11@jmc.test.com")
@@ -579,7 +580,7 @@ class SMTPAccount_TestCase(Account_TestCase):
        smtp_account.port = 1025
        smtp_account.login = "user"
        smtp_account.password = "pass"
-       del account.hub.threadConnection
+       model.db_disconnect()
        email = smtp_account.create_email("from@test.com",
                                          "to@test.com",
                                          "subject",
@@ -610,8 +611,7 @@ class SMTPAccount_TestCase(Account_TestCase):
        test_func()
 
     def test_send_email_esmtp_auth_method2(self):
-       account.hub.threadConnection = connectionForURI('sqlite://'
-                                                       + self.db_url)
+       model.db_connect()
        smtp_account = SMTPAccount(user_jid="user1@test.com",
                                   name="account11",
                                   jid="account11@jmc.test.com")
@@ -619,7 +619,7 @@ class SMTPAccount_TestCase(Account_TestCase):
        smtp_account.port = 1025
        smtp_account.login = "user"
        smtp_account.password = "pass"
-       del account.hub.threadConnection
+       model.db_disconnect()
        email = smtp_account.create_email("from@test.com",
                                          "to@test.com",
                                          "subject",

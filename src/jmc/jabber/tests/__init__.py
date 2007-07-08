@@ -3,11 +3,12 @@ __revision__ = ""
 
 import unittest
 
-from jmc.jabber.tests import component
+from jmc.jabber.tests import component, disco
 
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(component.suite())
+    suite.addTest(disco.suite())
     return suite
 
 if __name__ == '__main__':
