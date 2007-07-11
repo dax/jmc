@@ -50,6 +50,9 @@ class MailRootDiscoGetInfoHandler_TestCase(unittest.TestCase):
         # stanza, lang_class, node, disco_obj, data
         disco_infos = handler.handle(None, None, None, None, None)
         self.assertTrue(disco_infos[0].has_feature("jabber:iq:gateway"))
+        self.assertTrue(disco_infos[0].has_feature("http://jabber.org/protocol/disco#info"))
+        self.assertTrue(disco_infos[0].has_feature("http://jabber.org/protocol/disco#items"))
+        self.assertTrue(disco_infos[0].has_feature("http://jabber.org/protocol/commands"))
         self.assertEquals(len(disco_infos[0].get_identities()), 2)
         self.assertTrue(disco_infos[0].identity_is("gateway", "smtp"))
         self.assertTrue(disco_infos[0].identity_is("headline", "newmail"))

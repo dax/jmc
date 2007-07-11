@@ -20,13 +20,13 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-from jcl.jabber.disco import RootDiscoGetInfoHandler
+from jcl.jabber.command import CommandRootDiscoGetInfoHandler
 
-class MailRootDiscoGetInfoHandler(RootDiscoGetInfoHandler):
+class MailRootDiscoGetInfoHandler(CommandRootDiscoGetInfoHandler):
     def handle(self, stanza, lang_class, node, disco_obj, data):
         """Add jabber:iq:gateway support"""
-        disco_infos = RootDiscoGetInfoHandler.handle(self, stanza, lang_class,
-                                                     node, disco_obj, data)
+        disco_infos = CommandRootDiscoGetInfoHandler.handle(self, stanza, lang_class,
+                                                            node, disco_obj, data)
         disco_infos[0].add_feature("jabber:iq:gateway")
         disco_infos[0].add_identity(self.component.name, "headline", "newmail")
         return disco_infos
