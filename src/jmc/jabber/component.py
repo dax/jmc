@@ -22,18 +22,12 @@
 ##
 
 import logging
-import re
-import sys
 
-from sqlobject import *
-
-from pyxmpp.message import Message
 from pyxmpp.jid import JID
 
 import jcl.jabber as jabber
-from jcl.model.account import Account, PresenceAccount, LegacyJID
+from jcl.model.account import PresenceAccount
 from jcl.jabber.disco import RootDiscoGetInfoHandler
-from jcl.jabber.component import Handler, AccountManager
 from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, \
     HeadlineSender, FeederHandler
 

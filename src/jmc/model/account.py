@@ -188,13 +188,13 @@ class MailAccount(PresenceAccount):
         return PresenceAccount.get_register_fields(real_class) + \
             [("login", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
-                  account.mandatory_field(field_value),
+                  account.mandatory_field("login", field_value),
               lambda bare_from_jid: ""),
              ("password", "text-private", None, password_post_func,
               lambda bare_from_jid: ""),
              ("host", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
-                  account.mandatory_field(field_value),
+                  account.mandatory_field("host", field_value),
               lambda bare_from_jid: ""),
              ("port", "text-single", None,
               account.int_post_func,
@@ -459,8 +459,9 @@ class POP3Account(MailAccount):
     lastmail = IntCol(default=0)
 
     def _init(self, *args, **kw):
-	MailAccount._init(self, *args, **kw)
+        MailAccount._init(self, *args, **kw)
         self.__logger = logging.getLogger("jmc.model.account.POP3Account")
+        self.connected = False
 
     def _get_default_port(cls):
         """Return default POP3 server port"""
@@ -469,63 +470,62 @@ class POP3Account(MailAccount):
     get_default_port = classmethod(_get_default_port)
 
     def get_type(self):
-	if self.ssl:
-	    return "pop3s"
-	return "pop3"
+        if self.ssl:
+            return "pop3s"
+        return "pop3"
 
     type = property(get_type)
 
     def connect(self):
-	self.__logger.debug("Connecting to POP3 server "
+        self.__logger.debug("Connecting to POP3 server "
                             + self.login + "@" + self.host + ":" +
                             str(self.port) + ". SSL=" + str(self.ssl))
-	if self.ssl:
-	    self.connection = MYPOP3_SSL(self.host, self.port)
-	else:
-	    self.connection = MYPOP3(self.host, self.port)
-	try:
-	  self.connection.apop(self.login, self.password)
-	except:
-	  self.connection.user(self.login)
-	  self.connection.pass_(self.password)
+        if self.ssl:
+            self.connection = MYPOP3_SSL(self.host, self.port)
+        else:
+            self.connection = MYPOP3(self.host, self.port)
+        try:
+            self.connection.apop(self.login, self.password)
+        except:
+            self.connection.user(self.login)
+            self.connection.pass_(self.password)
         self.connected = True
 
 
     def disconnect(self):
-	self.__logger.debug("Disconnecting from POP3 server "
-                            + self.host)
-	self.connection.quit()
+        self.__logger.debug("Disconnecting from POP3 server " + self.host)
+        self.connection.quit()
         self.connected = False
 
     def get_mail_list(self):
-	self.__logger.debug("Getting mail list")
-	count, size = self.connection.stat()
+        self.__logger.debug("Getting mail list")
+        count, size = self.connection.stat()
         self.nb_mail = count
         return [str(i) for i in range(1, count + 1)]
 
     def get_mail(self, index):
-	self.__logger.debug("Getting mail " + str(index))
-	ret, data, size = self.connection.retr(index)
+        self.__logger.debug("Getting mail " + str(index))
+        ret, data, size = self.connection.retr(index)
         try:
             self.connection.rset()
         except:
             pass
-	if ret[0:3] == '+OK':
+        if ret[0:3] == '+OK':
             return self.format_message(email.message_from_string(\
                     '\n'.join(data)))
-	return u"Error while fetching mail " + str(index)
+        return u"Error while fetching mail " + str(index)
 
     def get_mail_summary(self, index):
-	self.__logger.debug("Getting mail summary " + str(index))
-	ret, data, size = self.connection.retr(index)
+        self.__logger.debug("Getting mail summary " + str(index))
+        ret, data, size = self.connection.retr(index)
         try:
             self.connection.rset()
         except:
             pass
-	if ret[0:3] == '+OK':
+        if ret[0:3] == '+OK':
             return self.format_message_summary(email.message_from_string(\
                     '\n'.join(data)))
-	return u"Error while fetching mail " + str(index)
+        return u"Error while fetching mail " + str(index)
 
     def get_next_mail_index(self, mail_list):
         if self.is_mail_list_valid(mail_list):
@@ -617,7 +617,7 @@ class SMTPAccount(Account):
               lambda bare_from_jid: ""),
              ("host", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
-                  account.mandatory_field(field_value),
+                  account.mandatory_field("host", field_value),
               lambda bare_from_jid: ""),
              ("port", "text-single", None,
               account.int_post_func,
@@ -627,7 +627,7 @@ class SMTPAccount(Account):
               lambda bare_from_jid: False),
              ("default_from", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
-                  account.mandatory_field(field_value),
+                  account.mandatory_field("default_from", field_value),
               lambda bare_from_jid: ""),
              ("store_password", "boolean", None,
               account.default_post_func,
