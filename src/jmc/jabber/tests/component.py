@@ -846,11 +846,10 @@ class MailHandler_TestCase(unittest.TestCase):
             accounts = self.handler.filter(message, None)
             model.db_disconnect()
         except NoAccountError, e:
-           self.assertNotEquals(e, None)
-           return
-        finally:
-           model.db_disconnect()
-        self.fail("No exception 'NoAccountError' catched")
+            model.db_disconnect()
+            self.assertNotEquals(e, None)
+        else:
+            self.fail("No exception 'NoAccountError' catched")
 
 class MailPresenceHandler_TestCase(unittest.TestCase):
     def setUp(self):
