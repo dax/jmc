@@ -24,6 +24,7 @@
 import unittest
 import os
 import sys
+import time
 
 from sqlobject import *
 from sqlobject.dbconnection import TheURIOpener
@@ -224,9 +225,9 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_live_email_init_no_password2(self):
         model.db_connect()
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11.status = account.ONLINE
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.in_error)
@@ -246,9 +247,9 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_interval_no_check(self):
         model.db_connect()
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11._action = PresenceAccount.DO_NOTHING
         account11.first_check = False
         self.assertEquals(account11.lastcheck, 0)
@@ -260,9 +261,9 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_interval_check(self):
         model.db_connect()
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11._action = PresenceAccount.DO_NOTHING
         account11.first_check = False
         account11.lastcheck = 1
@@ -274,9 +275,9 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_no_password(self):
         model.db_connect()
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11._action = MailAccount.RETRIEVE
         account11.status = account.ONLINE
         account11.first_check = False
@@ -298,9 +299,9 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_unknown_action(self):
         model.db_connect()
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11._action = 42 # Unknown action
         account11.status = account.ONLINE
         account11.first_check = False
@@ -322,9 +323,9 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_retrieve_no_mail(self):
         model.db_connect()
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11._action = MailAccount.RETRIEVE
         account11.status = account.ONLINE
         account11.first_check = False
@@ -380,9 +381,9 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_digest_no_mail(self):
         model.db_connect()
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11._action = MailAccount.DIGEST
         account11.status = account.ONLINE
         account11.first_check = False
@@ -401,12 +402,12 @@ class MailComponent_TestCase(unittest.TestCase):
 
     def test_feed_digest_mail(self):
         def mock_get_mail_summary(index):
-            return [("body1", "from1@test.com"), \
+            return [("body1", "from1@test.com"),
                     ("body2", "from2@test.com")][index]
         model.db_connect()
-        account11 = MockIMAPAccount(user_jid = "test1@test.com", \
-                                    name = "account11", \
-                                    jid = "account11@jmc.test.com")
+        account11 = MockIMAPAccount(user_jid="test1@test.com",
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
         account11._action = MailAccount.DIGEST
         account11.status = account.ONLINE
         account11.first_check = False
@@ -422,10 +423,10 @@ class MailComponent_TestCase(unittest.TestCase):
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
         self.assertEquals(len(result), 1)
-        self.assertEquals(result[0][1], \
+        self.assertEquals(result[0][1],
                           account11.default_lang_class.new_digest_subject \
                           % (2))
-        self.assertEquals(result[0][2], \
+        self.assertEquals(result[0][2],
                           "body1\n----------------------------------\nbody2\n----------------------------------\n")
         model.db_disconnect()
 
@@ -845,10 +846,11 @@ class MailHandler_TestCase(unittest.TestCase):
             accounts = self.handler.filter(message, None)
             model.db_disconnect()
         except NoAccountError, e:
-            model.db_disconnect()
-            self.assertNotEquals(e, None)
-        else:
-            self.fail("No exception 'NoAccountError' catched")
+           self.assertNotEquals(e, None)
+           return
+        finally:
+           model.db_disconnect()
+        self.fail("No exception 'NoAccountError' catched")
 
 class MailPresenceHandler_TestCase(unittest.TestCase):
     def setUp(self):
