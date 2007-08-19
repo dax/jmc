@@ -23,10 +23,9 @@
 import logging
 import re
 
-from sqlobject.sqlbuilder import AND
-
 from pyxmpp.message import Message
 
+from jcl.model import account
 from jmc.jabber import MailHandler
 from jmc.model.account import SMTPAccount
 
@@ -64,17 +63,17 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
             "jmc.jabber.component.RootSendMailMessageHandler")
 
     def filter(self, stanza, lang_class):
-        name = stanza.get_to().node
         bare_from_jid = unicode(stanza.get_from().bare())
-        accounts = SMTPAccount.select(\
-            AND(SMTPAccount.q.default_account == True,
-                SMTPAccount.q.user_jid == bare_from_jid))
+        accounts = account.get_accounts(\
+            bare_from_jid,
+            account_class=SMTPAccount,
+            filter=(SMTPAccount.q.default_account == True))
         if accounts.count() != 1:
             self.__logger.error("No default account found for user " +
                                 str(bare_from_jid))
         if accounts.count() == 0:
-            accounts = SMTPAccount.select(\
-                SMTPAccount.q.user_jid == bare_from_jid)
+            accounts = account.get_accounts(bare_from_jid,
+                                            SMTPAccount)
         return accounts
 
     def handle(self, stanza, lang_class, data):

@@ -30,7 +30,6 @@ class Lang(jcl.lang.Lang):
         component_name = u"Jabber Mail Component"
 
         field_login = u"Login"
-        field_password = u"Password"
         field_host = u"Host"
         field_port = u"Port"
         field_ssl = u"Secure connection (SSL)"
@@ -79,7 +78,6 @@ class Lang(jcl.lang.Lang):
                          u"serveur email."
 
         field_login = u"Nom d'utilisateur"
-        field_password = u"Mot de passe"
         field_host = u"Adresse du serveur email"
         field_port = u"Port du serveur email"
         field_ssl = u"Connexion sécurisé (SSL)"

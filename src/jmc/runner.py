@@ -21,7 +21,6 @@
 ##
 
 from jcl.runner import JCLRunner
-from jcl.model.account import LegacyJID
 
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
 from jmc.jabber.component import MailComponent
@@ -43,14 +42,14 @@ class JMCRunner(JCLRunner):
         self.service_jid = "jmc.localhost"
         self.db_url = "sqlite:///var/spool/jabber/jmc.db"
         self.pid_file = "/var/run/jabber/jmc.pid"
-        
+        self.config_file = "jmc.conf"
+
     def setup_db(self):
         JCLRunner.setup_db(self)
         MailAccount.createTable(ifNotExists=True)
         IMAPAccount.createTable(ifNotExists=True)
         POP3Account.createTable(ifNotExists=True)
         SMTPAccount.createTable(ifNotExists=True)
-        LegacyJID.createTable(ifNotExists=True)
         
     def run(self):
         def run_func():

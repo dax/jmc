@@ -24,22 +24,19 @@ import unittest
 import sys
 import os
 
-from sqlobject import *
-
 from jcl.tests.runner import JCLRunner_TestCase
 
 import jcl.model as model
-from jcl.model import account
-from jcl.model.account import Account, PresenceAccount
+from jcl.model.account import Account, PresenceAccount, User, LegacyJID
 
 import jmc
 from jmc.runner import JMCRunner
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, SMTPAccount
 
 if sys.platform == "win32":
-   DB_PATH = "/c|/temp/test.db"
+    DB_PATH = "/c|/temp/test.db"
 else:
-   DB_PATH = "/tmp/test.db"
+    DB_PATH = "/tmp/test.db"
 DB_URL = "sqlite://" + DB_PATH# + "?debug=1&debugThreading=1"
 
 class JMCRunner_TestCase(JCLRunner_TestCase):
@@ -52,7 +49,7 @@ class JMCRunner_TestCase(JCLRunner_TestCase):
         
     def test_configure_default(self):
         self.runner.configure()
-        self.assertEquals(self.runner.config_file, None)
+        self.assertEquals(self.runner.config_file, "jmc.conf")
         self.assertEquals(self.runner.server, "localhost")
         self.assertEquals(self.runner.port, 5347)
         self.assertEquals(self.runner.secret, "secret")
@@ -135,6 +132,8 @@ class JMCRunner_TestCase(JCLRunner_TestCase):
         # dropTable should succeed because tables should exist
         Account.dropTable()
         PresenceAccount.dropTable()
+        User.dropTable()
+        LegacyJID.dropTable()
         MailAccount.dropTable()
         IMAPAccount.dropTable()
         POP3Account.dropTable()
@@ -144,9 +143,9 @@ class JMCRunner_TestCase(JCLRunner_TestCase):
         self.assertFalse(os.access("/tmp/jmc.pid", os.F_OK))
         
 def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(JMCRunner_TestCase, 'test'))
-    return suite
+    test_suite = unittest.TestSuite()
+    test_suite.addTest(unittest.makeSuite(JMCRunner_TestCase, 'test'))
+    return test_suite
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

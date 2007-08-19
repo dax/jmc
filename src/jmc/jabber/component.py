@@ -26,6 +26,7 @@ import logging
 from pyxmpp.jid import JID
 
 import jcl.jabber as jabber
+from jcl.model import account
 from jcl.model.account import PresenceAccount
 from jcl.jabber.disco import RootDiscoGetInfoHandler
 from jcl.jabber.feeder import FeederComponent, Feeder, MessageSender, \
@@ -48,6 +49,8 @@ class MailComponent(FeederComponent):
                  secret,
                  server,
                  port,
+                 config,
+                 config_file,
                  lang=Lang()):
         """Use FeederComponent behavior and setup feeder and sender
         attributes.
@@ -57,6 +60,8 @@ class MailComponent(FeederComponent):
                                  secret,
                                  server,
                                  port,
+                                 config,
+                                 config_file,
                                  lang=lang)
         self.handler = MailFeederHandler(MailFeeder(self), MailSender(self))
         self.account_manager.account_classes = (IMAPAccount,
@@ -213,5 +218,5 @@ class MailFeederHandler(FeederHandler):
     def filter(self, stanza, lang_class):
         """Return only email account type to check mail from
         """
-        accounts = MailAccount.select(orderBy="user_jid")
+        accounts = account.get_all_accounts(account_class=MailAccount)
         return accounts

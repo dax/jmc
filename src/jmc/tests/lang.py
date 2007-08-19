@@ -77,7 +77,6 @@ class Language_TestCase(jcl.tests.lang.Language_TestCase):
         jcl.tests.lang.Language_TestCase.test_strings(self)
 
         self.assertNotEquals(self.lang_class.field_login, None)
-        self.assertNotEquals(self.lang_class.field_password, None)
         self.assertNotEquals(self.lang_class.field_host, None)
         self.assertNotEquals(self.lang_class.field_port, None)
         self.assertNotEquals(self.lang_class.field_ssl, None)

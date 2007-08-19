@@ -578,18 +578,16 @@ class SMTPAccount(Account):
             return password
 
         def default_account_default_func(bare_from_jid):
-            accounts = SMTPAccount.select(\
-                AND(SMTPAccount.q.default_account == True,
-                    SMTPAccount.q.user_jid == bare_from_jid))
+            accounts = account.get_accounts(bare_from_jid, SMTPAccount,
+                                            (SMTPAccount.q.default_account == True))
             if accounts.count() == 0:
                 return True
             else:
                 return False
 
         def default_account_post_func(value, default_func, bare_from_jid):
-            accounts = SMTPAccount.select(\
-                AND(SMTPAccount.q.default_account == True,
-                    SMTPAccount.q.user_jid == bare_from_jid))
+            accounts = account.get_accounts(bare_from_jid, SMTPAccount,
+                                            (SMTPAccount.q.default_account == True))
             already_default_account = (accounts.count() != 0)
             if isinstance(value, str):
                 value = value.lower()

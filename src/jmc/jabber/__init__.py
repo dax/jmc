@@ -4,7 +4,7 @@ __revision__ = ""
 import re
 
 from jcl.jabber import Handler
-from jcl.model.account import Account
+import jcl.model.account as account
 
 from jmc.model.account import NoAccountError, SMTPAccount
 
@@ -20,7 +20,7 @@ class MailHandler(Handler):
         node = stanza.get_to().node
         if node is not None and self.dest_jid_regexp.match(node):
             bare_from_jid = unicode(stanza.get_from().bare())
-            accounts = Account.select(Account.q.user_jid == bare_from_jid)
+            accounts = account.get_accounts(bare_from_jid, SMTPAccount)
             if accounts.count() == 0:
                 raise NoAccountError()
             else:
