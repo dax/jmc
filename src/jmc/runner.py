@@ -57,10 +57,12 @@ class JMCRunner(JCLRunner):
                                       secret=self.secret,
                                       server=self.server,
                                       port=self.port,
-                                      lang=Lang(self.language))
+                                      lang=Lang(self.language),
+                                      config=self.config,
+                                      config_file=self.config_file)
             MailAccount.default_encoding = self.mail_default_encoding
             component.check_interval = self.check_interval
             component.disco_identity.set_category("gateway")
             component.disco_identity.set_type("smtp")
-            component.run()
+            return component.run()
         self._run(run_func)
