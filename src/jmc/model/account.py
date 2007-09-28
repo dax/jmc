@@ -157,8 +157,9 @@ class MailAccount(PresenceAccount):
     password = StringCol(default=None)
     host = StringCol(default="localhost")
     port = IntCol(default=110)
-    ssl = BoolCol(default=False)
-    interval = IntCol(default=5)
+    # explicitly set dbName to avoid MySQL reserved words
+    ssl = BoolCol(default=False, dbName="_ssl")
+    interval = IntCol(default=5, dbName="_interval")
     store_password = BoolCol(default=True)
     live_email_only = BoolCol(default=False)
 
