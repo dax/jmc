@@ -338,7 +338,7 @@ class MailAccount(PresenceAccount):
     def format_message_summary(self, email_msg):
         return self.format_message(email_msg, False)
 
-    def get_status_msg(self):
+    def get_default_status_msg(self, lang_class):
 	return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
 	    unicode(self.port)
 
@@ -362,6 +362,9 @@ class MailAccount(PresenceAccount):
 
     def is_mail_list_valid(self, mail_list):
         return (mail_list and mail_list != [] and mail_list[0] != '')
+
+    def get_type(self):
+        raise NotImplementedError
 
     # Does not modify server state but just internal JMC state
     def mark_all_as_read(self):
