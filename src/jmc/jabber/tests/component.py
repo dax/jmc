@@ -31,6 +31,7 @@ from sqlobject.dbconnection import TheURIOpener
 
 from pyxmpp.presence import Presence
 from pyxmpp.message import Message
+from pyxmpp.iq import Iq
 
 from jcl.tests import JCLTestCase
 import jcl.model as model
@@ -143,9 +144,16 @@ class MockIMAPAccount(MockMailAccount, IMAPAccount):
         IMAPAccount._init(self, *args, **kw)
         MockMailAccount._init(self)
 
+    def ls_dir(self, imap_dir):
+        if imap_dir == "INBOX":
+            return ["dir1", "dir2"]
+        elif imap_dir == "INBOX/dir1":
+            return ["subdir1", "subdir2"]
+        return []
+
 class MockPOP3Account(MockMailAccount, POP3Account):
     def _init(self, *args, **kw):
-        IMAPAccount._init(self, *args, **kw)
+        POP3Account._init(self, *args, **kw)
         MockMailAccount._init(self)
 
 class MockSMTPAccount(object):
@@ -513,6 +521,286 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
         model.db_disconnect()
+
+    def test_disco_get_info_imap_node(self):
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        account11 = MockIMAPAccount(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="jcl.test.com/IMAP")
+        disco_info = self.comp.disco_get_info("IMAP", info_query)
+        self.assertEquals(len(self.comp.stream.sent), 0)
+        self.assertTrue(disco_info.has_feature("jabber:iq:register"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#info"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#items"))
+
+    def test_disco_get_info_imap_node_no_account(self):
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        account11 = MockPOP3Account(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        account21 = MockIMAPAccount(user=User(jid="user2@test.com"),
+                                    name="account21",
+                                    jid="account21@jmc.test.com")
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="jcl.test.com/IMAP")
+        disco_info = self.comp.disco_get_info("IMAP", info_query)
+        self.assertEquals(len(self.comp.stream.sent), 0)
+        self.assertTrue(disco_info.has_feature("jabber:iq:register"))
+        self.assertFalse(disco_info.has_feature("http://jabber.org/protocol/disco#info"))
+        self.assertFalse(disco_info.has_feature("http://jabber.org/protocol/disco#items"))
+
+    def test_disco_get_info_imap_long_node(self):
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        account11 = MockIMAPAccount(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="account11@jcl.test.com/IMAP")
+        disco_info = self.comp.disco_get_info("IMAP/account11",
+                                              info_query)
+        self.assertEquals(len(self.comp.stream.sent), 0)
+        self.assertTrue(disco_info.has_feature("jabber:iq:register"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#info"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#items"))
+
+    def test_disco_get_info_not_imap_long_node(self):
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        account11 = MockPOP3Account(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="account11@jcl.test.com/POP3")
+        disco_info = self.comp.disco_get_info("POP3/account11",
+                                              info_query)
+        self.assertEquals(len(self.comp.stream.sent), 0)
+        self.assertTrue(disco_info.has_feature("jabber:iq:register"))
+        self.assertFalse(disco_info.has_feature("http://jabber.org/protocol/disco#info"))
+        self.assertFalse(disco_info.has_feature("http://jabber.org/protocol/disco#items"))
+
+    def test_disco_get_info_imap_dir_node(self):
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        account11 = MockIMAPAccount(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        account11.mailbox = "INBOX/dir1"
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="account11@jcl.test.com/IMAP/INBOX")
+        disco_info = self.comp.disco_get_info("IMAP/account11/INBOX",
+                                              info_query)
+        self.assertEquals(len(self.comp.stream.sent), 0)
+        self.assertTrue(disco_info.has_feature("jabber:iq:register"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#info"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#items"))
+
+    def test_disco_get_info_imap_dir_node_already_registered(self):
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        account11 = MockIMAPAccount(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        account11.mailbox = "INBOX"
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="account11@jcl.test.com/IMAP/INBOX")
+        disco_info = self.comp.disco_get_info("IMAP/account11/INBOX",
+                                              info_query)
+        self.assertEquals(len(self.comp.stream.sent), 0)
+        self.assertTrue(disco_info.has_feature("jabber:iq:register"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#info"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#items"))
+
+    def test_disco_get_info_imap_dir_node_last_subdir(self):
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        account11 = MockIMAPAccount(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        account11.mailbox = "INBOX/dir1/subdir1"
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="account11@jcl.test.com/IMAP/INBOX/dir1/subdir1")
+        disco_info = self.comp.disco_get_info("IMAP/account11/INBOX/dir1/subdir1",
+                                              info_query)
+        self.assertEquals(len(self.comp.stream.sent), 0)
+        self.assertTrue(disco_info.has_feature("jabber:iq:register"))
+        self.assertTrue(disco_info.has_feature("http://jabber.org/protocol/disco#info"))
+        self.assertFalse(disco_info.has_feature("http://jabber.org/protocol/disco#items"))
+
+    def test_disco_get_items_base_imap_account(self):
+        account11 = MockIMAPAccount(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jcl.test.com")
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="account11@jcl.test.com/IMAP")
+        disco_items = self.comp.disco_get_items("IMAP/account11", info_query)
+        self.assertEquals(len(disco_items.get_items()), 1)
+        disco_item = disco_items.get_items()[0]
+        self.assertEquals(unicode(disco_item.get_jid()), unicode(account11.jid)
+                          + "/IMAP/INBOX")
+        self.assertEquals(disco_item.get_node(), "IMAP/" + account11.name + "/INBOX")
+        self.assertEquals(disco_item.get_name(), "INBOX")
+
+    def test_disco_get_items_inbox_imap_account(self):
+        account11 = MockIMAPAccount(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jcl.test.com")
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="account11@jcl.test.com/IMAP/INBOX")
+        disco_items = self.comp.disco_get_items("IMAP/account11/INBOX", info_query)
+        self.assertEquals(len(disco_items.get_items()), 2)
+        disco_item = disco_items.get_items()[0]
+        self.assertEquals(unicode(disco_item.get_jid()), unicode(account11.jid)
+                          + "/IMAP/INBOX/dir1")
+        self.assertEquals(disco_item.get_node(), "IMAP/" + account11.name + "/INBOX"
+                          + "/dir1")
+        self.assertEquals(disco_item.get_name(), "dir1")
+        disco_item = disco_items.get_items()[1]
+        self.assertEquals(unicode(disco_item.get_jid()), unicode(account11.jid)
+                          + "/IMAP/INBOX/dir2")
+        self.assertEquals(disco_item.get_node(), "IMAP/" + account11.name + "/INBOX"
+                          + "/dir2")
+        self.assertEquals(disco_item.get_name(), "dir2")
+
+    def test_disco_get_items_subdir_imap_account(self):
+        account11 = MockIMAPAccount(user=User(jid="user1@test.com"),
+                                    name="account11",
+                                    jid="account11@jcl.test.com")
+        info_query = Iq(stanza_type="get",
+                        from_jid="user1@test.com",
+                        to_jid="account11@jcl.test.com/IMAP")
+        disco_items = self.comp.disco_get_items("IMAP/account11/INBOX/dir1", info_query)
+        self.assertEquals(len(disco_items.get_items()), 2)
+        disco_item = disco_items.get_items()[0]
+        self.assertEquals(unicode(disco_item.get_jid()), unicode(account11.jid)
+                          + "/IMAP/INBOX/dir1/subdir1")
+        self.assertEquals(disco_item.get_node(), "IMAP/" + account11.name + "/INBOX"
+                          + "/dir1/subdir1")
+        self.assertEquals(disco_item.get_name(), "subdir1")
+        disco_item = disco_items.get_items()[1]
+        self.assertEquals(unicode(disco_item.get_jid()), unicode(account11.jid)
+                          + "/IMAP/INBOX/dir1/subdir2")
+        self.assertEquals(disco_item.get_node(), "IMAP/" + account11.name + "/INBOX"
+                          + "/dir1/subdir2")
+        self.assertEquals(disco_item.get_name(), "subdir2")
+
+    def test_account_get_register_imap_dir_already_registered(self):
+        model.db_connect()
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        user1 = User(jid="user1@test.com")
+        account1 = MockIMAPAccount(user=user1,
+                                   name="account1",
+                                   jid="account1@jcl.test.com")
+        account1.mailbox = "INBOX"
+        account11 = MockIMAPAccount(user=user1,
+                                    name="account11",
+                                    jid="account11@jcl.test.com")
+        account11.mailbox = "INBOX/dir1"
+        account21 = MockIMAPAccount(user=User(jid="user2@test.com"),
+                                    name="account21",
+                                    jid="account21@jcl.test.com")
+        model.db_disconnect()
+        self.comp.handle_get_register(Iq(stanza_type="get",
+                                         from_jid="user1@test.com",
+                                         to_jid="account1@jcl.test.com/IMAP/INBOX/dir1"))
+        self.assertEquals(len(self.comp.stream.sent), 1)
+        iq_sent = self.comp.stream.sent[0]
+        self.assertEquals(iq_sent.get_to(), "user1@test.com")
+        titles = iq_sent.xpath_eval("jir:query/jxd:x/jxd:title",
+                                    {"jir" : "jabber:iq:register",
+                                     "jxd" : "jabber:x:data"})
+        self.assertEquals(len(titles), 1)
+        self.assertEquals(titles[0].content,
+                          Lang.en.register_title)
+        instructions = iq_sent.xpath_eval("jir:query/jxd:x/jxd:instructions",
+                                          {"jir" : "jabber:iq:register",
+                                           "jxd" : "jabber:x:data"})
+        self.assertEquals(len(instructions), 1)
+        self.assertEquals(instructions[0].content,
+                          Lang.en.register_instructions)
+        fields = iq_sent.xpath_eval("jir:query/jxd:x/jxd:field",
+                                    {"jir" : "jabber:iq:register",
+                                     "jxd" : "jabber:x:data"})
+        self.assertEquals(len(fields), 16)
+        field = fields[0]
+        self.assertEquals(field.prop("type"), "hidden")
+        self.assertEquals(field.prop("var"), "name")
+        self.assertEquals(field.prop("label"), Lang.en.account_name)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "account11")
+        self.assertEquals(field.children.next.name, "required")
+        field = fields[15]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "mailbox")
+        self.assertEquals(field.prop("label"), Lang.en.field_mailbox)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "INBOX/dir1")
+
+    def test_account_get_register_imap_dir_new(self):
+        model.db_connect()
+        self.comp.stream = MockStream()
+        self.comp.stream_class = MockStream
+        user1 = User(jid="user1@test.com")
+        account1 = MockIMAPAccount(user=user1,
+                                   name="account1",
+                                   jid="account1@jcl.test.com")
+        account1.maildir = "INBOX"
+        account11 = MockIMAPAccount(user=user1,
+                                   name="account11",
+                                   jid="account11@jcl.test.com")
+        account11.maildir = "INBOX/dir1"
+        account21 = MockIMAPAccount(user=User(jid="user2@test.com"),
+                                    name="account21",
+                                    jid="account21@jcl.test.com")
+        model.db_disconnect()
+        self.comp.handle_get_register(Iq(stanza_type="get",
+                                         from_jid="user1@test.com",
+                                         to_jid="account1@jcl.test.com/IMAP/INBOX/dir1/subdir1"))
+        self.assertEquals(len(self.comp.stream.sent), 1)
+        iq_sent = self.comp.stream.sent[0]
+        self.assertEquals(iq_sent.get_to(), "user1@test.com")
+        titles = iq_sent.xpath_eval("jir:query/jxd:x/jxd:title",
+                                    {"jir" : "jabber:iq:register",
+                                     "jxd" : "jabber:x:data"})
+        self.assertEquals(len(titles), 1)
+        self.assertEquals(titles[0].content,
+                          Lang.en.register_title)
+        instructions = iq_sent.xpath_eval("jir:query/jxd:x/jxd:instructions",
+                                          {"jir" : "jabber:iq:register",
+                                           "jxd" : "jabber:x:data"})
+        self.assertEquals(len(instructions), 1)
+        self.assertEquals(instructions[0].content,
+                          Lang.en.register_instructions)
+        fields = iq_sent.xpath_eval("jir:query/jxd:x/jxd:field",
+                                    {"jir" : "jabber:iq:register",
+                                     "jxd" : "jabber:x:data"})
+        self.assertEquals(len(fields), 16)
+        field = fields[0]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "name")
+        self.assertEquals(field.prop("label"), Lang.en.account_name)
+        self.assertEquals(field.children.name, "required")
+        self.assertEquals(field.children.next, None)
+        field = fields[15]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "mailbox")
+        self.assertEquals(field.prop("label"), Lang.en.field_mailbox)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "INBOX/dir1/subdir1")
 
 class SendMailMessageHandler_TestCase(unittest.TestCase):
     def setUp(self):
