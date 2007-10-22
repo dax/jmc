@@ -110,20 +110,17 @@ class IMAPAccountDiscoGetItemsHandler(DiscoHandler):
         if account_class is not None and _account is not None:
             disco_items = DiscoItems()
             if imap_dir is None:
-                # TODO : test if INBOX really exist, is it possible to retrieve default dir from IMAP ?
+                imap_dir = ""
+            subdirs = _account.ls_dir(imap_dir)
+            if imap_dir != "":
+                imap_dir += "/"
+            for subdir in subdirs:
                 DiscoItem(disco_items,
-                          JID(unicode(_account.jid) + "/" + account_type
-                              + "/INBOX"),
-                          account_type + "/" + account_name + "/INBOX",
-                          "INBOX")
-            else:
-                for subdir in _account.ls_dir(imap_dir):
-                    DiscoItem(disco_items,
-                              JID(unicode(_account.jid) + "/" + account_type + \
-                                  "/" + imap_dir + "/" + subdir),
-                              account_type + "/" + account_name + "/" + imap_dir
-                              + "/" + subdir,
-                              subdir)
+                          JID(unicode(_account.jid) + "/" + account_type + \
+                              "/" + imap_dir + subdir),
+                          account_type + "/" + account_name + "/" + imap_dir
+                          + subdir,
+                          subdir)
             return [disco_items]
         return []
-# TODO : implement get_info on imap_Dir
+

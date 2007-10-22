@@ -145,7 +145,9 @@ class MockIMAPAccount(MockMailAccount, IMAPAccount):
         MockMailAccount._init(self)
 
     def ls_dir(self, imap_dir):
-        if imap_dir == "INBOX":
+        if imap_dir == "":
+            return ["INBOX"]
+        elif imap_dir == "INBOX":
             return ["dir1", "dir2"]
         elif imap_dir == "INBOX/dir1":
             return ["subdir1", "subdir2"]

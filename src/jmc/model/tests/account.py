@@ -314,6 +314,48 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                                                              (u"From : None\nSubject : None\n\nbody text\r\n\n", \
                                                               u"None")))
 
+    test_build_folder_cache = make_test(\
+        [lambda data: '* LIST () "." "INBOX"\r\n' + \
+         '* LIST () "." "INBOX.dir1"\r\n' + \
+         '* LIST () "." "INBOX.dir1.subdir1"\r\n' + \
+         '* LIST () "." "INBOX.dir1.subdir2"\r\n' + \
+         '* LIST () "." "INBOX.dir2"\r\n' + \
+         data.split()[0] + ' OK LIST completed\r\n'],
+        ["^[^ ]* LIST \"\" \*"],
+        lambda self: self.assertEquals(self.imap_account._build_folder_cache(),
+                                       {"INBOX":
+                                        {"dir1":
+                                         {"subdir1": {},
+                                          "subdir2": {}},
+                                         "dir2": {}}}))
+
+    def test_ls_dir_base(self):
+        self.test_build_folder_cache()
+        self.assertEquals(self.imap_account.ls_dir(""),
+                          ["INBOX"])
+
+    def test_ls_dir_subdir(self):
+        self.test_build_folder_cache()
+        result = self.imap_account.ls_dir("INBOX")
+        result.sort()
+        self.assertEquals(result,
+                          ["dir1", "dir2"])
+
+    def test_ls_dir_subsubdir_delim1(self):
+        self.test_build_folder_cache()
+        self.imap_account.default_delimiter = "."
+        result = self.imap_account.ls_dir("INBOX/dir1")
+        result.sort()
+        self.assertEquals(result,
+                          ["subdir1", "subdir2"])
+
+    def test_ls_dir_subsubdir_delim2(self):
+        self.test_build_folder_cache()
+        result = self.imap_account.ls_dir("INBOX/dir1")
+        result.sort()
+        self.assertEquals(result,
+                          ["subdir1", "subdir2"])
+
 class SMTPAccount_TestCase(Account_TestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, ExampleAccount, User,

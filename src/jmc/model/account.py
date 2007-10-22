@@ -21,6 +21,7 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
+import re
 import sys
 import logging
 import email
@@ -394,6 +395,9 @@ class IMAPAccount(MailAccount):
     def _init(self, *args, **kw):
 	MailAccount._init(self, *args, **kw)
         self.__logger = logging.getLogger("jmc.IMAPConnection")
+        self._regexp_list = re.compile("\((.*)\) \"(.)\" \"?([^\"]*)\"?$")
+        self.__cached_folders = {}
+        self.default_delimiter = "."
 
     def get_type(self):
 	if self.ssl:
@@ -404,15 +408,15 @@ class IMAPAccount(MailAccount):
 	return MailAccount.get_status(self) + "/" + self.mailbox
 
     def connect(self):
-	self.__logger.debug("Connecting to IMAP server "
+        self.__logger.debug("Connecting to IMAP server "
                             + self.login + "@" + self.host + ":" + str(self.port)
                             + " (" + self.mailbox + "). SSL="
                             + str(self.ssl))
-	if self.ssl:
-	    self.connection = MYIMAP4_SSL(self.host, self.port)
-	else:
-	    self.connection = MYIMAP4(self.host, self.port)
-	self.connection.login(self.login, self.password)
+        if self.ssl:
+            self.connection = MYIMAP4_SSL(self.host, self.port)
+        else:
+            self.connection = MYIMAP4(self.host, self.port)
+        self.connection.login(self.login, self.password)
         self.connected = True
 
     def disconnect(self):
@@ -457,6 +461,48 @@ class IMAPAccount(MailAccount):
         self.get_mail_list()
 
     type = property(get_type)
+
+    def _add_full_path_to_cache(self, folder_array):
+        current_dir = self.__cached_folders
+        for folder in folder_array:
+            if not current_dir.has_key(folder):
+                current_dir[folder] = {}
+            current_dir = current_dir[folder]
+
+    def _build_folder_cache(self):
+        if self.connected:
+            typ, data = self.connection.list()
+            if typ == 'OK':
+                for line in data:
+                    match = self._regexp_list.match(line)
+                    if match is not None:
+                        self.default_delimiter = match.group(2)
+                        subdir = match.group(3).split(self.default_delimiter)
+                        self._add_full_path_to_cache(subdir)
+        return self.__cached_folders
+
+    def ls_dir(self, imap_dir):
+        """
+        imap_dir: IMAP directory to list. subdirs must be delimited by '/'
+        """
+        # TODO : implement with cache (ie. only one connection)
+        self.__logger.debug("Listing IMAP dir '" + str(imap_dir) + "'")
+        if self.__cached_folders == {}:
+            if not self.connected:
+                self.connect()
+            self._build_folder_cache()
+            self.disconnect()
+        if imap_dir == "":
+            folder_array = []
+        else:
+            folder_array = imap_dir.split('/')
+        current_folder = self.__cached_folders
+        for folder in folder_array:
+            if not current_folder.has_key(folder):
+                return []
+            else:
+                current_folder = current_folder[folder]
+        return current_folder.keys()
 
 class POP3Account(MailAccount):
     nb_mail = IntCol(default=0)
