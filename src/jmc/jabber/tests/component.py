@@ -712,6 +712,20 @@ class MailComponent_TestCase(JCLTestCase):
                                     name="account11",
                                     jid="account11@jcl.test.com")
         account11.mailbox = "INBOX/dir1"
+        account11.password = "pass1"
+        account11.port = 993
+        account11.host = "host1"
+        account11.login = "login1"
+        account11.ssl = True
+        account11.interval = 1
+        account11.store_password = False
+        account11.live_email_only = True
+        account11.chat_action = PresenceAccount.DO_NOTHING
+        account11.online_action = PresenceAccount.DO_NOTHING
+        account11.away_action = PresenceAccount.DO_NOTHING
+        account11.xa_action = PresenceAccount.DO_NOTHING
+        account11.dnd_action = PresenceAccount.DO_NOTHING
+        account11.offline_action = PresenceAccount.DO_NOTHING        
         account21 = MockIMAPAccount(user=User(jid="user2@test.com"),
                                     name="account21",
                                     jid="account21@jcl.test.com")
@@ -745,6 +759,92 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(field.children.name, "value")
         self.assertEquals(field.children.content, "account11")
         self.assertEquals(field.children.next.name, "required")
+        field = fields[1]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "chat_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_chat_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[2]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "online_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_online_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[3]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "away_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_away_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[4]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "xa_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_xa_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[5]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "dnd_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_dnd_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[6]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "offline_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_offline_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[7]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "login")
+        self.assertEquals(field.prop("label"), Lang.en.field_login)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "login1")
+        self.assertEquals(field.children.next.name, "required")
+        field = fields[8]
+        self.assertEquals(field.prop("type"), "text-private")
+        self.assertEquals(field.prop("var"), "password")
+        self.assertEquals(field.prop("label"), Lang.en.field_password)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "pass1")
+        field = fields[9]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "host")
+        self.assertEquals(field.prop("label"), Lang.en.field_host)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "host1")
+        self.assertEquals(field.children.next.name, "required")
+        field = fields[10]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "port")
+        self.assertEquals(field.prop("label"), Lang.en.field_port)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "993")
+        field = fields[11]
+        self.assertEquals(field.prop("type"), "boolean")
+        self.assertEquals(field.prop("var"), "ssl")
+        self.assertEquals(field.prop("label"), Lang.en.field_ssl)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "1")
+        field = fields[12]
+        self.assertEquals(field.prop("type"), "boolean")
+        self.assertEquals(field.prop("var"), "store_password")
+        self.assertEquals(field.prop("label"), Lang.en.field_store_password)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[13]
+        self.assertEquals(field.prop("type"), "boolean")
+        self.assertEquals(field.prop("var"), "live_email_only")
+        self.assertEquals(field.prop("label"), Lang.en.field_live_email_only)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "1")
+        field = fields[14]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "interval")
+        self.assertEquals(field.prop("label"), Lang.en.field_interval)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "1")
         field = fields[15]
         self.assertEquals(field.prop("type"), "text-single")
         self.assertEquals(field.prop("var"), "mailbox")
@@ -761,9 +861,23 @@ class MailComponent_TestCase(JCLTestCase):
                                    name="account1",
                                    jid="account1@jcl.test.com")
         account1.maildir = "INBOX"
+        account1.password = "pass1"
+        account1.port = 993
+        account1.host = "host1"
+        account1.login = "login1"
+        account1.ssl = True
+        account1.interval = 1
+        account1.store_password = False
+        account1.live_email_only = True
+        account1.chat_action = PresenceAccount.DO_NOTHING
+        account1.online_action = PresenceAccount.DO_NOTHING
+        account1.away_action = PresenceAccount.DO_NOTHING
+        account1.xa_action = PresenceAccount.DO_NOTHING
+        account1.dnd_action = PresenceAccount.DO_NOTHING
+        account1.offline_action = PresenceAccount.DO_NOTHING        
         account11 = MockIMAPAccount(user=user1,
-                                   name="account11",
-                                   jid="account11@jcl.test.com")
+                                    name="account11",
+                                    jid="account11@jcl.test.com")
         account11.maildir = "INBOX/dir1"
         account21 = MockIMAPAccount(user=User(jid="user2@test.com"),
                                     name="account21",
@@ -797,6 +911,92 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(field.prop("label"), Lang.en.account_name)
         self.assertEquals(field.children.name, "required")
         self.assertEquals(field.children.next, None)
+        field = fields[1]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "chat_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_chat_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[2]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "online_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_online_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[3]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "away_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_away_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[4]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "xa_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_xa_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[5]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "dnd_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_dnd_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[6]
+        self.assertEquals(field.prop("type"), "list-single")
+        self.assertEquals(field.prop("var"), "offline_action")
+        self.assertEquals(field.prop("label"), Lang.en.field_offline_action)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[7]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "login")
+        self.assertEquals(field.prop("label"), Lang.en.field_login)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "login1")
+        self.assertEquals(field.children.next.name, "required")
+        field = fields[8]
+        self.assertEquals(field.prop("type"), "text-private")
+        self.assertEquals(field.prop("var"), "password")
+        self.assertEquals(field.prop("label"), Lang.en.field_password)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "pass1")
+        field = fields[9]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "host")
+        self.assertEquals(field.prop("label"), Lang.en.field_host)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "host1")
+        self.assertEquals(field.children.next.name, "required")
+        field = fields[10]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "port")
+        self.assertEquals(field.prop("label"), Lang.en.field_port)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "993")
+        field = fields[11]
+        self.assertEquals(field.prop("type"), "boolean")
+        self.assertEquals(field.prop("var"), "ssl")
+        self.assertEquals(field.prop("label"), Lang.en.field_ssl)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "1")
+        field = fields[12]
+        self.assertEquals(field.prop("type"), "boolean")
+        self.assertEquals(field.prop("var"), "store_password")
+        self.assertEquals(field.prop("label"), Lang.en.field_store_password)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "0")
+        field = fields[13]
+        self.assertEquals(field.prop("type"), "boolean")
+        self.assertEquals(field.prop("var"), "live_email_only")
+        self.assertEquals(field.prop("label"), Lang.en.field_live_email_only)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "1")
+        field = fields[14]
+        self.assertEquals(field.prop("type"), "text-single")
+        self.assertEquals(field.prop("var"), "interval")
+        self.assertEquals(field.prop("label"), Lang.en.field_interval)
+        self.assertEquals(field.children.name, "value")
+        self.assertEquals(field.children.content, "1")
         field = fields[15]
         self.assertEquals(field.prop("type"), "text-single")
         self.assertEquals(field.prop("var"), "mailbox")

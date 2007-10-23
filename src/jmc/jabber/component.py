@@ -79,15 +79,23 @@ class MailAccountManager(AccountManager):
                 account_class=IMAPAccount)
             query = info_query.new_query("jabber:iq:register")
             if _account is not None:
-                self.generate_registration_form_init(lang_class,
-                                                     _account).as_xml(query)
+                result = self.generate_registration_form_init(lang_class,
+                                                              _account)
             else:
-                result = self.generate_registration_form(\
-                    lang_class,
-                    IMAPAccount,
-                    bare_from_jid)
+                _account = account.get_account(bare_from_jid, name,
+                                               IMAPAccount)
+                if _account is not None:
+                    result = self.generate_registration_form_init(lang_class,
+                                                                  _account)
+                    result["name"].value = None
+                    result["name"].type = "text-single"
+                else:
+                    result = self.generate_registration_form(\
+                        lang_class,
+                        IMAPAccount,
+                        bare_from_jid)
                 result["mailbox"].value = imap_dir
-                result.as_xml(query)
+            result.as_xml(query)
             return [info_query]
 
 class MailComponent(FeederComponent):
