@@ -72,6 +72,19 @@ class Lang(jcl.lang.Lang):
         send_mail_ok_subject = u"Email sent"
         send_mail_ok_body = u"Your email was sent to %s."
 
+        help_message_body = u"To send an email with JMC, you have the choice" \
+            + " between:\n" \
+            + " - Send a message to the JMC gateway: the subject of the" \
+            + " email will be the subject of the Jabber message or the " \
+            + " subject specified with the following syntax in the Jabber " \
+            + " message body:\n" \
+            + "\tSubject: Your subject\n" \
+            + " To specify email receivers, you need to add a line in the " \
+            + " Jabber message body with the following syntax:\n" \
+            + "\tTo: to_email@test.com\n\n" \
+            + " - Add a contact to your roster, with JID to_email\%test.com@jmc.test.com"\
+            + ", where to_email@test.com is the receiver's email address."
+
     class fr(jcl.lang.Lang.fr):
         component_name = u"Jabber Mail Component"
         register_title = u"Enregistrement d'une nouvelle connexion à un " \
@@ -122,6 +135,19 @@ class Lang(jcl.lang.Lang):
             u"destinataire :\nTO: user@test.com\n"
         send_mail_ok_subject = u"Email envoyé"
         send_mail_ok_body = u"Votre email a été envoyé à %s."
+
+        help_message_body = u"Pour envoyer un email avec JMC, vous avez le choix " \
+            + "entre :\n" \
+            + " - Envoyer un message à la passerelle JMC: le sujet de l'email" \
+            + " sera le sujet du message Jabber ou le sujet spécifié avec la " \
+            + "syntaxe suivant dans le corps du message Jabber :\n" \
+            + "\tSubject: votre sujet\n" \
+            + " Pour spécifier les destinataires de l'email, il faut ajouter une" \
+            + " ligne au corps du message Jabber avec la syntaxe suivante:\n" \
+            + "\tTo: to_email@test.com\n\n" \
+            + " - Ajouter un contact à votre roster, avec comme JID " \
+            + "to_email\%test.com@jmc.test.com, où to_email@test.com est " \
+            + "l'adresse du destinataire."
 
     class nl(jcl.lang.Lang.nl):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_nl_TestCase, 'test') line
