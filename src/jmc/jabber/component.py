@@ -146,6 +146,11 @@ class MailComponent(FeederComponent):
                                 AccountDiscoGetInfoHandler,
                                 IMAPAccountDiscoGetInfoHandler(self))
 
+    def check_email_accounts(self, accounts, lang_class=None):
+        if lang_class is None:
+            lang_class = self.lang.get_default_lang_class()
+        self.handler.handle(None, lang_class, accounts)
+
 class MailFeeder(Feeder):
     """Email check"""
 
