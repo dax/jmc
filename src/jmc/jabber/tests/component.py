@@ -153,6 +153,10 @@ class MockIMAPAccount(MockMailAccount, IMAPAccount):
             return ["subdir1", "subdir2"]
         return []
 
+    def get_mail_with_attachment_list(self):
+       return [("1", "mail 1"),
+               ("2", "mail 2")]
+
 class MockPOP3Account(MockMailAccount, POP3Account):
     def _init(self, *args, **kw):
         POP3Account._init(self, *args, **kw)

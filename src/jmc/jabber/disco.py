@@ -30,6 +30,7 @@ from jcl.model import account
 from jcl.jabber.command import CommandRootDiscoGetInfoHandler
 from jcl.jabber.disco import AccountTypeDiscoGetInfoHandler, \
      AccountDiscoGetInfoHandler, DiscoHandler
+import jcl.jabber.command as command
 
 from jmc.model.account import IMAPAccount
 
@@ -60,6 +61,7 @@ class IMAPAccountDiscoGetInfoHandler(AccountDiscoGetInfoHandler):
                                                         lang_class,
                                                         node, disco_obj,
                                                         data)
+        disco_infos[0].add_feature(command.COMMAND_NS)
         splitted_node = node.split("/")
         splitted_node_len = len(splitted_node)
         if splitted_node_len > 1 and \

@@ -48,6 +48,7 @@ from jmc.jabber.presence import MailSubscribeHandler, \
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
     SMTPAccount
 from jmc.lang import Lang
+from jmc.jabber.command import MailCommandManager
 
 class MailAccountManager(AccountManager):
     def account_get_register(self, info_query,
@@ -109,7 +110,8 @@ class MailComponent(FeederComponent):
                  config,
                  config_file,
                  lang=Lang(),
-                 account_manager_class=MailAccountManager):
+                 account_manager_class=MailAccountManager,
+                 command_manager_class=MailCommandManager):
         """Use FeederComponent behavior and setup feeder and sender
         attributes.
         """
@@ -121,7 +123,8 @@ class MailComponent(FeederComponent):
                                  config,
                                  config_file,
                                  lang=lang,
-                                 account_manager_class=account_manager_class)
+                                 account_manager_class=account_manager_class,
+                                 command_manager_class=command_manager_class)
         self.handler = MailFeederHandler(MailFeeder(self), MailSender(self))
         self.account_manager.account_classes = (IMAPAccount,
                                                 POP3Account,
@@ -142,10 +145,6 @@ class MailComponent(FeederComponent):
         jabber.replace_handlers(self.disco_get_info_handlers,
                                 AccountDiscoGetInfoHandler,
                                 IMAPAccountDiscoGetInfoHandler(self))
-#         for hg in self.disco_get_items_handlers:
-#             print "----"
-#             for h in hg:
-#                 print str(h)
 
 class MailFeeder(Feeder):
     """Email check"""
