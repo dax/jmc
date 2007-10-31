@@ -137,17 +137,17 @@ class Lang(jcl.lang.Lang):
         send_mail_ok_body = u"Votre email a été envoyé à %s."
 
         help_message_body = u"Pour envoyer un email avec JMC, vous avez le choix " \
-            + "entre :\n" \
-            + " - Envoyer un message à la passerelle JMC: le sujet de l'email" \
-            + " sera le sujet du message Jabber ou le sujet spécifié avec la " \
-            + "syntaxe suivant dans le corps du message Jabber :\n" \
-            + "\tSubject: votre sujet\n" \
-            + " Pour spécifier les destinataires de l'email, il faut ajouter une" \
-            + " ligne au corps du message Jabber avec la syntaxe suivante:\n" \
-            + "\tTo: to_email@test.com\n\n" \
-            + " - Ajouter un contact à votre roster, avec comme JID " \
-            + "to_email\%test.com@jmc.test.com, où to_email@test.com est " \
-            + "l'adresse du destinataire."
+            + u"entre :\n" \
+            + u" - Envoyer un message à la passerelle JMC: le sujet de l'email" \
+            + u" sera le sujet du message Jabber ou le sujet spécifié avec la " \
+            + u"syntaxe suivant dans le corps du message Jabber :\n" \
+            + u"\tSubject: votre sujet\n" \
+            + u" Pour spécifier les destinataires de l'email, il faut ajouter une" \
+            + u" ligne au corps du message Jabber avec la syntaxe suivante:\n" \
+            + u"\tTo: to_email@test.com\n\n" \
+            + u" - Ajouter un contact à votre roster, avec comme JID " \
+            + u"to_email\%test.com@jmc.test.com, où to_email@test.com est " \
+            + u"l'adresse du destinataire."
 
     class nl(jcl.lang.Lang.nl):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_nl_TestCase, 'test') line

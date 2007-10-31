@@ -242,8 +242,8 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
         self.imap_account.ssl = False
         self.account_class = IMAPAccount
 
-    def make_test(responses=None, queries=None, core=None):
-        def inner(self):
+    def make_test(self, responses=None, queries=None, core=None):
+        def inner():
             self.server = server.DummyServer("localhost", 1143)
             thread.start_new_thread(self.server.serve, ())
             self.server.responses = ["* OK [CAPABILITY IMAP4 LOGIN-REFERRALS " + \
@@ -261,20 +261,25 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
             if queries:
                 self.server.queries += queries
             self.server.queries += ["^[^ ]* LOGOUT"]
-            self.imap_account.connect()
+            if not self.imap_account.connected:
+                self.imap_account.connect()
             self.failUnless(self.imap_account.connection, \
                             "Cannot establish connection")
             if core:
                 model.db_connect()
                 core(self)
                 model.db_disconnect()
-            self.imap_account.disconnect()
+            if self.imap_account.connected:
+                self.imap_account.disconnect()
             self.failUnless(self.server.verify_queries())
         return inner
 
-    test_connection = make_test()
+    def test_connection(self):
+        test_func = self.make_test()
+        test_func()
 
-    test_get_mail_list = make_test([lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" +\
+    def test_get_mail_list(self):
+        test_func = self.make_test([lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" +\
                                     " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" +\
                                     " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
                                     data.split()[0] + \
@@ -285,22 +290,60 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                                     "^[^ ]* SEARCH RECENT"], \
                                    lambda self: \
                                    self.assertEquals(self.imap_account.get_mail_list(), ['9', '10']))
+        test_func()
 
-    test_get_mail_summary = make_test([lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
-                                       " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
-                                       " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
-                                       data.split()[0] + \
-                                       " OK [READ-WRITE] SELECT completed\r\n", \
-                                       lambda data: "* 1 FETCH ((RFC822) {12}\r\nbody" + \
-                                       " text\r\n)\r\n" + \
-                                       data.split()[0] + " OK FETCH completed\r\n"], \
-                                      ["^[^ ]* EXAMINE INBOX", \
-                                       "^[^ ]* FETCH 1 \(RFC822\)"], \
-                                      lambda self: self.assertEquals(self.imap_account.get_mail_summary(1), \
-                                                                     (u"From : None\nSubject : None\n\n", \
-                                                                      u"None")))
+    def test_get_mail_list_delimiter1(self):
+        self.imap_account.mailbox = "INBOX/dir1/subdir2"
+        self.imap_account.delimiter = "."
+        test_func = self.make_test( \
+            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
+                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\n", \
+                 lambda data: "* SEARCH 9 10 \n" + \
+                 data.split()[0] + " OK SEARCH completed\n"], \
+                ["^[^ ]* SELECT \"?INBOX\.dir1\.subdir2\"?",
+                 "^[^ ]* SEARCH RECENT"], \
+                lambda self: \
+                self.assertEquals(self.imap_account.get_mail_list(), ['9', '10']))
+        test_func()
 
-    test_get_mail = make_test([lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
+    def test_get_mail_list_delimiter2(self):
+        self.imap_account.mailbox = "INBOX/dir1/subdir2"
+        self.imap_account.delimiter = "/"
+        test_func = self.make_test( \
+            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
+                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\n", \
+                 lambda data: "* SEARCH 9 10 \n" + \
+                 data.split()[0] + " OK SEARCH completed\n"], \
+                ["^[^ ]* SELECT \"?INBOX/dir1/subdir2\"?",
+                 "^[^ ]* SEARCH RECENT"], \
+                lambda self: \
+                self.assertEquals(self.imap_account.get_mail_list(), ['9', '10']))
+        test_func()
+
+    def test_get_mail_summary(self):
+        test_func = self.make_test([lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
+                                        " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
+                                        " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
+                                        data.split()[0] + \
+                                        " OK [READ-WRITE] SELECT completed\r\n", \
+                                        lambda data: "* 1 FETCH ((RFC822) {12}\r\nbody" + \
+                                        " text\r\n)\r\n" + \
+                                        data.split()[0] + " OK FETCH completed\r\n"],
+                                   ["^[^ ]* EXAMINE INBOX",
+                                    "^[^ ]* FETCH 1 \(RFC822\)"],
+                                   lambda self: self.assertEquals(self.imap_account.get_mail_summary(1),
+                                                                  (u"From : None\nSubject : None\n\n",
+                                                                   u"None")))
+        test_func()
+
+    def test_get_mail(self):
+        test_func = self.make_test([lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
                                " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
                                " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
                                data.split()[0] + \
@@ -313,8 +356,10 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                               lambda self: self.assertEquals(self.imap_account.get_mail(1), \
                                                              (u"From : None\nSubject : None\n\nbody text\r\n\n", \
                                                               u"None")))
+        test_func()
 
-    test_build_folder_cache = make_test(\
+    def test_build_folder_cache(self):
+        test_func = self.make_test(\
         [lambda data: '* LIST () "." "INBOX"\r\n' + \
          '* LIST () "." "INBOX.dir1"\r\n' + \
          '* LIST () "." "INBOX.dir1.subdir1"\r\n' + \
@@ -328,6 +373,7 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                                          {"subdir1": {},
                                           "subdir2": {}},
                                          "dir2": {}}}))
+        test_func()
 
     def test_ls_dir_base(self):
         self.test_build_folder_cache()
@@ -355,6 +401,34 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
         result.sort()
         self.assertEquals(result,
                           ["subdir1", "subdir2"])
+
+    def test_populate_handler(self):
+        self.assertEquals(".", self.imap_account.delimiter)
+        self.imap_account.mailbox = "INBOX.dir1.subdir2"
+        def call_func(self):
+            self.imap_account.populate_handler()
+            self.assertEquals("INBOX/dir1/subdir2", self.imap_account.mailbox)
+        test_func = self.make_test(\
+            [lambda data: '* LIST () "." "INBOX.dir1.subdir2"\r\n' + \
+                 data.split()[0] + ' OK LIST completed\r\n'],
+            ["^[^ ]* LIST \"?INBOX.dir1.subdir2\"? \*"],
+            call_func)
+        test_func()
+
+    def test_populate_handler_wrong_mailbox(self):
+        self.assertEquals(".", self.imap_account.delimiter)
+        self.imap_account.mailbox = "INBOX.dir1.subdir2"
+        def call_func(self):
+            try:
+                self.imap_account.populate_handler()
+            except Exception, e:
+                return
+            self.fail("Exception should have been raised")
+        test_func = self.make_test(\
+            [lambda data: data.split()[0] + ' ERR LIST completed\r\n'],
+            ["^[^ ]* LIST \"?INBOX.dir1.subdir2\"? \*"],
+            call_func)
+        test_func()
 
 class SMTPAccount_TestCase(Account_TestCase):
     def setUp(self):

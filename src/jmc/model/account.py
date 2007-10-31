@@ -373,6 +373,7 @@ class MailAccount(PresenceAccount):
 
 class IMAPAccount(MailAccount):
     mailbox = StringCol(default="INBOX")
+    delimiter = StringCol(default=".")
 
     def _get_register_fields(cls, real_class=None):
         """See Account._get_register_fields
@@ -397,12 +398,18 @@ class IMAPAccount(MailAccount):
         self.__logger = logging.getLogger("jmc.IMAPConnection")
         self._regexp_list = re.compile("\((.*)\) \"(.)\" \"?([^\"]*)\"?$")
         self.__cached_folders = {}
-        self.default_delimiter = "."
 
     def get_type(self):
 	if self.ssl:
 	    return "imaps"
 	return "imap"
+
+    def _get_real_mailbox(self):
+        """
+        mailbox attribute is stored with "/" to delimit folders.
+        real mailbox is the folder with the delimiter used by the IMAP server
+        """
+        return self.mailbox.replace("/", self.delimiter)
 
     def get_status(self):
 	return MailAccount.get_status(self) + "/" + self.mailbox
@@ -427,7 +434,7 @@ class IMAPAccount(MailAccount):
 
     def get_mail_list(self):
 	self.__logger.debug("Getting mail list")
-	typ, data = self.connection.select(self.mailbox)
+	typ, data = self.connection.select(self._get_real_mailbox())
 	typ, data = self.connection.search(None, 'RECENT')
 	if typ == 'OK':
 	    return data[0].split(' ')
@@ -476,8 +483,8 @@ class IMAPAccount(MailAccount):
                 for line in data:
                     match = self._regexp_list.match(line)
                     if match is not None:
-                        self.default_delimiter = match.group(2)
-                        subdir = match.group(3).split(self.default_delimiter)
+                        delimiter = match.group(2)
+                        subdir = match.group(3).split(delimiter)
                         self._add_full_path_to_cache(subdir)
         return self.__cached_folders
 
@@ -485,7 +492,6 @@ class IMAPAccount(MailAccount):
         """
         imap_dir: IMAP directory to list. subdirs must be delimited by '/'
         """
-        # TODO : implement with cache (ie. only one connection)
         self.__logger.debug("Listing IMAP dir '" + str(imap_dir) + "'")
         if self.__cached_folders == {}:
             if not self.connected:
@@ -503,6 +509,31 @@ class IMAPAccount(MailAccount):
             else:
                 current_folder = current_folder[folder]
         return current_folder.keys()
+
+    def populate_handler(self):
+        """
+        Handler called when populating account
+        """
+        # Get delimiter
+        if not self.connected:
+            self.connect()
+        typ, data = self.connection.list(self.mailbox)
+        if typ == 'OK':
+            line = data[0]
+            match = self._regexp_list.match(line)
+            if match is not None:
+                self.delimiter = match.group(2)
+            else:
+                self.disconnect()
+                raise Exception("Cannot find mailbox " + self.mailbox)
+        else:
+            self.disconnect()
+            raise Exception("Cannot find mailbox " + self.mailbox)
+        self.disconnect()
+        # replace any previous delimiter in self.mailbox by "/"
+        if self.delimiter != "/":
+            self.mailbox = self.mailbox.replace(self.delimiter, "/")
+            
 
 class POP3Account(MailAccount):
     nb_mail = IntCol(default=0)

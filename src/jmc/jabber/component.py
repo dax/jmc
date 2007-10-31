@@ -56,9 +56,11 @@ class MailAccountManager(AccountManager):
                              from_jid,
                              account_type,
                              lang_class):
-        """Handle get_register on an IMAP account.
+        """
+        Handle get_register on an IMAP account.
         Return a preinitialized form.
-        account_type contains 'account_type + imap_dir'"""
+        account_type contains 'account_type + imap_dir'
+        """
         splitted_node = account_type.split("/")
         splitted_node_len = len(splitted_node)
         if splitted_node_len == 1 or \
@@ -71,6 +73,7 @@ class MailAccountManager(AccountManager):
         else:
             info_query = info_query.make_result_response()
             model.db_connect()
+            # TODO : "/" is default, "." could be
             imap_dir = "/".join(splitted_node[1:])
             bare_from_jid = from_jid.bare()
             _account = account.get_account_filter(\
@@ -80,17 +83,20 @@ class MailAccountManager(AccountManager):
                 account_class=IMAPAccount)
             query = info_query.new_query("jabber:iq:register")
             if _account is not None:
+                # update account
                 result = self.generate_registration_form_init(lang_class,
                                                               _account)
             else:
                 _account = account.get_account(bare_from_jid, name,
                                                IMAPAccount)
                 if _account is not None:
+                    # create new account based on current one
                     result = self.generate_registration_form_init(lang_class,
                                                                   _account)
                     result["name"].value = None
                     result["name"].type = "text-single"
                 else:
+                    # create new account from scratch
                     result = self.generate_registration_form(\
                         lang_class,
                         IMAPAccount,
