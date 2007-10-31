@@ -73,7 +73,6 @@ class MailAccountManager(AccountManager):
         else:
             info_query = info_query.make_result_response()
             model.db_connect()
-            # TODO : "/" is default, "." could be
             imap_dir = "/".join(splitted_node[1:])
             bare_from_jid = from_jid.bare()
             _account = account.get_account_filter(\
@@ -95,13 +94,14 @@ class MailAccountManager(AccountManager):
                                                                   _account)
                     result["name"].value = None
                     result["name"].type = "text-single"
+                    result["mailbox"].value = imap_dir.replace("/", _account.delimiter)
                 else:
                     # create new account from scratch
                     result = self.generate_registration_form(\
                         lang_class,
                         IMAPAccount,
                         bare_from_jid)
-                result["mailbox"].value = imap_dir
+                    result["mailbox"].value = imap_dir
             result.as_xml(query)
             return [info_query]
 
