@@ -66,3 +66,18 @@ class JMCRunner(JCLRunner):
             component.disco_identity.set_type("smtp")
             return component.run()
         self._run(run_func)
+
+def main():
+    import jmc
+    import sys
+    from jmc.lang import Lang
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+    del sys.setdefaultencoding
+    runner = JMCRunner(Lang().get_default_lang_class().component_name,
+                       jmc.version)
+    runner.configure()
+    runner.run()
+
+if __name__ == "__main__":
+    main()
