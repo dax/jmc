@@ -162,17 +162,6 @@ class MockPOP3Account(MockMailAccount, POP3Account):
         POP3Account._init(self, *args, **kw)
         MockMailAccount._init(self)
 
-class MockSMTPAccount(object):
-    def __init__(self):
-        self.default_from = "user1@test.com"
-        self.email = None
-
-    def create_email(self, from_email, to_email, subject, body):
-        return (from_email, to_email, subject, body)
-
-    def send_email(self, email):
-        self.email = email
-
 class MailComponent_TestCase(JCLTestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, PresenceAccount, User,
@@ -1162,137 +1151,6 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(field.children.name, "value")
         self.assertEquals(field.children.content, "INBOX.dir1.subdir1")
 
-class SendMailMessageHandler_TestCase(unittest.TestCase):
-    def setUp(self):
-        self.handler = SendMailMessageHandler(None)
-
-    def test_handle(self):
-        message = Message(from_jid="user1@test.com",
-                          to_jid="user%test.com@jcl.test.com",
-                          subject="message subject",
-                          body="message body")
-        accounts = [MockSMTPAccount()]
-        result = self.handler.handle(message, Lang.en, accounts)
-        self.assertEquals(accounts[0].email[1], "user@test.com")
-        self.assertEquals(accounts[0].email[2], "message subject")
-        self.assertEquals(accounts[0].email[3], "message body")
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].stanza_type, "message")
-        self.assertEquals(result[0].get_from(), "user%test.com@jcl.test.com")
-        self.assertEquals(result[0].get_to(), "user1@test.com")
-        self.assertEquals(result[0].get_subject(),
-                          Lang.en.send_mail_ok_subject)
-        self.assertEquals(result[0].get_body(),
-                          Lang.en.send_mail_ok_body % ("user@test.com"))
-
-class RootSendMailMessageHandler_TestCase(JCLTestCase):
-    def setUp(self):
-        JCLTestCase.setUp(self, tables=[Account, SMTPAccount, User])
-        self.handler = RootSendMailMessageHandler(None)
-
-    def test_filter(self):
-        model.db_connect()
-        user1 = User(jid="user1@test.com")
-        account11 = SMTPAccount(user=user1,
-                                name="account11",
-                                jid="account11@jcl.test.com")
-        account11.default_account = True
-        account12 = SMTPAccount(user=user1,
-                                name="account12",
-                                jid="account12@jcl.test.com")
-        message = Message(from_jid="user1@test.com",
-                          to_jid="account11@jcl.test.com",
-                          body="message")
-        accounts = self.handler.filter(message, None)
-        self.assertEquals(accounts.count(), 1)
-        model.db_disconnect()
-
-    def test_filter_no_default_account(self):
-        model.db_connect()
-        user1 = User(jid="user1@test.com")
-        account11 = SMTPAccount(user=user1,
-                                name="account11",
-                                jid="account11@jcl.test.com")
-        account12 = SMTPAccount(user=user1,
-                                name="account12",
-                                jid="account12@jcl.test.com")
-        message = Message(from_jid="user1@test.com",
-                          to_jid="account11@jcl.test.com",
-                          body="message")
-        accounts = self.handler.filter(message, None)
-        self.assertEquals(accounts.count(), 2)
-        self.assertEquals(accounts[0].name, "account11")
-        model.db_disconnect()
-
-    def test_filter_wrong_dest(self):
-        model.db_connect()
-        user1 = User(jid="user1@test.com")
-        account11 = SMTPAccount(user=user1,
-                                name="account11",
-                                jid="account11@jcl.test.com")
-        account12 = SMTPAccount(user=user1,
-                                name="account12",
-                                jid="account12@jcl.test.com")
-        message = Message(from_jid="user1@test.com",
-                          to_jid="user2%test.com@jcl.test.com",
-                          body="message")
-        accounts = self.handler.filter(message, None)
-        self.assertEquals(accounts.count(), 2)
-        model.db_disconnect()
-
-    def test_filter_wrong_user(self):
-        model.db_connect()
-        user1 = User(jid="user1@test.com")
-        account11 = SMTPAccount(user=user1,
-                                name="account11",
-                                jid="account11@jcl.test.com")
-        account12 = SMTPAccount(user=user1,
-                                name="account12",
-                                jid="account12@jcl.test.com")
-        message = Message(from_jid="user2@test.com",
-                          to_jid="account11@jcl.test.com",
-                          body="message")
-        accounts = self.handler.filter(message, None)
-        self.assertEquals(accounts.count(), 0)
-        model.db_disconnect()
-
-    def test_handle_email_found_in_header(self):
-        message = Message(from_jid="user1@test.com",
-                          to_jid="jcl.test.com",
-                          subject="message subject",
-                          body="to: user@test.com\n" \
-                             "message body\nother line")
-        accounts = [MockSMTPAccount()]
-        result = self.handler.handle(message, Lang.en, accounts)
-        self.assertEquals(accounts[0].email[1], "user@test.com")
-        self.assertEquals(accounts[0].email[2], "message subject")
-        self.assertEquals(accounts[0].email[3],
-                          "message body\nother line")
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_type(), None)
-        self.assertEquals(result[0].get_from(), "jcl.test.com")
-        self.assertEquals(result[0].get_to(), "user1@test.com")
-        self.assertEquals(result[0].get_subject(),
-                          Lang.en.send_mail_ok_subject)
-        self.assertEquals(result[0].get_body(),
-                          Lang.en.send_mail_ok_body % ("user@test.com"))
-
-    def test_handle_email_not_found_in_header(self):
-        message = Message(from_jid="user1@test.com",
-                          to_jid="jcl.test.com",
-                          subject="message subject",
-                          body="message body")
-        accounts = [MockSMTPAccount()]
-        result = self.handler.handle(message, Lang.en, accounts)
-        self.assertEquals(len(result), 1)
-        self.assertEquals(result[0].get_type(), "error")
-        self.assertEquals(result[0].get_from(), "jcl.test.com")
-        self.assertEquals(result[0].get_to(), "user1@test.com")
-        self.assertEquals(result[0].get_subject(),
-                          Lang.en.send_mail_error_no_to_header_subject)
-        self.assertEquals(result[0].get_body(),
-                          Lang.en.send_mail_error_no_to_header_body)
-
 class MailSender_TestCase(JCLTestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, PresenceAccount, MailAccount,
@@ -1565,8 +1423,6 @@ class MailFeederHandler_TestCase(JCLTestCase):
 def suite():
     test_suite = unittest.TestSuite()
     test_suite.addTest(unittest.makeSuite(MailComponent_TestCase, 'test'))
-    test_suite.addTest(unittest.makeSuite(SendMailMessageHandler_TestCase, 'test'))
-    test_suite.addTest(unittest.makeSuite(RootSendMailMessageHandler_TestCase, 'test'))
     test_suite.addTest(unittest.makeSuite(MailSender_TestCase, 'test'))
     test_suite.addTest(unittest.makeSuite(MailHandler_TestCase, 'test'))
     test_suite.addTest(unittest.makeSuite(MailUnsubscribeHandler_TestCase, 'test'))

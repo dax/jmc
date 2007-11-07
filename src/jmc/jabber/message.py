@@ -34,6 +34,10 @@ class SendMailMessageHandler(MailHandler):
         MailHandler.__init__(self, component)
         self.__logger = logging.getLogger(\
             "jmc.jabber.component.SendMailMessageHandler")
+        self.to_regexp = re.compile("^\s*(?i)to\s*:\s*(?P<to_email>.*)")
+        self.cc_regexp = re.compile("^\s*(?i)cc\s*:\s*(?P<cc_email>.*)")
+        self.bcc_regexp = re.compile("^\s*(?i)bcc\s*:\s*(?P<bcc_email>.*)")
+        self.subject_regexp = re.compile("^\s*(?i)subject\s*:\s*(?P<subject_email>.*)")
 
     def send_mail_result(self, message, lang_class, to_email):
         return [Message(from_jid=message.get_to(),
@@ -41,16 +45,75 @@ class SendMailMessageHandler(MailHandler):
                         subject=lang_class.send_mail_ok_subject,
                         body=lang_class.send_mail_ok_body % (to_email))]
 
+    def get_email_headers_from_message(self, text, regexps, groups):
+        """
+        This method extract line from message body with given regexps
+        and associated matching groups names.
+        If a line match a regexp, this line is removed from the returned message
+        and matching group is extracted and returned in 'headers'.
+        """
+        headers = []
+        for i in xrange(len(regexps)):
+            headers.append(None)
+        lines = text.split('\n')
+        message_body = []
+        regexps_len = len(regexps)
+        matched = 0
+        while matched < regexps_len \
+                and lines:
+            line = lines.pop(0)
+            has_matched = False
+            i = 0
+            while i < regexps_len \
+                    and not has_matched:
+                if regexps[i] is not None:
+                    match = regexps[i].match(line)
+                    if match:
+                        headers[i] = match.group(groups[i])
+                        regexps[i] = None
+                        has_matched = True
+                i += 1
+            if has_matched:
+                matched += 1
+            else:
+                message_body.append(line)
+        message_body.extend(lines)
+        return ("\n".join(message_body), headers)
+
     def handle(self, stanza, lang_class, data):
         message = stanza
         accounts = data
         to_node = message.get_to().node
         to_email = to_node.replace('%', '@', 1)
+        (message_body,
+         (more_to_email,
+          subject,
+          cc_email,
+          bcc_email)) = self.get_email_headers_from_message(\
+            message.get_body(), 
+            [self.to_regexp,
+             self.subject_regexp,
+             self.cc_regexp,
+             self.bcc_regexp],
+            ["to_email",
+             "subject_email",
+             "cc_email",
+             "bcc_email"])
+        other_headers = {}
+        other_headers["Cc"] = cc_email
+        other_headers["Bcc"] = bcc_email
+        message_subject = message.get_subject()
+        if message_subject is not None \
+                and len(message_subject) > 0:
+            subject = message_subject
+        if more_to_email is not None:
+            to_email += ", " + more_to_email
         accounts[0].send_email(\
             accounts[0].create_email(accounts[0].default_from,
                                      to_email,
                                      message.get_subject(),
-                                     message.get_body()))
+                                     message_body,
+                                     other_headers))
         return self.send_mail_result(message, lang_class, to_email)
 
 class RootSendMailMessageHandler(SendMailMessageHandler):
@@ -79,24 +142,34 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
     def handle(self, stanza, lang_class, data):
         message = stanza
         accounts = data
-        to_email = None
-        lines = message.get_body().split('\n')
-        message_body = []
-        while to_email is None \
-                and lines:
-            line = lines.pop(0)
-            match = self.to_regexp.match(line)
-            if match:
-                to_email = match.group("to_email")
-            else:
-                message_body.append(line)
-        message_body.extend(lines)
+        (message_body,
+         (to_email,
+          subject,
+          cc_email,
+          bcc_email)) = self.get_email_headers_from_message(\
+            message.get_body(), 
+            [self.to_regexp,
+             self.subject_regexp,
+             self.cc_regexp,
+             self.bcc_regexp],
+            ["to_email",
+             "subject_email",
+             "cc_email",
+             "bcc_email"])
+        other_headers = {}
+        other_headers["Cc"] = cc_email
+        other_headers["Bcc"] = bcc_email
+        message_subject = message.get_subject()
+        if message_subject is not None \
+                and len(message_subject) > 0:
+            subject = message_subject
         if to_email is not None:
             accounts[0].send_email(\
                 accounts[0].create_email(accounts[0].default_from,
                                          to_email,
-                                         message.get_subject(),
-                                         "\n".join(message_body)))
+                                         subject,
+                                         message_body,
+                                         other_headers))
             return self.send_mail_result(message, lang_class, to_email)
         else:
             return [Message(from_jid=message.get_to(),

@@ -515,6 +515,25 @@ class SMTPAccount_TestCase(Account_TestCase):
         self.assertEqual(email['Subject'], "subject")
         self.assertEqual(email.get_payload(), "body")
 
+    def test_create_email_other_headers(self):
+        model.db_connect()
+        account11 = SMTPAccount(user=User(jid="user1@test.com"),
+                                name="account11",
+                                jid="account11@jmc.test.com")
+        model.db_disconnect()
+        email = account11.create_email("from@test.com",
+                                       "to@test.com",
+                                       "subject",
+                                       "body",
+                                       {"Bcc": "bcc@test.com",
+                                        "Cc": "cc@test.com"})
+        self.assertEqual(email['From'], "from@test.com")
+        self.assertEqual(email['To'], "to@test.com")
+        self.assertEqual(email['Subject'], "subject")
+        self.assertEqual(email['Bcc'], "bcc@test.com")
+        self.assertEqual(email['Cc'], "cc@test.com")
+        self.assertEqual(email.get_payload(), "body")
+
     def make_test(self, responses=None, queries=None, core=None):
         def inner():
             self.server = server.DummyServer("localhost", 1025)

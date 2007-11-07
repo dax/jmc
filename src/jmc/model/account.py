@@ -717,7 +717,7 @@ class SMTPAccount(Account):
 
     get_register_fields = classmethod(_get_register_fields)
 
-    def create_email(self, from_email, to_email, subject, body):
+    def create_email(self, from_email, to_email, subject, body, other_headers=None):
         """Create new email"""
         email = MIMEText(body)
         if subject is None:
@@ -725,6 +725,9 @@ class SMTPAccount(Account):
         email['Subject'] = Header(str(subject))
         email['From'] = Header(str(from_email))
         email['To'] = Header(str(to_email))
+        if other_headers is not None:
+            for header_name in other_headers.keys():
+                email[header_name] = Header(other_headers[header_name])
         return email
 
     def __say_hello(self, connection):
