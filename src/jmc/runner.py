@@ -68,12 +68,12 @@ class JMCRunner(JCLRunner):
         self._run(run_func)
 
 def main():
-    import jmc
     import sys
-    from jmc.lang import Lang
     reload(sys)
     sys.setdefaultencoding('utf-8')
     del sys.setdefaultencoding
+    import jmc
+    from jmc.lang import Lang
     runner = JMCRunner(Lang().get_default_lang_class().component_name,
                        jmc.version)
     runner.configure()
