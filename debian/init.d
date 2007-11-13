@@ -1,147 +1,81 @@
-#! /bin/bash -e
+#! /bin/sh
+#
+# skeleton	example file to build /etc/init.d/ scripts.
+#		This file should be used to construct scripts for /etc/init.d.
+#
+#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
+#		Modified for Debian 
+#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
+#
+# Version:	@(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
+#
 
-export PATH=/sbin:/bin:/usr/sbin:/usr/bin
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DAEMON=/usr/sbin/jmc
+NAME=jmc
+DESC=jmc
 
-# ----- load init-functions if they exist -----
+test -x $DAEMON || exit 0
 
-if [ -f /lib/lsb/init-functions ]; then
-	. /etc/lsb-release
-	. /lib/lsb/init-functions
+# Include jmc defaults if available
+if [ -f /etc/default/jmc ] ; then
+	. /etc/default/jmc
 fi
 
-# ----- Functions for printing messages (Works for debian and looks good in ubuntu too)
-
-log_start()
-{
-	case $DISTRIB_ID.$DISTRIB_RELEASE in
-  		Ubuntu.[0-4].*|Ubuntu.5.[0-9]|Ubuntu.5.10)
-			log_begin_msg $1
-			;;
-  		Ubuntu.*.*)
-			log_daemon_msg $1
-			;;
-  		*)
-			echo -n $1
-		;;
-	esac
-}
-
-log_end()
-{
-	case $DISTRIB_ID.$DISTRIB_RELEASE in
-  		Ubuntu.*.*)
-			log_end_msg $1
-			;;
-  		*)
-			if [ "$1" = "0" ]; then
-				echo "Started"
-			else
-				echo "Error starting daemon, check the logs."
-			fi
-			;;
-	esac
-}
-
-log_failure()
-{
-	case $DISTRIB_ID.$DISTRIB_RELEASE in
-  		Ubuntu.*.*)
-			log_failure_msg $1
-			;;
-  		*)
-			echo $1
-		;;
-	esac
-}
-
-# ----- set required environment -----
-
-TRANS_NAME=jmc
-TRANS_DESC="Jabber Mail Component"
-TRANS_HOME=/usr/share/$TRANS_NAME
-TRANS_CONFIG=/etc/jabber/$TRANS_NAME.conf
-TRANS_USER=jabber
-TRANS_GROUP=daemon
-TRANS_PID=`grep "<pidfile>.*</pidfile>" $TRANS_CONFIG | sed 's:.*<pidfile>\(.*\)</pidfile>.*:\1:'`
-TRANS_DAEMON=/usr/bin/jmc
-TRANS_START="--chuid $TRANS_USER:$TRANS_GROUP --chdir $TRANS_HOME --pidfile $TRANS_PID"
-TRANS_STOP="--pidfile $TRANS_PID"
-TRANS_OPTIONS="-c $TRANS_CONFIG"
-TRANSPORT_DEFAULTS_FILE=/etc/default/$TRANS_NAME
-
-# ----- Check if transport is enabled ----- 
-
-if [ -s $TRANSPORT_DEFAULTS_FILE ]; then
-	. $TRANSPORT_DEFAULTS_FILE
-    	case "x$ENABLE" in
-        	xtrue)   ;;
-		xfalse)
-			exit 0		
-			;;
-        	*)              
-			log_failure "Value of ENABLE in $TRANSPORT_DEFAULTS_FILE must be either 'true' or 'false';"
-                	log_failure "not starting $TRANS_NAME daemon."
-                	exit 0
-                	;;
-    	esac
-else
-	log_failure "$TRANSPORT_DEFAULTS_FILE not found. Not starting $TRANS_NAME daemon."
-	exit 1
-fi
-
-# ----- do the action -----
+set -e
 
 case "$1" in
-config)
-	echo "Configuration:"
-	echo "  TRANS_NAME=$TRANS_NAME"
-	echo "  TRANS_DESC=$TRANS_DESC"
-	echo "  TRANS_HOME=$TRANS_HOME"
-	echo "  TRANS_CONFIG=$TRANS_CONFIG"
-	echo "  TRANS_USER=$TRANS_USER"
-	echo "  TRANS_PID=$TRANS_PID"
-	echo "  TRANS_DAEMON=$TRANS_DAEMON"
-	echo "  TRANS_OPTIONS=$TRANS_OPTIONS"
+  start)
+	echo -n "Starting $DESC: "
+	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
+		--exec $DAEMON -- $DAEMON_OPTS
+	echo "$NAME."
 	;;
-
-console)
-	$TRANS_DAEMON $TRANS_OPTIONS
+  stop)
+	echo -n "Stopping $DESC: "
+	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
+		--exec $DAEMON
+	echo "$NAME."
 	;;
-
-start)
-	log_start "Starting $TRANS_DESC: "
-	if start-stop-daemon $TRANS_START --start --oknodo --exec $TRANS_DAEMON -- $TRANS_OPTIONS $DAEMON_OPTS >/dev/null 2>&1; then
-		log_end 0
-	else
-		log_end 1
-	fi 
+  #reload)
+	#
+	#	If the daemon can reload its config files on the fly
+	#	for example by sending it SIGHUP, do it here.
+	#
+	#	If the daemon responds to changes in its config file
+	#	directly anyway, make this a do-nothing entry.
+	#
+	# echo "Reloading $DESC configuration files."
+	# start-stop-daemon --stop --signal 1 --quiet --pidfile \
+	#	/var/run/$NAME.pid --exec $DAEMON
+  #;;
+  force-reload)
+	#
+	#	If the "reload" option is implemented, move the "force-reload"
+	#	option to the "reload" entry above. If not, "force-reload" is
+	#	just the same as "restart" except that it does nothing if the
+	#   daemon isn't already running.
+	# check wether $DAEMON is running. If so, restart
+	start-stop-daemon --stop --test --quiet --pidfile \
+		/var/run/$NAME.pid --exec $DAEMON \
+	&& $0 restart \
+	|| exit 0
 	;;
-stop)
-	log_start "Stopping $TRANS_DESC: "
-	if start-stop-daemon --stop $TRANS_STOP --retry 10 --oknodo  2>&1; then
-		log_end 0
-	else
-		log_end 1
-	fi
+  restart)
+    echo -n "Restarting $DESC: "
+	start-stop-daemon --stop --quiet --pidfile \
+		/var/run/$NAME.pid --exec $DAEMON
+	sleep 1
+	start-stop-daemon --start --quiet --pidfile \
+		/var/run/$NAME.pid --exec $DAEMON -- $DAEMON_OPTS
+	echo "$NAME."
 	;;
-reload|force-reload)
-	log_start "Reloading $TRANS_DESC: "
-	if start-stop-daemon --stop $TRANS_STOP --signal HUP >/dev/null 2>&1; then
-		log_end 0
-	else
-		log_end 1
-	fi
-	;;
-restart)
-	$0 stop
-	sleep 5
-	$0 start
-	;;
-*)
-	echo "Usage: /etc/init.d/$TRANS_NAME {config|console|start|stop|restart|reload|force-reload}" >&2
+  *)
+	N=/etc/init.d/$NAME
+	# echo "Usage: $N {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $N {start|stop|restart|force-reload}" >&2
 	exit 1
 	;;
 esac
 
 exit 0
-

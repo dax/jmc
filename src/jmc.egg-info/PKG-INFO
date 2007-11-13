@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: jmc
+Version: 0.3
+Summary: Jabber Mail Component
+Home-page: http://people.happycoders.org/dax/projects/jmc
+Author: David Rousselie
+Author-email: dax@happycoders.org
+License: GPL
+Description: UNKNOWN
+Keywords: jabber component email IMAP POP3 SMTP
+Platform: UNKNOWN

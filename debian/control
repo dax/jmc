@@ -2,12 +2,18 @@ Source: jmc
 Section: python
 Priority: optional
 Maintainer: David Rousselie <dax@happycoders.org>
-Build-Depends: debhelper (>= 4.1.0)
-Standards-Version: 3.6.2
+Build-Depends: python-setuptools (>= 0.6b3-1), python-all-dev (>= 2.3.5-11), debhelper (>= 5.0.38), python-central (>= 0.5.6)
+Standards-Version: 3.7.2
+XS-Python-Version: all
 
-Package: jmc
+Package: python-jmc
 Architecture: all
-Depends: ${python:Depends}, python-pyxmpp (>= 0.5)
-Recommends: python2.4-pysqlite2 (>= 2.0)
+Depends: ${python:Depends}, python-jcl (>= 0.1)
+Recommends: 
+Suggests: 
+XB-Python-Version: ${python:Versions}
+Provides: ${python:Provides}
 Description: JMC is an email gateway for Jabber
- JMC is a jabber service to check email from POP3 and IMAP4 server and retrieve them or just a notification of new emails. Jabber users can register multiple email accounts.
+ JMC is a jabber service to check email from POP3 and IMAP4 server and 
+ retrieve them or just a notification of new emails. Jabber users can 
+ register multiple email accounts.

@@ -1,5 +1,5 @@
 #! /bin/sh
-# postinst script for jabber-pyaim
+# postinst script for jmc
 #
 # see: dh_installdeb(1)
 
@@ -25,7 +25,6 @@ case "$1" in
 	# the sanit(ar)y checks otherwise we can safely create it.
 
 	if [ "$uid" ]; then
-	    # guess??? the checks!!!
 	    if [ $uid -ge 100 ] && [ $uid -le 999 ]; then
 	    	echo "jabber uid check: ok"
 	    else
