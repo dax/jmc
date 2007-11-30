@@ -11,15 +11,15 @@
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/jmc
+DAEMON=/usr/bin/jmc
 NAME=jmc
 DESC=jmc
 
 test -x $DAEMON || exit 0
 
 # Include jmc defaults if available
-if [ -f /etc/default/jmc ] ; then
-	. /etc/default/jmc
+if [ -f /etc/default/python-jmc ] ; then
+	. /etc/default/python-jmc
 fi
 
 set -e
@@ -27,14 +27,19 @@ set -e
 case "$1" in
   start)
 	echo -n "Starting $DESC: "
-	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
+	start-stop-daemon --start --quiet --chuid jabber \
+                --background --pidfile $PID_FILE \
 		--exec $DAEMON -- $DAEMON_OPTS
 	echo "$NAME."
 	;;
   stop)
 	echo -n "Stopping $DESC: "
-	start-stop-daemon --stop --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON
+        if [ -f $PID_FILE ]; then
+	    start-stop-daemon --stop --quiet --user jabber \
+                --pidfile $PID_FILE
+        else
+            echo "$PID_FILE does not exist. JMC seems to be not started"
+        fi
 	echo "$NAME."
 	;;
   #reload)

@@ -4,7 +4,10 @@
 
 ENABLE="false"
 
+# Must be the same value as in jmc.conf
+PID_FILE="/var/run/jabber/jmc.pid"
+
 # Additional options that are passed to the Daemon.
 # use this line to activate debug
-#DAEMON_OPTS="-D"
-DAEMON_OPTS=""
+#DAEMON_OPTS="-d"
+DAEMON_OPTS="-c /etc/jabber/jmc.conf"

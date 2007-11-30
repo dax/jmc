@@ -1,3 +1,10 @@
+jmc (0.3) unstable; urgency=low
+
+  * Global refactoring (Splitted and now use python-jcl)
+  * SMTP email sending support
+
+ -- David Rousselie <dax@happycoders.org>  Thu, 29 Nov 2007 08:23:30 +0100
+
 jmc (0.2.3) unstable; urgency=low
 
   * keep boolean settings with tkabber

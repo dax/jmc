@@ -42,6 +42,8 @@ case "$1" in
 	fi
 	chown jabber:daemon /var/spool/jabber
 	chown jabber:daemon /var/run/jabber
+	chown jabber:daemon /var/log/jabber
+	chown jabber:daemon /etc/jabber
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
