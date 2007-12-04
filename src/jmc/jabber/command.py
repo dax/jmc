@@ -46,7 +46,7 @@ class MailCommandManager(JCLCommandManager):
         #self.commands["jmc#retrieve-attachment"] = (False, command.account_node_re)
         self.commands["jmc#force-check"] = (False, command.account_node_re)
 
-    # Delayed for JMC 0.3.1
+    # Delayed to JMC 0.3.1
     def execute_retrieve_attachment_1(self, info_query, session_context,
                                       command_node, lang_class):
         # TODO : translate
