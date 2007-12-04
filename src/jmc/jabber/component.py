@@ -183,7 +183,7 @@ class MailFeeder(Feeder):
             _account.mark_all_as_read()
             _account.disconnect()
             _account.first_check = False
-            _account.in_error = False
+            _account.error = None
             return True
         except Exception, e:
             if _account.connected:
@@ -253,7 +253,7 @@ class MailFeeder(Feeder):
                         raise Exception("Unkown action: " + str(action) \
                                             + "\nPlease reconfigure account.")
                     _account.disconnect()
-                    _account.in_error = False
+                    _account.error = None
                     self.__logger.debug("\nCHECK_MAIL ends " + _account.jid)
                 except Exception, e:
                     if _account.connected:

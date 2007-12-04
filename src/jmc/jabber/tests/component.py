@@ -22,7 +22,6 @@
 ##
 
 import unittest
-import os
 import sys
 import time
 
@@ -44,8 +43,7 @@ from jcl.jabber.tests.feeder import FeederMock, SenderMock
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
      SMTPAccount, NoAccountError
 from jmc.jabber import MailHandler
-from jmc.jabber.message import SendMailMessageHandler, \
-     RootSendMailMessageHandler
+from jmc.jabber.message import SendMailMessageHandler
 from jmc.jabber.presence import MailSubscribeHandler, \
      MailUnsubscribeHandler, MailPresenceHandler
 from jmc.jabber.component import MailComponent, MailFeederHandler, \
@@ -187,7 +185,7 @@ class MailComponent_TestCase(JCLTestCase):
                                     jid="account11@jmc.test.com")
         account11.status = account.ONLINE
         self.assertTrue(account11.first_check)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertFalse(account11.waiting_password_reply)
         account11.live_email_only = True
         account11.password = None
@@ -199,7 +197,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertTrue(account11.waiting_password_reply)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
@@ -212,7 +210,7 @@ class MailComponent_TestCase(JCLTestCase):
                                     jid="account11@jmc.test.com")
         account11.status = account.ONLINE
         self.assertTrue(account11.first_check)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         account11.waiting_password_reply = True
         account11.live_email_only = True
         account11.password = None
@@ -220,7 +218,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(result, [])
         self.assertTrue(account11.first_check)
         self.assertTrue(account11.waiting_password_reply)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
@@ -268,7 +266,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.password = None
         self.assertFalse(account11.waiting_password_reply)
         result = self.comp.handler.feeder.feed(account11)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 1)
@@ -292,7 +290,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.password = "password"
         account11.get_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
-        self.assertTrue(account11.in_error)
+        self.assertNotEquals(account11.error, None)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 1)
@@ -316,7 +314,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.password = "password"
         account11.get_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
@@ -341,7 +339,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.get_mail_list = lambda: [0, 1]
         account11.get_mail = mock_get_mail
         result = self.comp.handler.feeder.feed(account11)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
@@ -374,7 +372,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.password = "password"
         account11.get_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
@@ -399,7 +397,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.get_mail_list = lambda: [0, 1]
         account11.get_mail_summary = mock_get_mail_summary
         result = self.comp.handler.feeder.feed(account11)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
@@ -422,14 +420,14 @@ class MailComponent_TestCase(JCLTestCase):
                                     jid="account11@jmc.test.com")
         account11.status = account.ONLINE
         self.assertTrue(account11.first_check)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         account11.live_email_only = True
         account11.password = "password"
         continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, True)
         self.assertFalse(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
@@ -445,7 +443,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.connect = raiser
         account11.status = account.ONLINE
         self.assertTrue(account11.first_check)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         account11.live_email_only = True
         account11.password = "password"
         continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
@@ -456,7 +454,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
-        self.assertTrue(account11.in_error)
+        self.assertEquals(account11.error, "")
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
@@ -472,7 +470,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.mark_all_as_read = raiser
         account11.status = account.ONLINE
         self.assertTrue(account11.first_check)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         account11.live_email_only = True
         account11.password = "password"
         continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
@@ -483,7 +481,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
-        self.assertTrue(account11.in_error)
+        self.assertEquals(account11.error, "")
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
@@ -499,7 +497,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.disconnect = raiser
         account11.status = account.ONLINE
         self.assertTrue(account11.first_check)
-        self.assertFalse(account11.in_error)
+        self.assertEquals(account11.error, None)
         account11.live_email_only = True
         account11.password = "password"
         continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
@@ -511,7 +509,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(continue_checking, False)
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
-        self.assertTrue(account11.in_error)
+        self.assertEquals(account11.error, "")
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
