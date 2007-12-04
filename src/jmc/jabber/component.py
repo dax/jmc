@@ -135,8 +135,8 @@ class MailComponent(FeederComponent):
         self.account_manager.account_classes = (IMAPAccount,
                                                 POP3Account,
                                                 SMTPAccount)
-        self.msg_handlers += [[SendMailMessageHandler(self),
-                               RootSendMailMessageHandler(self)]]
+        self.msg_handlers[0] += [SendMailMessageHandler(self),
+                                 RootSendMailMessageHandler(self)]
         self.presence_subscribe_handlers += [[MailSubscribeHandler(self)]]
         self.presence_unsubscribe_handlers += [[MailUnsubscribeHandler(self)]]
         self.presence_available_handlers += [[MailPresenceHandler(self)]]
