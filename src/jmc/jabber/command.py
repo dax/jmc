@@ -21,6 +21,7 @@
 ##
 
 import logging
+import re
 
 from pyxmpp.jabber.dataforms import Form
 import jcl.model.account as account
@@ -44,7 +45,7 @@ class MailCommandManager(JCLCommandManager):
         JCLCommandManager.__init__(self, component, account_manager)
         self.__logger = logging.getLogger("jmc.jabber.command.JMCCommandManager")
         #self.commands["jmc#retrieve-attachment"] = (False, command.account_node_re)
-        self.commands["jmc#force-check"] = (False, command.account_node_re)
+        self.commands["jmc#force-check"] = (False, re.compile(".*"))
 
     # Delayed to JMC 0.3.1
     def execute_retrieve_attachment_1(self, info_query, session_context,
@@ -78,9 +79,9 @@ class MailCommandManager(JCLCommandManager):
 
     # TODO: retrieve step2: Delayed to JMC 0.3.1
 
-    def execute_force_check_1(self, info_query, session_context,
-                              command_node, lang_class):
-        self.__logger.debug("Executing command 'force-check' step 1")
+    def execute_force_check_root_node(self, info_query, session_context,
+                                      command_node, lang_class):
+        self.__logger.debug("Executing command 'force-check' step 1 on root node")
         self.add_actions(command_node, [command.ACTION_COMPLETE])
         session_context["user_jids"] = [unicode(info_query.get_from().bare())]
         return (self.add_form_select_accounts(session_context, command_node,
@@ -88,15 +89,31 @@ class MailCommandManager(JCLCommandManager):
                                               "TODO:DESC", format_as_xml=True,
                                               show_user_jid=False), [])
 
-    def execute_force_check_2(self, info_query, session_context,
+    def execute_force_check_1(self, info_query, session_context,
                               command_node, lang_class):
-        self.__logger.debug("Executing command 'force-check' step 2")
-        command_node.setProp("status", command.STATUS_COMPLETED)
+        self.__logger.debug("Executing command 'force-check' step 1")
+        bare_from_jid = info_query.get_from().bare()
+        account_name = info_query.get_to().node
         accounts = []
-        for account_name in session_context["account_names"]:
-            name, user_jid = self.get_name_and_jid(account_name)
-            _account = account.get_account(user_jid, name)
-            _account.lastcheck = _account.interval - 1
-            accounts.append(_account)
+        if account_name is None:
+            if session_context.has_key("account_names"):
+                for account_name in session_context["account_names"]:
+                    name, user_jid = self.get_name_and_jid(account_name)
+                    _account = account.get_account(user_jid, name)
+                    _account.lastcheck = _account.interval - 1
+                    accounts.append(_account)
+            else:
+                return self.execute_force_check_root_node(info_query,
+                                                          session_context,
+                                                          command_node,
+                                                          lang_class)
+        else:
+            _account = account.get_account(bare_from_jid, account_name)
+            if _account is not None:
+                _account.lastcheck = _account.interval - 1
+                accounts.append(_account)
+        command_node.setProp("status", command.STATUS_COMPLETED)
         self.component.check_email_accounts(accounts, lang_class)
         return (None, [])
+
+    execute_force_check_2 = execute_force_check_1

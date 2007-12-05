@@ -31,14 +31,12 @@ from pyxmpp.jabber.dataforms import Form
 import jcl.tests
 from jcl.jabber.tests.command import JCLCommandManager_TestCase
 from jcl.jabber.feeder import Feeder
-from jcl.model.account import Account, PresenceAccount, LegacyJID, \
-    User
+from jcl.model.account import User
 import jcl.jabber.command as command
 
 from jmc.model.account import POP3Account, IMAPAccount, SMTPAccount, \
     MailAccount
 from jmc.jabber.component import MailComponent
-from jmc.jabber.command import MailCommandManager
 
 from jmc.jabber.tests.component import MockIMAPAccount
 
@@ -231,6 +229,52 @@ class MailCommandManager_TestCase(JCLCommandManager_TestCase):
 #                           "subscribe")
 
     def test_execute_force_check(self):
+        self.comp.account_manager.account_classes = (POP3Account, IMAPAccount,
+                                                     SMTPAccount, MockIMAPAccount)
+        class MockFeederHandler(Feeder):
+            def __init__(self, component):
+                Feeder.__init__(self, component)
+                self.checked_accounts = []
+
+            def feed(self, _account):
+                self.checked_accounts.append(_account)
+                assert(_account.lastcheck == (_account.interval - 1))
+                return []
+
+        self.comp.handler.feeder = MockFeederHandler(self.comp)
+        user1 = User(jid="test1@test.com")
+        user2 = User(jid="test2@test.com")
+        account11 = MockIMAPAccount(user=user1,
+                                    name="account11",
+                                    jid="account11@" + unicode(self.comp.jid))
+        account12 = MockIMAPAccount(user=user1,
+                                    name="account12",
+                                    jid="account12@" + unicode(self.comp.jid))
+        account21 = MockIMAPAccount(user=user2,
+                                    name="account21",
+                                    jid="account21@" + unicode(self.comp.jid))
+        account22 = MockIMAPAccount(user=user2,
+                                    name="account11",
+                                    jid="account11@" + unicode(self.comp.jid))
+        info_query = Iq(stanza_type="set",
+                        from_jid="test1@test.com",
+                        to_jid="account11@" + unicode(self.comp.jid))
+        command_node = info_query.set_new_content(command.COMMAND_NS, "command")
+        command_node.setProp("node", "jmc#force-check")
+        result = self.command_manager.apply_command_action(info_query,
+                                                           "jmc#force-check",
+                                                           "execute")
+        self.assertNotEquals(result, None)
+        self.assertEquals(len(result), 1)
+        xml_command = result[0].xpath_eval("c:command",
+                                           {"c": "http://jabber.org/protocol/commands"})[0]
+        self.assertEquals(xml_command.prop("status"), "completed")
+        self._check_actions(result[0])
+        feeder = self.comp.handler.feeder
+        self.assertEquals(len(feeder.checked_accounts), 1)
+        self.assertEquals(feeder.checked_accounts[0], account11)
+
+    def test_execute_force_check_root_node(self):
         self.comp.account_manager.account_classes = (POP3Account, IMAPAccount,
                                                      SMTPAccount, MockIMAPAccount)
         class MockFeederHandler(Feeder):
