@@ -244,10 +244,10 @@ class RootSendMailMessageHandler_TestCase(JCLTestCase):
                                                   u"Cc": "cc@test.com"})
 
 def suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(SendMailMessageHandler_TestCase, 'test'))
-    suite.addTest(unittest.makeSuite(RootSendMailMessageHandler_TestCase, 'test'))
-    return suite
+    test_suite = unittest.TestSuite()
+    test_suite.addTest(unittest.makeSuite(SendMailMessageHandler_TestCase, 'test'))
+    test_suite.addTest(unittest.makeSuite(RootSendMailMessageHandler_TestCase, 'test'))
+    return test_suite
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')

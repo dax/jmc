@@ -21,6 +21,13 @@
 ##
 
 from setuptools import setup, find_packages
+from distutils import sysconfig
+
+prefix = sysconfig.get_config_vars("prefix")
+if len(prefix) == 0 or prefix[0] == "/usr":
+    config_dir = "/etc/jabber"
+else:
+    config_dir = prefix[0] + "/etc/jabber"
 
 setup(name='jmc',
       version='0.3',
