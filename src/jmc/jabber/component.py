@@ -221,7 +221,7 @@ class MailFeeder(Feeder):
                     self.__logger.debug("\t" + _account.login \
                                             + "@" + _account.host)
                     _account.connect()
-                    mail_list = _account.get_mail_list()
+                    mail_list = _account.get_new_mail_list()
                     default_lang_class = _account.default_lang_class
                     if action == MailAccount.RETRIEVE:
                         # TODO : use generator (yield)

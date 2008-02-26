@@ -29,6 +29,7 @@ from email.Header import Header
 from email.MIMEText import MIMEText
 from email.MIMEMultipart import MIMEMultipart
 import traceback
+import types
 
 import poplib
 import imaplib
@@ -238,6 +239,32 @@ class MailAccount(PresenceAccount):
 
     get_presence_actions_fields = classmethod(_get_presence_actions_fields)
 
+    def get_decoded_header(self, header, charset_hint=None):
+        decoded_header = email.Header.decode_header(header)
+        decoded_header_str = u""
+        for i in range(len(decoded_header)):
+            try:
+                if decoded_header[i][1]:
+                    charset_hint = decoded_header[i][1]
+                    decoded_header_str += unicode(decoded_header[i][0].decode(\
+                            decoded_header[i][1]))
+                else:
+                    decoded_header_str += unicode(decoded_header[i][0].decode(\
+                            MailAccount.default_encoding))
+            except Exception,e:
+                try:
+                    decoded_header_str += unicode(decoded_header[i][0])
+                except Exception, e:
+                    try:
+                        decoded_header_str += unicode(decoded_header[i][0].decode(\
+                                "iso-8859-1"))
+                    except Exception, e:
+                        type, value, stack = sys.exc_info()
+                        print >>sys.stderr, \
+                            "".join(traceback.format_exception
+                                    (type, value, stack, 5))
+        return (decoded_header_str, charset_hint)
+
     def get_decoded_part(self, part, charset_hint):
         content_charset = part.get_content_charset()
         result = u""
@@ -265,64 +292,12 @@ class MailAccount(PresenceAccount):
 
         return result
 
-    def format_message(self, email_msg, include_body = True):
-        from_decoded = email.Header.decode_header(email_msg["From"])
-        charset_hint = None
-        email_from = u""
-        result = u"From : "
-        for i in range(len(from_decoded)):
-            try:
-                if from_decoded[i][1]:
-                    charset_hint = from_decoded[i][1]
-                    email_from += unicode(from_decoded[i][0].decode(\
-                            from_decoded[i][1]))
-                else:
-                    email_from += unicode(from_decoded[i][0].decode(\
-                            MailAccount.default_encoding))
-            except Exception,e:
-                try:
-                    email_from += unicode(from_decoded[i][0])
-                except Exception, e:
-                    try:
-                        email_from += unicode(from_decoded[i][0].decode(\
-                                "iso-8859-1"))
-                    except Exception, e:
-                        type, value, stack = sys.exc_info()
-                        print >>sys.stderr, \
-                            "".join(traceback.format_exception
-                                    (type, value, stack, 5))
-        result += email_from + u"\n"
-
-        subject_decoded = email.Header.decode_header(email_msg["Subject"])
-        result += u"Subject : "
-        for i in range(len(subject_decoded)):
-            try:
-                if subject_decoded[i][1]:
-                    charset_hint = subject_decoded[i][1]
-                    result += unicode(subject_decoded[i][0].decode(\
-                            subject_decoded[i][1]))
-                else:
-                    result += unicode(subject_decoded[i][0].decode(\
-                            MailAccount.default_encoding))
-            except Exception,e:
-                try:
-                    result += unicode(subject_decoded[i][0])
-                except Exception, e:
-                    try:
-                        result += unicode(subject_decoded[i][0].decode(\
-                                "iso-8859-1"))
-                    except Exception, e:
-                        if charset_hint is not None:
-                            try:
-                                result += unicode(subject_decoded[i][0].decode(\
-                                        charset_hint))
-                            except Exception, e:
-                                type, value, stack = sys.exc_info()
-                                print >>sys.stderr, \
-                                    "".join(traceback.format_exception
-                                            (type, value, stack, 5))
-
-        result += u"\n\n"
+    def format_message(self, email_msg, include_body=True):
+        (email_from, charset_hint) = self.get_decoded_header(email_msg["From"])
+        result = u"From : " + email_from + "\n"
+        (email_subject, charset_hint) = self.get_decoded_header(email_msg["Subject"],
+                                                                charset_hint)
+        result += u"Subject : " + email_subject + "\n\n"
 
         if include_body:
             action = {
@@ -340,7 +315,7 @@ class MailAccount(PresenceAccount):
         return self.format_message(email_msg, False)
 
     def get_default_status_msg(self, lang_class):
-	return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
+        return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
 	    unicode(self.port)
 
     def connect(self):
@@ -349,7 +324,10 @@ class MailAccount(PresenceAccount):
     def disconnect(self):
         raise NotImplementedError
 
-    def get_mail_list(self):
+    def get_mail_list_summary(self, start_index=0, end_index=20):
+        raise NotImplementedError
+
+    def get_new_mail_list(self):
         raise NotImplementedError
 
     def get_mail(self, index):
@@ -394,15 +372,15 @@ class IMAPAccount(MailAccount):
     get_default_port = classmethod(_get_default_port)
 
     def _init(self, *args, **kw):
-	MailAccount._init(self, *args, **kw)
+        MailAccount._init(self, *args, **kw)
         self.__logger = logging.getLogger("jmc.IMAPConnection")
         self._regexp_list = re.compile("\((.*)\) \"(.)\" \"?([^\"]*)\"?$")
         self.__cached_folders = {}
 
     def get_type(self):
-	if self.ssl:
-	    return "imaps"
-	return "imap"
+        if self.ssl:
+            return "imaps"
+        return "imap"
 
     def _get_real_mailbox(self):
         """
@@ -412,7 +390,7 @@ class IMAPAccount(MailAccount):
         return self.mailbox.replace("/", self.delimiter)
 
     def get_status(self):
-	return MailAccount.get_status(self) + "/" + self.mailbox
+        return MailAccount.get_status(self) + "/" + self.mailbox
 
     def connect(self):
         self.__logger.debug("Connecting to IMAP server "
@@ -427,36 +405,53 @@ class IMAPAccount(MailAccount):
         self.connected = True
 
     def disconnect(self):
-	self.__logger.debug("Disconnecting from IMAP server "
+        self.__logger.debug("Disconnecting from IMAP server "
                             + self.host)
-	self.connection.logout()
+        self.connection.logout()
         self.connected = False
 
-    def get_mail_list(self):
-	self.__logger.debug("Getting mail list")
-	typ, data = self.connection.select(self._get_real_mailbox())
-	typ, data = self.connection.search(None, 'RECENT')
-	if typ == 'OK':
-	    return data[0].split(' ')
-	return None
+    def get_mail_list_summary(self, start_index=1, end_index=20):
+        self.__logger.debug("Getting mail list summary")
+        typ, count = self.connection.select(self._get_real_mailbox(), True)
+        result = []
+        if typ == "OK":
+            typ, data = self.connection.fetch(str(start_index) + ":" +
+                                              str(end_index),
+                                              "RFC822.header")
+            if typ == 'OK':
+                index = start_index
+                for _email in data:
+                    if isinstance(_email, types.TupleType) and len(_email) == 2:
+                        subject_header = self.get_decoded_header(email.message_from_string(_email[1])["Subject"])[0]
+                        result.append((str(index), subject_header))
+                        index += 1
+        return result
+
+    def get_new_mail_list(self):
+        self.__logger.debug("Getting mail list")
+        typ, data = self.connection.select(self._get_real_mailbox(), True)
+        typ, data = self.connection.search(None, 'RECENT')
+        if typ == 'OK':
+            return data[0].split(' ')
+        return None
 
     def get_mail(self, index):
-	self.__logger.debug("Getting mail " + str(index))
-	typ, data = self.connection.select(self.mailbox, True)
-	typ, data = self.connection.fetch(index, '(RFC822)')
-	if typ == 'OK':
+        self.__logger.debug("Getting mail " + str(index))
+        typ, data = self.connection.select(self._get_real_mailbox(), True)
+        typ, data = self.connection.fetch(index, '(RFC822)')
+        if typ == 'OK':
             return self.format_message(\
                 email.message_from_string(data[0][1]))
-	return u"Error while fetching mail " + str(index)
+        return u"Error while fetching mail " + str(index)
 
     def get_mail_summary(self, index):
-	self.__logger.debug("Getting mail summary " + str(index))
-	typ, data = self.connection.select(self.mailbox, True)
-	typ, data = self.connection.fetch(index, '(RFC822)')
-	if typ == 'OK':
+        self.__logger.debug("Getting mail summary " + str(index))
+        typ, data = self.connection.select(self._get_real_mailbox(), True)
+        typ, data = self.connection.fetch(index, '(RFC822.header)')
+        if typ == 'OK':
             return self.format_message_summary(\
                 email.message_from_string(data[0][1]))
-	return u"Error while fetching mail " + str(index)
+        return u"Error while fetching mail " + str(index)
 
     def get_next_mail_index(self, mail_list):
         if self.is_mail_list_valid(mail_list):
@@ -465,7 +460,7 @@ class IMAPAccount(MailAccount):
             return None
 
     def mark_all_as_read(self):
-        self.get_mail_list()
+        self.get_new_mail_list()
 
     type = property(get_type)
 
@@ -525,7 +520,8 @@ class IMAPAccount(MailAccount):
                 self.delimiter = match.group(2)
             else:
                 self.disconnect()
-                raise Exception("Cannot find mailbox " + self.mailbox)
+                raise Exception("Cannot find delimiter for mailbox "
+                                + self.mailbox)
         else:
             self.disconnect()
             raise Exception("Cannot find mailbox " + self.mailbox)
@@ -578,8 +574,23 @@ class POP3Account(MailAccount):
         self.connection.quit()
         self.connected = False
 
-    def get_mail_list(self):
+    def get_mail_list_summary(self, start_index=0, end_index=20):
         self.__logger.debug("Getting mail list")
+        count, size = self.connection.stat()
+        result = []
+        for index in xrange(1, count + 1):
+            (ret, data, octets) = self.connection.top(index, 0)
+            if ret[0:3] == '+OK':
+                subject_header = self.get_decoded_header(email.message_from_string('\n'.join(data))["Subject"])[0]
+                result.append((str(index), subject_header))
+        try:
+            self.connection.rset()
+        except:
+            pass
+        return result
+
+    def get_new_mail_list(self):
+        self.__logger.debug("Getting new mail list")
         count, size = self.connection.stat()
         self.nb_mail = count
         return [str(i) for i in range(1, count + 1)]
@@ -621,7 +632,7 @@ class POP3Account(MailAccount):
             return None
 
     def mark_all_as_read(self):
-        self.get_mail_list()
+        self.get_new_mail_list()
         self.lastmail = self.nb_mail
 
 
@@ -719,16 +730,16 @@ class SMTPAccount(Account):
 
     def create_email(self, from_email, to_email, subject, body, other_headers=None):
         """Create new email"""
-        email = MIMEText(body)
+        _email = MIMEText(body)
         if subject is None:
             subject = ""
-        email['Subject'] = Header(str(subject))
-        email['From'] = Header(str(from_email))
-        email['To'] = Header(str(to_email))
+        _email['Subject'] = Header(str(subject))
+        _email['From'] = Header(str(from_email))
+        _email['To'] = Header(str(to_email))
         if other_headers is not None:
             for header_name in other_headers.keys():
-                email[header_name] = Header(other_headers[header_name])
-        return email
+                _email[header_name] = Header(other_headers[header_name])
+        return _email
 
     def __say_hello(self, connection):
         if not (200 <= connection.ehlo()[0] <= 299):
@@ -736,10 +747,10 @@ class SMTPAccount(Account):
             if not (200 <= code <= 299):
                 raise SMTPHeloError(code, resp)
 
-    def send_email(self, email):
+    def send_email(self, _email):
         """Send email according to current account parameters"""
         self.__logger.debug("Sending email:\n"
-                            + str(email))
+                            + str(_email))
         smtp_connection = smtplib.SMTP()
         if self.__logger.getEffectiveLevel() == logging.DEBUG:
             smtp_connection.set_debuglevel(1)
@@ -768,6 +779,6 @@ class SMTPAccount(Account):
                     current_error = error
             if current_error is not None:
                 raise current_error
-        smtp_connection.sendmail(str(email['From']), str(email['To']),
-                                 email.as_string())
+        smtp_connection.sendmail(str(_email['From']), str(_email['To']),
+                                 _email.as_string())
         smtp_connection.quit()

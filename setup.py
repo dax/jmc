@@ -1,6 +1,6 @@
 ##
 ## setup.py
-## Login : <dax@happycoders.org>
+## Login : David Rousselie <dax@happycoders.org>
 ## Started on  Tue Apr 17 21:12:33 2007 David Rousselie
 ## $Id$
 ## 

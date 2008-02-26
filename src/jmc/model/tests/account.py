@@ -54,70 +54,78 @@ class MailAccount_TestCase(PresenceAccount_TestCase):
 
     test_get_decoded_part_not_encoded = \
         make_test((False, False, False), \
-                  lambda self, email: self.account.get_decoded_part(email, None), \
+                  lambda self, email: \
+                      self.account.get_decoded_part(email, None),
                   u"Not encoded single part")
 
     test_get_decoded_part_encoded = \
-        make_test((True, False, False), \
-                  lambda self, email: self.account.get_decoded_part(email, None), \
+        make_test((True, False, False),
+                  lambda self, email: \
+                      self.account.get_decoded_part(email, None),
                   u"Encoded single part with 'iso-8859-15' charset (éàê)")
 
     test_format_message_summary_not_encoded = \
-        make_test((False, False, True), \
-                  lambda self, email: self.account.format_message_summary(email), \
-                  (u"From : not encoded from\nSubject : not encoded subject\n\n", \
+        make_test((False, False, True),
+                  lambda self, email: \
+                      self.account.format_message_summary(email),
+                  (u"From : not encoded from\nSubject : not encoded subject\n\n",
                    u"not encoded from"))
 
     test_format_message_summary_encoded = \
-        make_test((True, False, True), \
-                  lambda self, email: self.account.format_message_summary(email), \
+        make_test((True, False, True),
+                  lambda self, email: \
+                      self.account.format_message_summary(email),
                   (u"From : encoded from (éàê)\nSubject : encoded subject " + \
-                   u"(éàê)\n\n", \
+                       u"(éàê)\n\n",
                    u"encoded from (éàê)"))
 
     test_format_message_summary_partial_encoded = \
-        make_test((True, False, True), \
+        make_test((True, False, True),
                   lambda self, email: \
-                  email.replace_header("Subject", \
-                                       "\" " + str(email["Subject"]) \
-                                       + " \" not encoded part") or \
-                  email.replace_header("From", \
-                                       "\" " + str(email["From"]) \
-                                       + " \" not encoded part") or \
-                  self.account.format_message_summary(email), \
+                      email.replace_header("Subject",
+                                           "\" " + str(email["Subject"]) \
+                                               + " \" not encoded part") or \
+                      email.replace_header("From",
+                                           "\" " + str(email["From"]) \
+                                               + " \" not encoded part") or \
+                  self.account.format_message_summary(email),
                   (u"From : \"encoded from (éàê)\" not encoded part\nSubject " + \
-                   u": \"encoded subject (éàê)\" not encoded part\n\n", \
+                       u": \"encoded subject (éàê)\" not encoded part\n\n",
                    u"\"encoded from (éàê)\" not encoded part"))
 
     test_format_message_single_not_encoded = \
-        make_test((False, False, True), \
-                  lambda self, email: self.account.format_message(email), \
+        make_test((False, False, True),
+                  lambda self, email: \
+                      self.account.format_message(email),
                   (u"From : not encoded from\nSubject : not encoded subject" + \
-                   u"\n\nNot encoded single part\n", \
+                       u"\n\nNot encoded single part\n",
                    u"not encoded from"))
 
     test_format_message_single_encoded = \
-        make_test((True, False, True), \
-                  lambda self, email: self.account.format_message(email), \
+        make_test((True, False, True),
+                  lambda self, email: \
+                      self.account.format_message(email),
                   (u"From : encoded from (éàê)\nSubject : encoded subject " + \
-                   u"(éàê)\n\nEncoded single part with 'iso-8859-15' charset" + \
-                   u" (éàê)\n", \
+                       u"(éàê)\n\nEncoded single part with 'iso-8859-15' charset" + \
+                       u" (éàê)\n",
                    u"encoded from (éàê)"))
 
     test_format_message_multi_not_encoded = \
-        make_test((False, True, True), \
-                  lambda self, email: self.account.format_message(email), \
+        make_test((False, True, True),
+                  lambda self, email: \
+                      self.account.format_message(email),
                   (u"From : not encoded from\nSubject : not encoded subject" + \
-                   u"\n\nNot encoded multipart1\nNot encoded multipart2\n", \
+                       u"\n\nNot encoded multipart1\nNot encoded multipart2\n",
                    u"not encoded from"))
 
     test_format_message_multi_encoded = \
-        make_test((True, True, True), \
-                  lambda self, email: self.account.format_message(email), \
+        make_test((True, True, True),
+                  lambda self, email: \
+                      self.account.format_message(email),
                   (u"From : encoded from (éàê)\nSubject : encoded subject (éà" + \
-                   u"ê)\n\nutf-8 multipart1 with no charset (éàê)" + \
-                   u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n" + \
-                   u"Encoded multipart3 with no charset (éàê)\n", \
+                       u"ê)\n\nutf-8 multipart1 with no charset (éàê)" + \
+                       u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n" + \
+                       u"Encoded multipart3 with no charset (éàê)\n",
                    u"encoded from (éàê)"))
 
 class POP3Account_TestCase(InheritableAccount_TestCase):
@@ -161,72 +169,90 @@ class POP3Account_TestCase(InheritableAccount_TestCase):
                             "Sended queries does not match expected queries.")
         return inner
 
-    test_connection = make_test()
+    test_connection = make_test
 
-    test_get_mail_list = \
+    test_get_mail_list_summary = \
+        make_test(["+OK 2 20\r\n",
+                   "+OK 10 octets\r\n" + \
+                       "From: user@test.com\r\n" + \
+                       "Subject: mail subject 1\r\n.\r\n",
+                   "+OK 10 octets\r\n" + \
+                       "From: user@test.com\r\n" + \
+                       "Subject: mail subject 2\r\n.\r\n",
+                   "+OK\r\n"],
+                  ["STAT\r\n",
+                   "TOP 1 0\r\n",
+                   "TOP 2 0\r\n",
+                   "RSET\r\n"],
+                  lambda self: \
+                      self.assertEquals(self.pop3_account.get_mail_list_summary(),
+                                        [("1", "mail subject 1"),
+                                         ("2", "mail subject 2")]))
+
+    test_get_new_mail_list = \
         make_test(["+OK 2 20\r\n"],
                   ["STAT\r\n"],
                   lambda self: \
-                      self.assertEquals(self.pop3_account.get_mail_list(),
+                      self.assertEquals(self.pop3_account.get_new_mail_list(),
                                         ["1", "2"]))
 
     test_get_mail_summary = \
-        make_test(["+OK 10 octets\r\n" +
-                   "From: user@test.com\r\n" +
-                   "Subject: subject test\r\n\r\n" +
-                   "mymessage\r\n.\r\n",
+        make_test(["+OK 10 octets\r\n" + \
+                       "From: user@test.com\r\n" + \
+                       "Subject: subject test\r\n\r\n" + \
+                       "mymessage\r\n.\r\n",
                    "+OK\r\n"],
                   ["RETR 1\r\n",
                    "RSET\r\n"],
                   lambda self: \
                       self.assertEquals(self.pop3_account.get_mail_summary(1),
-                                        (u"From : user@test.com\n" +
-                                         u"Subject : subject test\n\n",
+                                        (u"From : user@test.com\n" + \
+                                             u"Subject : subject test\n\n",
                                          u"user@test.com")))
 
     test_get_mail = \
-        make_test(["+OK 10 octets\r\n" +
-                   "From: user@test.com\r\n" +
-                   "Subject: subject test\r\n\r\n" +
-                   "mymessage\r\n.\r\n",
+        make_test(["+OK 10 octets\r\n" + \
+                       "From: user@test.com\r\n" + \
+                       "Subject: subject test\r\n\r\n" + \
+                       "mymessage\r\n.\r\n",
                    "+OK\r\n"],
                   ["RETR 1\r\n",
-                   "RSET\r\n"], \
+                   "RSET\r\n"],
                   lambda self: \
-                  self.assertEquals(self.pop3_account.get_mail(1), \
-                                    (u"From : user@test.com\n" + \
-                                     u"Subject : subject test\n\n" + \
-                                     u"mymessage\n", \
-                                     u"user@test.com")))
+                      self.assertEquals(self.pop3_account.get_mail(1),
+                                        (u"From : user@test.com\n" + \
+                                             u"Subject : subject test\n\n" + \
+                                             u"mymessage\n",
+                                         u"user@test.com")))
 
     test_unsupported_reset_command_get_mail_summary = \
         make_test(["+OK 10 octets\r\n" + \
-                   "From: user@test.com\r\n" + \
-                   "Subject: subject test\r\n\r\n" + \
-                   "mymessage\r\n.\r\n",
-                   "-ERR unknown command\r\n"], \
+                       "From: user@test.com\r\n" + \
+                       "Subject: subject test\r\n\r\n" + \
+                       "mymessage\r\n.\r\n",
+                   "-ERR unknown command\r\n"],
                   ["RETR 1\r\n",
-                   "RSET\r\n"], \
+                   "RSET\r\n"],
                   lambda self: \
-                  self.assertEquals(self.pop3_account.get_mail_summary(1), \
-                                    (u"From : user@test.com\n" + \
-                                     u"Subject : subject test\n\n", \
-                                     u"user@test.com")))
+                      self.assertEquals(self.pop3_account.get_mail_summary(1),
+                                        (u"From : user@test.com\n" + \
+                                             u"Subject : subject test\n\n",
+                                         u"user@test.com")))
 
     test_unsupported_reset_command_get_mail = \
         make_test(["+OK 10 octets\r\n" + \
-                   "From: user@test.com\r\n" + \
-                   "Subject: subject test\r\n\r\n" + \
-                   "mymessage\r\n.\r\n",
-                   "-ERR unknown command\r\n"], \
+                       "From: user@test.com\r\n" + \
+                       "Subject: subject test\r\n\r\n" + \
+                       "mymessage\r\n.\r\n",
+                   "-ERR unknown command\r\n"],
                   ["RETR 1\r\n",
-                   "RSET\r\n"], \
+                   "RSET\r\n"],
                   lambda self: \
-                  self.assertEquals(self.pop3_account.get_mail(1), \
-                                    (u"From : user@test.com\n" + \
-                                     u"Subject : subject test\n\n" + \
-                                     u"mymessage\n", \
-                                     u"user@test.com")))
+                      self.assertEquals(self.pop3_account.get_mail(1),
+                                        (u"From : user@test.com\n" + \
+                                             u"Subject : subject test\n\n" + \
+                                             u"mymessage\n",
+                                         u"user@test.com")))
 
 class IMAPAccount_TestCase(InheritableAccount_TestCase):
     def setUp(self):
@@ -278,21 +304,43 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
         test_func = self.make_test()
         test_func()
 
-    def test_get_mail_list(self):
-        test_func = self.make_test([lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" +\
-                                    " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" +\
-                                    " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
-                                    data.split()[0] + \
-                                    " OK [READ-WRITE] SELECT completed\n", \
-                                    lambda data: "* SEARCH 9 10 \n" + \
-                                    data.split()[0] + " OK SEARCH completed\n"], \
-                                   ["^[^ ]* SELECT INBOX", \
-                                    "^[^ ]* SEARCH RECENT"], \
-                                   lambda self: \
-                                   self.assertEquals(self.imap_account.get_mail_list(), ['9', '10']))
+    def test_get_mail_list_summary(self):
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* 1 FETCH ((RFC822.header) {38}\r\n" + \
+                 "Subject: mail subject 1\r\n\r\nbody text\r\n)\r\n" + \
+                 "* 2 FETCH ((RFC822.header) {38}\r\n" + \
+                 "Subject: mail subject 2\r\n\r\nbody text\r\n)\r\n" + \
+                 data.split()[0] + " OK FETCH completed\r\n"],
+            ["^[^ ]* EXAMINE INBOX",
+             "^[^ ]* FETCH 1:20 RFC822.header"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_mail_list_summary(),
+                                  [('1', 'mail subject 1'),
+                                   ('2', 'mail subject 2')]))
         test_func()
 
-    def test_get_mail_list_delimiter1(self):
+    def test_get_new_mail_list(self):
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
+                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\n",
+             lambda data: "* SEARCH 9 10 \n" + \
+                 data.split()[0] + " OK SEARCH completed\n"],
+            ["^[^ ]* EXAMINE INBOX",
+             "^[^ ]* SEARCH RECENT"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_new_mail_list(),
+                                  ['9', '10']))
+        test_func()
+
+    def test_get_new_mail_list_delimiter1(self):
         self.imap_account.mailbox = "INBOX/dir1/subdir2"
         self.imap_account.delimiter = "."
         test_func = self.make_test( \
@@ -300,16 +348,17 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                  " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
                  " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
                  data.split()[0] + \
-                 " OK [READ-WRITE] SELECT completed\n", \
-                 lambda data: "* SEARCH 9 10 \n" + \
-                 data.split()[0] + " OK SEARCH completed\n"], \
-                ["^[^ ]* SELECT \"?INBOX\.dir1\.subdir2\"?",
-                 "^[^ ]* SEARCH RECENT"], \
-                lambda self: \
-                self.assertEquals(self.imap_account.get_mail_list(), ['9', '10']))
+                 " OK [READ-WRITE] SELECT completed\n",
+             lambda data: "* SEARCH 9 10 \n" + \
+                 data.split()[0] + " OK SEARCH completed\n"],
+            ["^[^ ]* EXAMINE \"?INBOX\.dir1\.subdir2\"?",
+             "^[^ ]* SEARCH RECENT"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_new_mail_list(),
+                                  ['9', '10']))
         test_func()
 
-    def test_get_mail_list_delimiter2(self):
+    def test_get_new_mail_list_delimiter2(self):
         self.imap_account.mailbox = "INBOX/dir1/subdir2"
         self.imap_account.delimiter = "/"
         test_func = self.make_test( \
@@ -317,45 +366,90 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                  " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
                  " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
                  data.split()[0] + \
-                 " OK [READ-WRITE] SELECT completed\n", \
-                 lambda data: "* SEARCH 9 10 \n" + \
-                 data.split()[0] + " OK SEARCH completed\n"], \
-                ["^[^ ]* SELECT \"?INBOX/dir1/subdir2\"?",
-                 "^[^ ]* SEARCH RECENT"], \
-                lambda self: \
-                self.assertEquals(self.imap_account.get_mail_list(), ['9', '10']))
+                 " OK [READ-WRITE] SELECT completed\n",
+             lambda data: "* SEARCH 9 10 \n" + \
+                 data.split()[0] + " OK SEARCH completed\n"],
+            ["^[^ ]* EXAMINE \"?INBOX/dir1/subdir2\"?",
+             "^[^ ]* SEARCH RECENT"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_new_mail_list(),
+                                  ['9', '10']))
         test_func()
 
     def test_get_mail_summary(self):
-        test_func = self.make_test([lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
-                                        " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
-                                        " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
-                                        data.split()[0] + \
-                                        " OK [READ-WRITE] SELECT completed\r\n", \
-                                        lambda data: "* 1 FETCH ((RFC822) {12}\r\nbody" + \
-                                        " text\r\n)\r\n" + \
-                                        data.split()[0] + " OK FETCH completed\r\n"],
-                                   ["^[^ ]* EXAMINE INBOX",
-                                    "^[^ ]* FETCH 1 \(RFC822\)"],
-                                   lambda self: self.assertEquals(self.imap_account.get_mail_summary(1),
-                                                                  (u"From : None\nSubject : None\n\n",
-                                                                   u"None")))
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* 1 FETCH ((RFC822) {12}\r\nbody" + \
+                 " text\r\n)\r\n" + \
+                 data.split()[0] + " OK FETCH completed\r\n"],
+            ["^[^ ]* EXAMINE INBOX",
+             "^[^ ]* FETCH 1 \(RFC822.header\)"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_mail_summary(1),
+                                  (u"From : None\nSubject : None\n\n",
+                                   u"None")))
+        test_func()
+
+    def test_get_mail_summary_delimiter(self):
+        self.imap_account.mailbox = "INBOX/dir1/subdir2"
+        self.imap_account.delimiter = "."
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* 1 FETCH ((RFC822) {12}\r\nbody" + \
+                 " text\r\n)\r\n" + \
+                 data.split()[0] + " OK FETCH completed\r\n"],
+            ["^[^ ]* EXAMINE \"?INBOX\.dir1\.subdir2\"?",
+             "^[^ ]* FETCH 1 \(RFC822.header\)"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_mail_summary(1),
+                                  (u"From : None\nSubject : None\n\n",
+                                   u"None")))
         test_func()
 
     def test_get_mail(self):
-        test_func = self.make_test([lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
-                               " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
-                               " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
-                               data.split()[0] + \
-                               " OK [READ-WRITE] SELECT completed\r\n", \
-                               lambda data: "* 1 FETCH ((RFC822) {11}\r\nbody" + \
-                               " text\r\n)\r\n" + \
-                               data.split()[0] + " OK FETCH completed\r\n"], \
-                              ["^[^ ]* EXAMINE INBOX", \
-                               "^[^ ]* FETCH 1 \(RFC822\)",], \
-                              lambda self: self.assertEquals(self.imap_account.get_mail(1), \
-                                                             (u"From : None\nSubject : None\n\nbody text\r\n\n", \
-                                                              u"None")))
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" + \
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* 1 FETCH ((RFC822) {11}\r\nbody" + \
+                 " text\r\n)\r\n" + \
+                 data.split()[0] + " OK FETCH completed\r\n"],
+            ["^[^ ]* EXAMINE INBOX",
+             "^[^ ]* FETCH 1 \(RFC822\)"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_mail(1),
+                                  (u"From : None\nSubject : None\n\nbody text\r\n\n",
+                                   u"None")))
+        test_func()
+
+    def test_get_mail_delimiter(self):
+        self.imap_account.mailbox = "INBOX/dir1/subdir2"
+        self.imap_account.delimiter = "."
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" + \
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* 1 FETCH ((RFC822) {11}\r\nbody" + \
+                 " text\r\n)\r\n" + \
+                 data.split()[0] + " OK FETCH completed\r\n"],
+            ["^[^ ]* EXAMINE \"?INBOX\.dir1\.subdir2\"?",
+             "^[^ ]* FETCH 1 \(RFC822\)"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_mail(1),
+                                  (u"From : None\nSubject : None\n\nbody text\r\n\n",
+                                   u"None")))
         test_func()
 
     def test_build_folder_cache(self):
@@ -576,7 +670,7 @@ class SMTPAccount_TestCase(Account_TestCase):
                                    None, None, None, None,
                                    None, None, None, None,
                                    "250 OK\r\n"],
-                                  ["ehlo \[127.0.0.1\]\r\n",
+                                  ["ehlo \[127.0...1\]\r\n",
                                    "mail FROM:<" + str(email['From']) + ">.*",
                                    "rcpt TO:<" + str(email['To']) + ">\r\n",
                                    "data\r\n"] +
@@ -609,8 +703,8 @@ class SMTPAccount_TestCase(Account_TestCase):
                                    None, None, None, None,
                                    None, None, None, None,
                                    "250 OK\r\n"],
-                                  ["ehlo \[127.0.0.1\]\r\n",
-                                   "helo \[127.0.0.1\]\r\n",
+                                  ["ehlo \[127.0...1\]\r\n",
+                                   "helo \[127.0...1\]\r\n",
                                    "mail FROM:<" + str(email['From']) + ">.*",
                                    "rcpt TO:<" + str(email['To']) + ">\r\n",
                                    "data\r\n"] +
@@ -647,7 +741,7 @@ class SMTPAccount_TestCase(Account_TestCase):
                                    None, None, None, None,
                                    None, None, None, None,
                                    "250 OK\r\n"],
-                                  ["ehlo \[127.0.0.1\]\r\n",
+                                  ["ehlo \[127.0...1\]\r\n",
                                    "AUTH CRAM-MD5\r\n",
                                    ".*\r\n",
                                    "mail FROM:<" + str(email['From']) + ">.*",
@@ -688,7 +782,7 @@ class SMTPAccount_TestCase(Account_TestCase):
                                    None, None, None, None,
                                    None, None, None, None,
                                    "250 OK\r\n"],
-                                  ["ehlo \[127.0.0.1\]\r\n",
+                                  ["ehlo \[127.0...1\]\r\n",
                                    "AUTH CRAM-MD5\r\n",
                                    ".*\r\n",
                                    "AUTH LOGIN .*\r\n",

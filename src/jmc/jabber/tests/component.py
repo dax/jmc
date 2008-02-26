@@ -288,7 +288,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.lastcheck = 1
         account11.interval = 2
         account11.password = "password"
-        account11.get_mail_list = lambda: []
+        account11.get_new_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
         self.assertNotEquals(account11.error, None)
         self.assertEquals(len(result), 0)
@@ -312,7 +312,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.lastcheck = 1
         account11.interval = 2
         account11.password = "password"
-        account11.get_mail_list = lambda: []
+        account11.get_new_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
@@ -336,7 +336,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.lastcheck = 1
         account11.interval = 2
         account11.password = "password"
-        account11.get_mail_list = lambda: [0, 1]
+        account11.get_new_mail_list = lambda: [0, 1]
         account11.get_mail = mock_get_mail
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
@@ -370,7 +370,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.lastcheck = 1
         account11.interval = 2
         account11.password = "password"
-        account11.get_mail_list = lambda: []
+        account11.get_new_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
@@ -394,7 +394,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.lastcheck = 1
         account11.interval = 2
         account11.password = "password"
-        account11.get_mail_list = lambda: [0, 1]
+        account11.get_new_mail_list = lambda: [0, 1]
         account11.get_mail_summary = mock_get_mail_summary
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
