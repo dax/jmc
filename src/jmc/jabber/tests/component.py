@@ -141,6 +141,7 @@ class MockIMAPAccount(MockMailAccount, IMAPAccount):
     def _init(self, *args, **kw):
         IMAPAccount._init(self, *args, **kw)
         MockMailAccount._init(self)
+        self.get_mail_list_summary_called = False
 
     def ls_dir(self, imap_dir):
         if imap_dir == "":
@@ -152,12 +153,17 @@ class MockIMAPAccount(MockMailAccount, IMAPAccount):
         return []
 
     def get_mail_with_attachment_list(self):
-       return [("1", "mail 1"),
-               ("2", "mail 2")]
+        return [("1", "mail 1"),
+                ("2", "mail 2")]
 
     def get_mail_list_summary(self):
-       return [("1", "mail 1"),
-               ("2", "mail 2")]
+        if self.get_mail_list_summary_called:
+           return [("3", "mail 3"),
+                   ("4", "mail 4")]
+        else:
+           self.get_mail_list_summary_called = True
+           return [("1", "mail 1"),
+                   ("2", "mail 2")]
 
 
 class MockPOP3Account(MockMailAccount, POP3Account):

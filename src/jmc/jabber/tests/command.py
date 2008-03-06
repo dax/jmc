@@ -36,6 +36,7 @@ from jcl.jabber.feeder import Feeder
 from jcl.model.account import User, Account, PresenceAccount
 from jcl.jabber.tests.command import JCLCommandManagerTestCase
 import jcl.jabber.command as command
+import jcl.jabber.tests.command
 
 from jmc.model.account import POP3Account, IMAPAccount, SMTPAccount, \
     MailAccount
@@ -174,7 +175,7 @@ class MailCommandManagerForceCheckCommand_TestCase(MailCommandManagerTestCase):
                           ["test1@test.com"])
 
         # Second step
-        info_query = self.prepare_submit(\
+        info_query = jcl.jabber.tests.command.prepare_submit(\
             node="jmc#force-check",
             session_id=session_id,
             from_jid="test1@test.com",
@@ -224,7 +225,10 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
                     "from" + str(email_index) + "@test.com")
         self.account11.__dict__["get_mail"] = get_email
 
-    def check_step_1 (self, result):
+    def check_step_1(self, result, options="<option label=\"mail 1\">" \
+                         + "<value>1</value></option>" \
+                         + "<option label=\"mail 2\">" \
+                         + "<value>2</value></option>"):
         """
         Check first step result of get-email ad-hoc command
         """
@@ -242,10 +246,7 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
                 + "</instructions>"
                 + "<field var='emails' type='list-multi' label='"
                 + Lang.en.field_email_subject + "'>"
-                + "<option label=\"mail 1\">"
-                + "<value>1</value></option>"
-                + "<option label=\"mail 2\">"
-                + "<value>2</value></option>"
+                + options
                 + "</field><field var='fetch_more' type='boolean' label='"
                 + Lang.en.field_select_more_emails + "'>"
                 + "</field></x></command></iq>",
@@ -254,6 +255,23 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
         self.assertNotEquals(session_id, None)
         return session_id
 
+    def check_email_message(self, result_iq, index):
+        """ """
+        self.assertTrue(jcl.tests.is_xml_equal(\
+                u"<message from='account11@" + unicode(self.comp.jid)
+                + "' to='test1@test.com' "
+                + "xmlns='http://pyxmpp.jabberstudio.org/xmlns/common'>"
+                + "<subject>" + Lang.en.mail_subject \
+                    % ("from" + str(index) + "@test.com")
+                + "</subject>"
+                + "<body>mail body " + str(index) + "</body>"
+                + "<addresses xmlns='http://jabber.org/protocol/address'>"
+                + "<address type='replyto' jid='from" + str(index)
+                + "%test.com@jmc.test.com'/>"
+                + "</addresses>"
+                + "</message>",
+                result_iq, True, test_sibling=False))
+        
     def test_execute_get_email(self):
         """
         Test single email retrieval
@@ -267,7 +285,7 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
         session_id = self.check_step_1(result)
 
         # Second step
-        info_query = self.prepare_submit(\
+        info_query = jcl.jabber.tests.command.prepare_submit(\
             node="jmc#get-email",
             session_id=session_id,
             from_jid="test1@test.com",
@@ -298,18 +316,7 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
                 + "</x></command></iq>",
                 result_iq, True, test_sibling=False))
         result_iq = result[1].xmlnode
-        self.assertTrue(jcl.tests.is_xml_equal(\
-                u"<message from='account11@" + unicode(self.comp.jid)
-                + "' to='test1@test.com' "
-                + "xmlns='http://pyxmpp.jabberstudio.org/xmlns/common'>"
-                + "<subject>" + Lang.en.mail_subject % ("from1@test.com")
-                + "</subject>"
-                + "<body>mail body 1</body>"
-                + "<addresses xmlns='http://jabber.org/protocol/address'>"
-                + "<address type='replyto' jid='from1%test.com@jmc.test.com'/>"
-                + "</addresses>"
-                + "</message>",
-                result_iq, True, test_sibling=False))
+        self.check_email_message(result_iq, 1)
 
     def test_execute_get_emails(self):
         """
@@ -324,7 +331,7 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
         session_id = self.check_step_1(result)
 
         # Second step
-        info_query = self.prepare_submit(\
+        info_query = jcl.jabber.tests.command.prepare_submit(\
             node="jmc#get-email",
             session_id=session_id,
             from_jid="test1@test.com",
@@ -355,31 +362,83 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
                 + "</x></command></iq>",
                 result_iq, True, test_sibling=False))
         result_iq = result[1].xmlnode
-        self.assertTrue(jcl.tests.is_xml_equal(\
-                u"<message from='account11@" + unicode(self.comp.jid)
-                + "' to='test1@test.com' "
-                + "xmlns='http://pyxmpp.jabberstudio.org/xmlns/common'>"
-                + "<subject>" + Lang.en.mail_subject % ("from1@test.com")
-                + "</subject>"
-                + "<body>mail body 1</body>"
-                + "<addresses xmlns='http://jabber.org/protocol/address'>"
-                + "<address type='replyto' jid='from1%test.com@jmc.test.com'/>"
-                + "</addresses>"
-                + "</message>",
-                result_iq, True, test_sibling=False))
+        self.check_email_message(result_iq, 1)
         result_iq = result[2].xmlnode
+        self.check_email_message(result_iq, 2)
+
+    def test_execute_get_emails_multi_pages(self):
+        """
+        Test multiple emails retrieval
+        """
+        self.info_query.set_from("test1@test.com")
+        self.info_query.set_to("account11@" + unicode(self.comp.jid))
+        result = self.command_manager.apply_command_action(\
+            self.info_query,
+            "jmc#get-email",
+            "execute")
+        session_id = self.check_step_1(result)
+
+        # Second step
+        info_query = jcl.jabber.tests.command.prepare_submit(\
+            node="jmc#get-email",
+            session_id=session_id,
+            from_jid="test1@test.com",
+            to_jid="account11@jmc.test.com",
+            fields=[Field(field_type="list-multi",
+                          name="emails",
+                          values=["1", "2"]),
+                    Field(field_type="boolean",
+                          name="fetch_more",
+                          value=True)],
+            action="complete")
+        result = self.command_manager.apply_command_action(\
+            info_query,
+            "jmc#get-email",
+            "execute")
+        self.check_step_1(result, options="<option label=\"mail 3\">" \
+                              + "<value>3</value></option>" \
+                              + "<option label=\"mail 4\">" \
+                              + "<value>4</value></option>")
+
+        # Third step
+        info_query = jcl.jabber.tests.command.prepare_submit(\
+            node="jmc#get-email",
+            session_id=session_id,
+            from_jid="test1@test.com",
+            to_jid="account11@jmc.test.com",
+            fields=[Field(field_type="list-multi",
+                          name="emails",
+                          values=["3", "4"]),
+                    Field(field_type="boolean",
+                          name="fetch_more",
+                          value=False)],
+            action="complete")
+        result = self.command_manager.apply_command_action(\
+            info_query,
+            "jmc#get-email",
+            "execute")
+        self.assertEquals(len(result), 5)
+        result_iq = result[0].xmlnode
+        result_iq.setNs(None)
         self.assertTrue(jcl.tests.is_xml_equal(\
-                u"<message from='account11@" + unicode(self.comp.jid)
-                + "' to='test1@test.com' "
-                + "xmlns='http://pyxmpp.jabberstudio.org/xmlns/common'>"
-                + "<subject>" + Lang.en.mail_subject % ("from2@test.com")
-                + "</subject>"
-                + "<body>mail body 2</body>"
-                + "<addresses xmlns='http://jabber.org/protocol/address'>"
-                + "<address type='replyto' jid='from2%test.com@jmc.test.com'/>"
-                + "</addresses>"
-                + "</message>",
+                u"<iq from='account11@" + unicode(self.comp.jid)
+                + "' to='test1@test.com' type='result'>"
+                + "<command xmlns='http://jabber.org/protocol/commands' "
+                + "status='completed'>"
+                + "<x xmlns='jabber:x:data' type='form'>"
+                + "<title>" + Lang.en.command_get_email + "</title>"
+                + "<instructions>" + Lang.en.command_get_email_2_description
+                % (4) + "</instructions>"
+                + "</x></command></iq>",
                 result_iq, True, test_sibling=False))
+        result_iq = result[1].xmlnode
+        self.check_email_message(result_iq, 1)
+        result_iq = result[2].xmlnode
+        self.check_email_message(result_iq, 2)
+        result_iq = result[3].xmlnode
+        self.check_email_message(result_iq, 3)
+        result_iq = result[4].xmlnode
+        self.check_email_message(result_iq, 4)
 
 def suite():
     test_suite = unittest.TestSuite()

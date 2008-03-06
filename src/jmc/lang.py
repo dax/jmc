@@ -90,7 +90,7 @@ class Lang(jcl.lang.Lang):
         
         command_get_email = "Fetch emails"
         command_get_email_1_description = "Select email(s) to fetch"
-        command_get_email_2_description = "% emails have been sent"
+        command_get_email_2_description = "%i emails have been sent"
         field_email_subject = u"Email Subject"
         field_select_more_emails = u"Select more emails to fetch"
         mail_subject = u"Email from %s"
@@ -164,7 +164,7 @@ class Lang(jcl.lang.Lang):
 
         command_get_email = "Récupérer des emails"
         command_get_email_1_description = "Séléctionner le(s) email(s) à récupérer"
-        command_get_email_2_description = "% emails ont été envoyés"
+        command_get_email_2_description = "%i emails ont été envoyés"
         field_email_subject = u"Objet des emails"
         field_select_more_emails = u"Séléctionner plus d'emails à récupérer"
         mail_subject = u"Email de %s"
