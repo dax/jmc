@@ -24,11 +24,13 @@ import logging
 import re
 
 from pyxmpp.jabber.dataforms import Form
+
 import jcl.model.account as account
+import jcl.jabber.command as command
+from jcl.jabber.command import JCLCommandManager
 
 from jmc.model.account import MailAccount
-from jcl.jabber.command import JCLCommandManager
-import jcl.jabber.command as command
+from jmc.jabber.feeder import MailSender
 
 class MailCommandManager(JCLCommandManager):
     """
@@ -46,6 +48,7 @@ class MailCommandManager(JCLCommandManager):
         self.__logger = logging.getLogger("jmc.jabber.command.JMCCommandManager")
         #self.commands["jmc#retrieve-attachment"] = (False, command.account_node_re)
         self.commands["jmc#force-check"] = (False, re.compile(".*"))
+        self.commands["jmc#get-email"] = (False, command.account_node_re)
 
     # Delayed to JMC 0.3.1
     def execute_retrieve_attachment_1(self, info_query, session_context,
@@ -84,10 +87,11 @@ class MailCommandManager(JCLCommandManager):
         self.__logger.debug("Executing command 'force-check' step 1 on root node")
         self.add_actions(command_node, [command.ACTION_COMPLETE])
         session_context["user_jids"] = [unicode(info_query.get_from().bare())]
-        return (self.add_form_select_accounts(session_context, command_node,
-                                              lang_class, "TODO:TITLE",
-                                              "TODO:DESC", format_as_xml=True,
-                                              show_user_jid=False), [])
+        return (self.add_form_select_accounts(\
+                session_context, command_node, lang_class,
+                lang_class.command_force_check,
+                lang_class.command_force_check_1_description,
+                format_as_xml=True, show_user_jid=False), [])
 
     def execute_force_check_1(self, info_query, session_context,
                               command_node, lang_class):
@@ -117,3 +121,56 @@ class MailCommandManager(JCLCommandManager):
         return (None, [])
 
     execute_force_check_2 = execute_force_check_1
+
+    def execute_get_email_1(self, info_query, session_context,
+                            command_node, lang_class):
+        self.__logger.debug("Executing command 'get-email' step 1")
+        self.add_actions(command_node, [command.ACTION_COMPLETE])
+        bare_from_jid = info_query.get_from().bare()
+        account_name = info_query.get_to().node
+        _account = account.get_account(bare_from_jid, account_name)
+        if _account is not None:
+            result_form = Form(\
+                xmlnode_or_type="form",
+                title=lang_class.command_get_email,
+                instructions=lang_class.command_get_email_1_description)
+            email_list = _account.get_mail_list_summary()
+            field = result_form.add_field(name="emails",
+                                          field_type="list-multi",
+                                          label=lang_class.field_email_subject)
+            for (email_index, email_subject) in email_list:
+                field.add_option(label=email_subject, values=[email_index])
+            result_form.add_field(name="fetch_more",
+                                  field_type="boolean",
+                                  label=lang_class.field_select_more_emails)
+            result_form.as_xml(command_node)
+            return (result_form, [])
+        else:
+            # TODO Error
+            return (None, [])
+
+    def execute_get_email_2(self, info_query, session_context,
+                            command_node, lang_class):
+        self.__logger.debug("Executing command 'get-email' step 2")
+        result = []
+        mail_sender = MailSender(self.component)
+        bare_from_jid = info_query.get_from().bare()
+        account_name = info_query.get_to().node
+        _account = account.get_account(bare_from_jid, account_name)
+        if _account is not None:
+            for email_index in session_context["emails"]:
+                (email_body, email_from) = _account.get_mail(email_index)
+                result.append(\
+                    mail_sender.create_full_email_message(\
+                        email_from,
+                        lang_class.mail_subject % (email_from),
+                        email_body,
+                        _account))
+            result_form = Form(\
+                xmlnode_or_type="form",
+                title=lang_class.command_get_email,
+                instructions=lang_class.command_get_email_2_description \
+                    % (len(session_context["emails"])))
+            result_form.as_xml(command_node)
+        command_node.setProp("status", command.STATUS_COMPLETED)
+        return (None, result)

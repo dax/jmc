@@ -155,6 +155,11 @@ class MockIMAPAccount(MockMailAccount, IMAPAccount):
        return [("1", "mail 1"),
                ("2", "mail 2")]
 
+    def get_mail_list_summary(self):
+       return [("1", "mail 1"),
+               ("2", "mail 2")]
+
+
 class MockPOP3Account(MockMailAccount, POP3Account):
     def _init(self, *args, **kw):
         POP3Account._init(self, *args, **kw)

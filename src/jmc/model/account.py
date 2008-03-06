@@ -324,7 +324,7 @@ class MailAccount(PresenceAccount):
     def disconnect(self):
         raise NotImplementedError
 
-    def get_mail_list_summary(self, start_index=0, end_index=20):
+    def get_mail_list_summary(self, start_index=1, end_index=20):
         raise NotImplementedError
 
     def get_new_mail_list(self):
@@ -411,6 +411,10 @@ class IMAPAccount(MailAccount):
         self.connected = False
 
     def get_mail_list_summary(self, start_index=1, end_index=20):
+        """
+        Get a list of emails starting from start_index and ending at end_index
+        of tuple (email_index, email_subject)
+        """
         self.__logger.debug("Getting mail list summary")
         typ, count = self.connection.select(self._get_real_mailbox(), True)
         result = []
@@ -428,6 +432,9 @@ class IMAPAccount(MailAccount):
         return result
 
     def get_new_mail_list(self):
+        """
+        Get a list of new emails indexes
+        """
         self.__logger.debug("Getting mail list")
         typ, data = self.connection.select(self._get_real_mailbox(), True)
         typ, data = self.connection.search(None, 'RECENT')
@@ -574,11 +581,13 @@ class POP3Account(MailAccount):
         self.connection.quit()
         self.connected = False
 
-    def get_mail_list_summary(self, start_index=0, end_index=20):
+    def get_mail_list_summary(self, start_index=1, end_index=20):
         self.__logger.debug("Getting mail list")
         count, size = self.connection.stat()
         result = []
-        for index in xrange(1, count + 1):
+        if count < end_index:
+            end_index = count
+        for index in xrange(start_index, end_index + 1):
             (ret, data, octets) = self.connection.top(index, 0)
             if ret[0:3] == '+OK':
                 subject_header = self.get_decoded_header(email.message_from_string('\n'.join(data))["Subject"])[0]

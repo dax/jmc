@@ -189,6 +189,42 @@ class POP3Account_TestCase(InheritableAccount_TestCase):
                                         [("1", "mail subject 1"),
                                          ("2", "mail subject 2")]))
 
+    test_get_mail_list_summary_start_index = \
+        make_test(["+OK 3 30\r\n",
+                   "+OK 10 octets\r\n" + \
+                       "From: user@test.com\r\n" + \
+                       "Subject: mail subject 2\r\n.\r\n",
+                   "+OK 10 octets\r\n" + \
+                       "From: user@test.com\r\n" + \
+                       "Subject: mail subject 3\r\n.\r\n",
+                   "+OK\r\n"],
+                  ["STAT\r\n",
+                   "TOP 2 0\r\n",
+                   "TOP 3 0\r\n",
+                   "RSET\r\n"],
+                  lambda self: \
+                      self.assertEquals(self.pop3_account.get_mail_list_summary(start_index=2),
+                                        [("2", "mail subject 2"),
+                                         ("3", "mail subject 3")]))
+
+    test_get_mail_list_summary_end_index = \
+        make_test(["+OK 3 30\r\n",
+                   "+OK 10 octets\r\n" + \
+                       "From: user@test.com\r\n" + \
+                       "Subject: mail subject 1\r\n.\r\n",
+                   "+OK 10 octets\r\n" + \
+                       "From: user@test.com\r\n" + \
+                       "Subject: mail subject 2\r\n.\r\n",
+                   "+OK\r\n"],
+                  ["STAT\r\n",
+                   "TOP 1 0\r\n",
+                   "TOP 2 0\r\n",
+                   "RSET\r\n"],
+                  lambda self: \
+                      self.assertEquals(self.pop3_account.get_mail_list_summary(end_index=2),
+                                        [("1", "mail subject 1"),
+                                         ("2", "mail subject 2")]))
+
     test_get_new_mail_list = \
         make_test(["+OK 2 20\r\n"],
                   ["STAT\r\n"],
@@ -320,6 +356,46 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
              "^[^ ]* FETCH 1:20 RFC822.header"],
             lambda self: \
                 self.assertEquals(self.imap_account.get_mail_list_summary(),
+                                  [('1', 'mail subject 1'),
+                                   ('2', 'mail subject 2')]))
+        test_func()
+
+    def test_get_mail_list_summary_start_index(self):
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* 2 FETCH ((RFC822.header) {38}\r\n" + \
+                 "Subject: mail subject 2\r\n\r\nbody text\r\n)\r\n" + \
+                 "* 3 FETCH ((RFC822.header) {38}\r\n" + \
+                 "Subject: mail subject 3\r\n\r\nbody text\r\n)\r\n" + \
+                 data.split()[0] + " OK FETCH completed\r\n"],
+            ["^[^ ]* EXAMINE INBOX",
+             "^[^ ]* FETCH 2:20 RFC822.header"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_mail_list_summary(start_index=2),
+                                  [('2', 'mail subject 2'),
+                                   ('3', 'mail subject 3')]))
+        test_func()
+
+    def test_get_mail_list_summary_end_index(self):
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" +\
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
+                 data.split()[0] + \
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* 1 FETCH ((RFC822.header) {38}\r\n" + \
+                 "Subject: mail subject 1\r\n\r\nbody text\r\n)\r\n" + \
+                 "* 2 FETCH ((RFC822.header) {38}\r\n" + \
+                 "Subject: mail subject 2\r\n\r\nbody text\r\n)\r\n" + \
+                 data.split()[0] + " OK FETCH completed\r\n"],
+            ["^[^ ]* EXAMINE INBOX",
+             "^[^ ]* FETCH 1:2 RFC822.header"],
+            lambda self: \
+                self.assertEquals(self.imap_account.get_mail_list_summary(end_index=2),
                                   [('1', 'mail subject 1'),
                                    ('2', 'mail subject 2')]))
         test_func()
