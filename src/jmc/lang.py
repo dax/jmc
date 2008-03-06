@@ -85,7 +85,17 @@ class Lang(jcl.lang.Lang):
             + " - Add a contact to your roster, with JID to_email\%test.com@jmc.test.com"\
             + ", where to_email@test.com is the receiver's email address."
 
-    class fr(jcl.lang.Lang.fr):
+        command_force_check = "Force check for new emails"
+        command_force_check_1_description = "Select account(s) to check for new emails."
+        
+        command_get_email = "Fetch emails"
+        command_get_email_1_description = "Select email(s) to fetch"
+        command_get_email_2_description = "% emails have been sent"
+        field_email_subject = u"Email Subject"
+        field_select_more_emails = u"Select more emails to fetch"
+        mail_subject = u"Email from %s"
+        
+    class fr(en, jcl.lang.Lang.fr):
         component_name = u"Jabber Mail Component"
         register_title = u"Enregistrement d'une nouvelle connexion à un " \
                          u"serveur email."
@@ -149,7 +159,17 @@ class Lang(jcl.lang.Lang):
             + u"to_email\%test.com@jmc.test.com, où to_email@test.com est " \
             + u"l'adresse du destinataire."
 
-    class nl(jcl.lang.Lang.nl):
+        command_force_check = "Forcer la vérification de nouveaux emails"
+        command_force_check_1_description = "Séléctionner le(s) compte(s) à vérifier."
+
+        command_get_email = "Récupérer des emails"
+        command_get_email_1_description = "Séléctionner le(s) email(s) à récupérer"
+        command_get_email_2_description = "% emails ont été envoyés"
+        field_email_subject = u"Objet des emails"
+        field_select_more_emails = u"Séléctionner plus d'emails à récupérer"
+        mail_subject = u"Email de %s"
+
+    class nl(en, jcl.lang.Lang.nl):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_nl_TestCase, 'test') line
         register_title = u"Registratie van verbindingen voor Jabber Mail"
         register_instructions = u"Instellingen voor verbinding"
@@ -173,27 +193,14 @@ class Lang(jcl.lang.Lang):
         action_nothing = u"Niets doen"
         action_retrieve = u"E-mail ophalen"
         action_digest = u"Samenvatting verzenden"
-        update_title = u"Bijwerken van JMC"
-        update_instructions = u"Verbinding '%s' aanpassen"
         connection_label = u"%s verbinding '%s'"
-        update_account_message_subject = u"Verbinding %s '%s' werd bijgewerkt"
-        update_account_message_body = u"Geregistreerd met gebruikersnaam '%s'"\
-                                      u"en wachtwoord '%s' op '%s'"
-        new_account_message_subject = u"Nieuwe %s verbinding '%s' aangemaakt"
-        new_account_message_body = u"Geregistreerd met " \
-                                   u"gebruikersnaam '%s' en wachtwoord '%s' op '%s'"
-        ask_password_subject = u"Wachtwoordaanvraag"
-        ask_password_body = u"Antwoord dit bericht met het volgende wachtwoord" \
-                            u"voor de volgende account: \n" \
-                            u"\thost = %s\n" \
-                            u"\tlogin = %s\n"
         password_saved_for_session = u"Het wachtwoord zal worden bewaard tijdens uw Jabber-sessie"
         check_error_subject = u"Fout tijdens controle op e-mails."
         check_error_body = u"Fout tijdens controle op e-mails:\n\t%s"
         new_mail_subject = u"Nieuwe e-mail van %s"
         new_digest_subject = u"%i nieuwe e-mail(s)"
 
-    class es(jcl.lang.Lang.es):
+    class es(en, jcl.lang.Lang.es):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_es_TestCase, 'test') line
         register_title = u"Registro de nueva cuenta de email"
         register_instructions = u"Inserta los datos para la nueva cuenta"
@@ -216,25 +223,14 @@ class Lang(jcl.lang.Lang):
         action_nothing = u"No hacer nada"
         action_retrieve = u"Mostrarme el email"
         action_digest = u"Enviar resúmen"
-        update_title = u"Actualización de cuenta de email"
-        update_instructions = u"Modifica los datos de la cuenta '%s'"
         connection_label = u"%s conexión '%s'"
-        update_account_message_subject = u"Actualizada %s conexión '%s'"
-        update_account_message_body = u"Registrado con el usuario '%s' y contraseña '%s' en '%s'"
-        new_account_message_subject = u"Nueva %s conexión '%s' creada"
-        new_account_message_body = u"Registrado con usuario '%s' y contraseña '%s' en '%s'"
-        ask_password_subject = u"Petición de contraseña"
-        ask_password_body = u"Para avisarte de emails nuevos, contesta a este mensaje con la contraseña " \
-                            "de la cuenta: \n" \
-                            "\tHost = %s\n" \
-                            "\tUsuario = %s\n"
         password_saved_for_session = u"La contraseña será guardada para esta sesión únicamente."
         check_error_subject = u"Error al revisar los emails."
         check_error_body = u"Un error apareció al revisar los emails:\n\t%s"
         new_mail_subject = u"Nuevo email en %s"
         new_digest_subject = u"%i email(s) nuevo(s)"
 
-    class pl(jcl.lang.Lang.pl):
+    class pl(en, jcl.lang.Lang.pl):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_pl_TestCase, 'test') line
         register_title = u"Rejestracja w komponencie E-Mail"
         register_instructions = u"Wprowadź parametry połączenia"
@@ -257,24 +253,14 @@ class Lang(jcl.lang.Lang):
         action_nothing = u"Nic nie rób"
         action_retrieve = u"Pobierz emaila"
         action_digest = u"Wyślij zarys emaila"
-        update_title = u"Modyfikacja połączenia z komponentem mailowym"
-        update_instructions = u"Modyfikacja połączenia '%s'"
         connection_label = u"%s połączenie '%s'"
-        update_account_message_subject = u"Zmodyfikowane %s połączenie '%s'"
-        update_account_message_body = u"Zarejestrowany z nazwą użytkownika '%s' i hasłem '%s' na '%s'"
-        new_account_message_subject = u"Nowe %s połączenie '%s' utworzone"
-        new_account_message_body = u"Zarejestrowany z nazwą użytkownika '%s' i hasłem '%s' na '%s'"
-        ask_password_subject = u"Żądanie hasła"
-        ask_password_body = u"Odpowiedz na ta wiadomosc z hasłem dla podanego konta: \n" \
-                            "\tnazwa hosta = %s\n" \
-                            "\tnazwa uzytkownika = %s\n"
         password_saved_for_session = u"Hasło będzie przechowywane podczas Twojej sesji Jabbera"
         check_error_subject = u"Błąd podczas sprawdzania emaili."
         check_error_body = u"Pojawił się błąd podczas sprawdzania emaili:\n\t%s"
         new_mail_subject = u"Nowy email od %s"
         new_digest_subject = u"%i nowy(ch) email(i)"
 
-    class cs(jcl.lang.Lang.cs):
+    class cs(en, jcl.lang.Lang.cs):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_cs_TestCase, 'test') line
         register_title = u"Jabber MailNotify registrace"
         register_instructions = u"Vložte nastavení spojení"
@@ -297,27 +283,14 @@ class Lang(jcl.lang.Lang):
         action_nothing = u"Nedělej nic"
         action_retrieve = u"Přijmi poštu"
         action_digest = u"Pošli upozornění na novou poštu"
-        update_title = u"Jabber - aktualizace spojení k emailu"
-        update_instructions = u"Aktualizace spojení '%s'"
         connection_label = u"%s spojení '%s'"
-        update_account_message_subject = u"Aktualizováno %s spojení '%s'"
-        update_account_message_body = u"Registrováno s přihlašovacím jménem '%s' a " \
-                                      u"heslem '%s' v '%s'"
-        new_account_message_subject = u"Nové spojení %s '%s' aktualizováno"
-        new_account_message_body = u"Registrováno " \
-                                   u"s přihlašovacím jménem '%s' a heslem '%s' v '%s'"
-        ask_password_subject = u"Žádost o heslo"
-        ask_password_body = u"Odpovězte na tuto zprávu posláním hesla " \
-                            u"pro následující spojení: \n" \
-                            u"\thost = %s\n" \
-                            u"\tlogin = %s\n"
         password_saved_for_session = u"Heslo bude uchováno během vašeho připojení k Jabberu"
         check_error_subject = u"Chyba při kontrole emailů."
         check_error_body = u"Nějaká chyba nastala při kontrole emailů:\n\t%s"
         new_mail_subject = u"Nový email od %s"
         new_digest_subject = u"%i má nový(é) email(y)"
 
-    class ru:
+    class ru(en, jcl.lang.Lang.ru):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_ru_TestCase, 'test') line
         register_title = u"Учетные данные соединения"
         register_instructions = u"Введите данные для соединения"
@@ -340,20 +313,7 @@ class Lang(jcl.lang.Lang):
         action_nothing = u"Не делать ничего"
         action_retrieve = u"Показать почту"
         action_digest = u"Показать уведомление"
-        update_title = u"Уточнение параметров"
-        update_instructions = u"Изменяем соединение '%s'"
         connection_label = u"%s соединение '%s'"
-        update_account_message_subject = u"Данные для  %s обновлены '%s'"
-        update_account_message_body = u"Зарегистрирован с логином '%s' и " \
-                                      u"паролем '%s' на '%s'"
-        new_account_message_subject = u"Новое %s соединение '%s' создано"
-        new_account_message_body = u"Перерегистрирован с " \
-                                   u"логином '%s' и паролем '%s' на '%s'"
-        ask_password_subject = u"Запрос пароля"
-        ask_password_body = u"Ответьте на это сообщение с паролем " \
-                            u"для следующей учетной записи: \n" \
-                            u"\tХост = %s\n" \
-                            u"\tЛогин = %s\n"
         password_saved_for_session = u"Пароль будет сохранен только на время Вашей сессии."
         check_error_subject = u"Ошибка при проверке почты."
         check_error_body = u"Возникла ошибка при проверке почты:\n\t%s"

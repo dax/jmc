@@ -25,6 +25,7 @@ import unittest
 
 import jcl.tests.lang
 
+import jmc.lang
 from jmc.lang import Lang
 
 from pyxmpp.iq import Iq
@@ -118,8 +119,67 @@ class Language_TestCase(jcl.tests.lang.Language_TestCase):
                              None)
         self.assertNotEquals(self.lang_class.send_mail_ok_subject, None)
         self.assertNotEquals(self.lang_class.send_mail_ok_body, None)
+        self.assertNotEquals(self.lang_class.help_message_body, None)
+        self.assertNotEquals(self.lang_class.command_force_check, None)
+        self.assertNotEquals(self.lang_class.command_force_check_1_description, None)
+        self.assertNotEquals(self.lang_class.command_get_email, None)
+        self.assertNotEquals(self.lang_class.command_get_email_1_description, None)
+        self.assertNotEquals(self.lang_class.command_get_email_2_description, None)
+        self.assertNotEquals(self.lang_class.field_email_subject, None)
+        self.assertNotEquals(self.lang_class.mail_subject, None)
+        self.assertNotEquals(self.lang_class.field_select_more_emails, None)
 
-class Language_fr_TestCase(Language_TestCase):
+class SubLanguage_TestCase(Language_TestCase):
+    """
+    Test translation fallback mecanism :
+    jmc.lang.Lang.{translation class} -> jmc.lang.Lang.en -> jcl.lang.Lang.{translation class} -> jcl.lang.Lang.en
+    """
+
+    def test_fallback_jmc_en(self):
+        """
+        if a translation does not exist in JMC. It falls back to the English
+        translation.
+        """
+        value = self.lang_class.register_title
+        del self.lang_class.register_title
+        self.assertEquals(self.lang_class.register_title,
+                          jmc.lang.Lang.en.register_title)
+        self.lang_class.register_title = value
+
+    def test_fallback_jcl_current(self):
+        """
+        if an attribut does not exist in JMC translation class nor in JMC
+        English class, it falls back to the current language in JCL.
+        """
+        lang_class_value = self.lang_class.register_title
+        jmc_lang_en_value = jmc.lang.Lang.en.register_title
+        del self.lang_class.register_title
+        del jmc.lang.Lang.en.register_title
+        self.assertEquals(\
+            self.lang_class.register_title,
+            jcl.lang.Lang.__dict__[self.lang_class.__name__].register_title)
+        jmc.lang.Lang.en.register_title = jmc_lang_en_value
+        self.lang_class.register_title = lang_class_value
+
+    def test_fallback_jcl_en(self):
+        """
+        if an attribut does not exist in JMC and is not translated in JCL,
+        it falls back to English in JCL
+        """
+        lang_class_value = self.lang_class.register_title
+        jmc_lang_en_value = jmc.lang.Lang.en.register_title
+        jcl_lang_class_value = jcl.lang.Lang.__dict__[self.lang_class.__name__].register_title
+        del self.lang_class.register_title
+        del jmc.lang.Lang.en.register_title
+        del jcl.lang.Lang.__dict__[self.lang_class.__name__].register_title
+        self.assertEquals(\
+            self.lang_class.register_title,
+            jcl.lang.Lang.en.register_title)
+        jcl.lang.Lang.__dict__[self.lang_class.__name__].register_title = jcl_lang_class_value
+        jmc.lang.Lang.en.register_title = jmc_lang_en_value
+        self.lang_class.register_title = lang_class_value
+    
+class Language_fr_TestCase(SubLanguage_TestCase):
     def setUp(self):
         self.lang_class = Lang.fr
 
@@ -135,16 +195,24 @@ class Language_pl_TestCase(Language_TestCase):
     def setUp(self):
         self.lang_class = Lang.pl
 
+class Language_cs_TestCase(Language_TestCase):
+    def setUp(self):
+        self.lang_class = Lang.cs
+
+class Language_ru_TestCase(Language_TestCase):
+    def setUp(self):
+        self.lang_class = Lang.ru
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(Lang_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(Language_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(Language_fr_TestCase, 'test'))
-#    suite.addTest(unittest.makeSuite(Language_nl_TestCase, 'test'))
-#    suite.addTest(unittest.makeSuite(Language_es_TestCase, 'test'))
-#    suite.addTest(unittest.makeSuite(Language_pl_TestCase, 'test'))
-#    suite.addTest(unittest.makeSuite(Language_cs_TestCase, 'test'))
-#    suite.addTest(unittest.makeSuite(Language_ru_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(Language_nl_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(Language_es_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(Language_pl_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(Language_cs_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(Language_ru_TestCase, 'test'))
     return suite
 
 if __name__ == '__main__':
