@@ -228,31 +228,51 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
     def check_step_1(self, result, options="<option label=\"mail 1\">" \
                          + "<value>1</value></option>" \
                          + "<option label=\"mail 2\">" \
-                         + "<value>2</value></option>"):
+                         + "<value>2</value></option>" \
+                         + "<option label=\"mail 3\">" \
+                         + "<value>3</value></option>" \
+                         + "<option label=\"mail 4\">" \
+                         + "<value>4</value></option>" \
+                         + "<option label=\"mail 5\">" \
+                         + "<value>5</value></option>" \
+                         + "<option label=\"mail 6\">" \
+                         + "<value>6</value></option>" \
+                         + "<option label=\"mail 7\">" \
+                         + "<value>7</value></option>" \
+                         + "<option label=\"mail 8\">" \
+                         + "<value>8</value></option>" \
+                         + "<option label=\"mail 9\">" \
+                         + "<value>9</value></option>" \
+                         + "<option label=\"mail 10\">" \
+                         + "<value>10</value></option>",
+                     last_page=False):
         """
         Check first step result of get-email ad-hoc command
         """
         result_iq = result[0].xmlnode
         result_iq.setNs(None)
-        self.assertTrue(jcl.tests.is_xml_equal(\
-                u"<iq from='account11@" + unicode(self.comp.jid) 
-                + "' to='test1@test.com' type='result'>"
-                + "<command xmlns='http://jabber.org/protocol/commands'"
-                + "status='executing'>"
-                + "<actions execute='complete'><complete/></actions>"
-                + "<x xmlns='jabber:x:data' type='form'>"
-                + "<title>" + Lang.en.command_get_email + "</title>"
-                + "<instructions>" + Lang.en.command_get_email_1_description
-                + "</instructions>"
-                + "<field var='emails' type='list-multi' label='"
-                + Lang.en.field_email_subject + "'>"
-                + options
-                + "</field><field var='fetch_more' type='boolean' label='"
+        xml_ref = u"<iq from='account11@" + unicode(self.comp.jid) \
+            + "' to='test1@test.com' type='result'>" \
+            + "<command xmlns='http://jabber.org/protocol/commands'" \
+            + "status='executing'>" \
+            + "<actions execute='complete'><complete/></actions>" \
+            + "<x xmlns='jabber:x:data' type='form'>" \
+            + "<title>" + Lang.en.command_get_email + "</title>" \
+            + "<instructions>" + Lang.en.command_get_email_1_description \
+            + "</instructions>" \
+            + "<field var='emails' type='list-multi' label='" \
+            + Lang.en.field_email_subject + "'>" \
+            + options
+        if not last_page:
+            xml_ref += "</field><field var='fetch_more' type='boolean' label='" \
                 + Lang.en.field_select_more_emails + "'>"
-                + "</field></x></command></iq>",
-                result_iq, True))
+        xml_ref += "</field></x></command></iq>"
+        self.assertTrue(jcl.tests.is_xml_equal(xml_ref, result_iq, True))
         session_id = result_iq.children.prop("sessionid")
         self.assertNotEquals(session_id, None)
+        self.assertTrue(self.account11.has_connected)
+        self.assertFalse(self.account11.connected)
+        self.account11.has_connected = False
         return session_id
 
     def check_email_message(self, result_iq, index):
@@ -271,7 +291,7 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
                 + "</addresses>"
                 + "</message>",
                 result_iq, True, test_sibling=False))
-        
+
     def test_execute_get_email(self):
         """
         Test single email retrieval
@@ -301,6 +321,8 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
             info_query,
             "jmc#get-email",
             "execute")
+        self.assertTrue(self.account11.has_connected)
+        self.assertFalse(self.account11.connected)
         self.assertEquals(len(result), 2)
         result_iq = result[0].xmlnode
         result_iq.setNs(None)
@@ -347,6 +369,8 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
             info_query,
             "jmc#get-email",
             "execute")
+        self.assertTrue(self.account11.has_connected)
+        self.assertFalse(self.account11.connected)
         self.assertEquals(len(result), 3)
         result_iq = result[0].xmlnode
         result_iq.setNs(None)
@@ -395,10 +419,26 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
             info_query,
             "jmc#get-email",
             "execute")
-        self.check_step_1(result, options="<option label=\"mail 3\">" \
-                              + "<value>3</value></option>" \
-                              + "<option label=\"mail 4\">" \
-                              + "<value>4</value></option>")
+        self.check_step_1(result, options="<option label=\"mail 11\">" \
+                              + "<value>11</value></option>" \
+                              + "<option label=\"mail 12\">" \
+                              + "<value>12</value></option>" \
+                              + "<option label=\"mail 13\">" \
+                              + "<value>13</value></option>" \
+                              + "<option label=\"mail 14\">" \
+                              + "<value>14</value></option>" \
+                              + "<option label=\"mail 15\">" \
+                              + "<value>15</value></option>" \
+                              + "<option label=\"mail 16\">" \
+                              + "<value>16</value></option>" \
+                              + "<option label=\"mail 17\">" \
+                              + "<value>17</value></option>" \
+                              + "<option label=\"mail 18\">" \
+                              + "<value>18</value></option>" \
+                              + "<option label=\"mail 19\">" \
+                              + "<value>19</value></option>" \
+                              + "<option label=\"mail 20\">" \
+                              + "<value>20</value></option>")
 
         # Third step
         info_query = jcl.jabber.tests.command.prepare_submit(\
@@ -408,7 +448,7 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
             to_jid="account11@jmc.test.com",
             fields=[Field(field_type="list-multi",
                           name="emails",
-                          values=["3", "4"]),
+                          values=["13", "14"]),
                     Field(field_type="boolean",
                           name="fetch_more",
                           value=False)],
@@ -417,6 +457,8 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
             info_query,
             "jmc#get-email",
             "execute")
+        self.assertTrue(self.account11.has_connected)
+        self.assertFalse(self.account11.connected)
         self.assertEquals(len(result), 5)
         result_iq = result[0].xmlnode
         result_iq.setNs(None)
@@ -436,9 +478,99 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
         result_iq = result[2].xmlnode
         self.check_email_message(result_iq, 2)
         result_iq = result[3].xmlnode
-        self.check_email_message(result_iq, 3)
+        self.check_email_message(result_iq, 13)
         result_iq = result[4].xmlnode
-        self.check_email_message(result_iq, 4)
+        self.check_email_message(result_iq, 14)
+
+    def test_execute_get_emails_last_page(self):
+        """
+        Test that field fetch_more does not exist if number of emails < 10
+        """
+        class MockIMAPAccount2(MockIMAPAccount):
+            """ """
+            def get_mail_list_summary(self, start_index=1, end_index=20):
+                return [("1", "mail 1"),
+                        ("2", "mail 2")]
+
+        get_email_func = self.account11.get_mail
+        MockIMAPAccount2.createTable(ifNotExists=True)
+        self.account11.destroySelf()
+        self.account11 = MockIMAPAccount2(user=self.user1,
+                                          name="account11",
+                                          jid="account11@" + unicode(self.comp.jid))
+        self.account11.__dict__["get_mail"] = get_email_func
+        self.info_query.set_from("test1@test.com")
+        self.info_query.set_to("account11@" + unicode(self.comp.jid))
+        result = self.command_manager.apply_command_action(\
+            self.info_query,
+            "jmc#get-email",
+            "execute")
+        session_id = self.check_step_1(result, options="<option label=\"mail 1\">" \
+                                           + "<value>1</value></option>" \
+                                           + "<option label=\"mail 2\">" \
+                                           + "<value>2</value></option>",
+                                       last_page=True)
+        self.assertTrue("fetch_more" in
+                        self.command_manager.sessions[session_id][1])
+        self.assertEquals(\
+            self.command_manager.sessions[session_id][1]["fetch_more"][-1],
+            "0")
+
+        # Second step
+        info_query = jcl.jabber.tests.command.prepare_submit(\
+            node="jmc#get-email",
+            session_id=session_id,
+            from_jid="test1@test.com",
+            to_jid="account11@jmc.test.com",
+            fields=[Field(field_type="list-multi",
+                          name="emails",
+                          values=["1"])],
+            action="complete")
+        result = self.command_manager.apply_command_action(\
+            info_query,
+            "jmc#get-email",
+            "execute")
+        self.assertTrue(self.account11.has_connected)
+        self.assertFalse(self.account11.connected)
+        self.assertEquals(len(result), 2)
+        result_iq = result[0].xmlnode
+        result_iq.setNs(None)
+        self.assertTrue(jcl.tests.is_xml_equal(\
+                u"<iq from='account11@" + unicode(self.comp.jid)
+                + "' to='test1@test.com' type='result'>"
+                + "<command xmlns='http://jabber.org/protocol/commands' "
+                + "status='completed'>"
+                + "<x xmlns='jabber:x:data' type='form'>"
+                + "<title>" + Lang.en.command_get_email + "</title>"
+                + "<instructions>" + Lang.en.command_get_email_2_description
+                % (1) + "</instructions>"
+                + "</x></command></iq>",
+                result_iq, True, test_sibling=False))
+        result_iq = result[1].xmlnode
+        self.check_email_message(result_iq, 1)
+        MockIMAPAccount2.dropTable(ifExists=True)
+
+    def test_execute_get_email_error(self):
+        """
+        Test single email retrieval
+        """
+        self.info_query.set_from("test1@test.com")
+        self.info_query.set_to("unknown@" + unicode(self.comp.jid))
+        result = self.command_manager.apply_command_action(\
+            self.info_query,
+            "jmc#get-email",
+            "execute")
+        result_iq = result[0].xmlnode
+        self.assertTrue(jcl.tests.is_xml_equal(\
+                u"<iq from='unknown@" + unicode(self.comp.jid)
+                + "' to='test1@test.com' type='error' "
+                + "xmlns='http://pyxmpp.jabberstudio.org/xmlns/common'>"
+                + "<command xmlns='http://jabber.org/protocol/commands' "
+                + "node='jmc#get-email' />"
+                + "<error type='cancel'>"
+                + "<item-not-found xmlns='urn:ietf:params:xml:ns:xmpp-stanzas' />"
+                + "</error></iq>",
+                result_iq, True))
 
 def suite():
     test_suite = unittest.TestSuite()

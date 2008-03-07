@@ -156,14 +156,30 @@ class MockIMAPAccount(MockMailAccount, IMAPAccount):
         return [("1", "mail 1"),
                 ("2", "mail 2")]
 
-    def get_mail_list_summary(self):
+    def get_mail_list_summary(self, start_index=1, end_index=20):
         if self.get_mail_list_summary_called:
-           return [("3", "mail 3"),
-                   ("4", "mail 4")]
+           return [("11", "mail 11"),
+                   ("12", "mail 12"),
+                   ("13", "mail 13"),
+                   ("14", "mail 14"),
+                   ("15", "mail 15"),
+                   ("16", "mail 16"),
+                   ("17", "mail 17"),
+                   ("18", "mail 18"),
+                   ("19", "mail 19"),
+                   ("20", "mail 20")]
         else:
            self.get_mail_list_summary_called = True
            return [("1", "mail 1"),
-                   ("2", "mail 2")]
+                   ("2", "mail 2"),
+                   ("3", "mail 3"),
+                   ("4", "mail 4"),
+                   ("5", "mail 5"),
+                   ("6", "mail 6"),
+                   ("7", "mail 7"),
+                   ("8", "mail 8"),
+                   ("9", "mail 9"),
+                   ("10", "mail 10")]
 
 
 class MockPOP3Account(MockMailAccount, POP3Account):
