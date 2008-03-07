@@ -1,7 +1,6 @@
 README
 setup.py
 src/jmc/__init__.py
-src/jmc/config.py
 src/jmc/lang.py
 src/jmc/runner.py
 src/jmc.egg-info/PKG-INFO
@@ -13,6 +12,7 @@ src/jmc/jabber/__init__.py
 src/jmc/jabber/command.py
 src/jmc/jabber/component.py
 src/jmc/jabber/disco.py
+src/jmc/jabber/feeder.py
 src/jmc/jabber/message.py
 src/jmc/jabber/presence.py
 src/jmc/model/__init__.py

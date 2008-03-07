@@ -21,13 +21,20 @@
 ##
 
 from setuptools import setup, find_packages
-from distutils import sysconfig
+import sys
+import re
+import shutil
 
-prefix = sysconfig.get_config_vars("prefix")
-if len(prefix) == 0 or prefix[0] == "/usr":
-    config_dir = "/etc/jabber"
+prefix = "/usr"
+for arg in sys.argv:
+    if arg[0:9] == "--prefix=":
+        prefix = arg[9:]
+        break
+
+if prefix == "/usr":
+    config_dir = "/etc/jabber/"
 else:
-    config_dir = prefix[0] + "/etc/jabber"
+    config_dir = prefix + "/etc/jabber/"
 
 setup(name='jmc',
       version='0.3',
@@ -44,4 +51,16 @@ setup(name='jmc',
                                              "tests"]),
       entry_points={'console_scripts': ['jmc=jmc.runner:main']},
       test_suite='jmc.tests.suite')
-#      data_files=[("etc/jabber", "conf/jmc.conf")],
+
+shutil.copy("conf/jmc.conf", config_dir)
+runner_file = open("src/jmc/runner.py")
+dest_runner_file = open("build/lib/jmc/runner.py", "w")
+
+config_file_re = re.compile("(.*self\.config_file = \")(jmc.conf\")")
+for line in runner_file:
+    match = config_file_re.match(line)
+    if match is not None:
+        dest_runner_file.write(match.group(1) + config_dir
+                               + match.group(2) + "\n")
+    else:
+        dest_runner_file.write(line)
