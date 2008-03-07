@@ -24,6 +24,7 @@ from setuptools import setup, find_packages
 import sys
 import re
 import shutil
+import os
 
 prefix = "/usr"
 for arg in sys.argv:
@@ -52,15 +53,16 @@ setup(name='jmc',
       entry_points={'console_scripts': ['jmc=jmc.runner:main']},
       test_suite='jmc.tests.suite')
 
-shutil.copy("conf/jmc.conf", config_dir)
-runner_file = open("src/jmc/runner.py")
-dest_runner_file = open("build/lib/jmc/runner.py", "w")
-
-config_file_re = re.compile("(.*self\.config_file = \")(jmc.conf\")")
-for line in runner_file:
-    match = config_file_re.match(line)
-    if match is not None:
-        dest_runner_file.write(match.group(1) + config_dir
-                               + match.group(2) + "\n")
-    else:
-        dest_runner_file.write(line)
+if len(sys.argv) >= 2 and sys.argv[1] == "install":
+    os.makedirs(config_dir)
+    shutil.copy("conf/jmc.conf", config_dir)
+    runner_file = open("src/jmc/runner.py")
+    dest_runner_file = open("build/lib/jmc/runner.py", "w")
+    config_file_re = re.compile("(.*self\.config_file = \")(jmc.conf\")")
+    for line in runner_file:
+        match = config_file_re.match(line)
+        if match is not None:
+            dest_runner_file.write(match.group(1) + config_dir
+                                   + match.group(2) + "\n")
+        else:
+            dest_runner_file.write(line)
