@@ -27,8 +27,10 @@ from jmc.jabber.component import MailComponent
 from jmc.lang import Lang
 
 class JMCRunner(JCLRunner):
+
     def __init__(self, component_name, component_version):
         JCLRunner.__init__(self, component_name, component_version)
+        self.component_short_name = "JMC"
         # define new options
         self.check_interval = 1
         self.mail_default_encoding = "iso-8859-1"
