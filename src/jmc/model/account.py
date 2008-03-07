@@ -436,7 +436,7 @@ class IMAPAccount(MailAccount):
         Get a list of new emails indexes
         """
         self.__logger.debug("Getting mail list")
-        typ, data = self.connection.select(self._get_real_mailbox(), True)
+        typ, data = self.connection.select(self._get_real_mailbox())
         typ, data = self.connection.search(None, 'RECENT')
         if typ == 'OK':
             return data[0].split(' ')
