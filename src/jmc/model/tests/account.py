@@ -409,7 +409,7 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                  " OK [READ-WRITE] SELECT completed\n",
              lambda data: "* SEARCH 9 10 \n" + \
                  data.split()[0] + " OK SEARCH completed\n"],
-            ["^[^ ]* EXAMINE INBOX",
+            ["^[^ ]* SELECT INBOX",
              "^[^ ]* SEARCH RECENT"],
             lambda self: \
                 self.assertEquals(self.imap_account.get_new_mail_list(),
@@ -427,7 +427,7 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                  " OK [READ-WRITE] SELECT completed\n",
              lambda data: "* SEARCH 9 10 \n" + \
                  data.split()[0] + " OK SEARCH completed\n"],
-            ["^[^ ]* EXAMINE \"?INBOX\.dir1\.subdir2\"?",
+            ["^[^ ]* SELECT \"?INBOX\.dir1\.subdir2\"?",
              "^[^ ]* SEARCH RECENT"],
             lambda self: \
                 self.assertEquals(self.imap_account.get_new_mail_list(),
@@ -445,7 +445,7 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                  " OK [READ-WRITE] SELECT completed\n",
              lambda data: "* SEARCH 9 10 \n" + \
                  data.split()[0] + " OK SEARCH completed\n"],
-            ["^[^ ]* EXAMINE \"?INBOX/dir1/subdir2\"?",
+            ["^[^ ]* SELECT \"?INBOX/dir1/subdir2\"?",
              "^[^ ]* SEARCH RECENT"],
             lambda self: \
                 self.assertEquals(self.imap_account.get_new_mail_list(),
