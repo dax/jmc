@@ -6,6 +6,17 @@ Home-page: http://people.happycoders.org/dax/projects/jmc
 Author: David Rousselie
 Author-email: dax@happycoders.org
 License: GPL
-Description: UNKNOWN
+Description: JMC is a jabber service to check email from POP3 and IMAP4 server and retrieve
+        them or just a notification of new emails. Jabber users can register multiple
+        email accounts.
 Keywords: jabber component email IMAP POP3 SMTP
 Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)
+Classifier: Programming Language :: Python
+Classifier: Topic :: Communications
+Classifier: Topic :: Communications :: Chat
+Classifier: Topic :: Communications :: Email
+Classifier: Topic :: Internet
+Classifier: Topic :: Software Development :: Libraries :: Python Modules

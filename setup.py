@@ -40,11 +40,26 @@ else:
 setup(name='jmc',
       version='0.3b1',
       description='Jabber Mail Component',
+      long_description="""\
+JMC is a jabber service to check email from POP3 and IMAP4 server and retrieve
+them or just a notification of new emails. Jabber users can register multiple
+email accounts.""",
       author='David Rousselie',
       author_email='dax@happycoders.org',
       license="GPL",
       keywords="jabber component email IMAP POP3 SMTP",
       url='http://people.happycoders.org/dax/projects/jmc',
+      classifiers=[
+        "Development Status :: 4 - Beta",
+        "Intended Audience :: System Administrators",
+        "License :: OSI Approved :: GNU General Public License (GPL)",
+        "Programming Language :: Python",
+        "Topic :: Communications",
+        "Topic :: Communications :: Chat",
+        "Topic :: Communications :: Email",
+        "Topic :: Internet",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        ],
       package_dir={'': 'src'},
       packages=find_packages('src', exclude=["*.tests",
                                              "*.tests.*",
