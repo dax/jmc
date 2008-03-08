@@ -7,6 +7,7 @@ src/jmc.egg-info/PKG-INFO
 src/jmc.egg-info/SOURCES.txt
 src/jmc.egg-info/dependency_links.txt
 src/jmc.egg-info/entry_points.txt
+src/jmc.egg-info/requires.txt
 src/jmc.egg-info/top_level.txt
 src/jmc/jabber/__init__.py
 src/jmc/jabber/command.py

@@ -38,7 +38,7 @@ else:
     config_dir = prefix + "/etc/jabber/"
 
 setup(name='jmc',
-      version='0.3',
+      version='0.3b1',
       description='Jabber Mail Component',
       author='David Rousselie',
       author_email='dax@happycoders.org',
@@ -51,7 +51,8 @@ setup(name='jmc',
                                              "tests.*",
                                              "tests"]),
       entry_points={'console_scripts': ['jmc=jmc.runner:main']},
-      test_suite='jmc.tests.suite')
+      test_suite='jmc.tests.suite',
+      install_requires=["jcl==0.1b1"])
 
 if len(sys.argv) >= 2 and sys.argv[1] == "install":
     os.makedirs(config_dir)
