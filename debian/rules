@@ -5,7 +5,7 @@
 
 PACKAGE_NAME=python-jmc
 MODULE_NAME=jmc
-DEB_UPSTREAM_VERSION=0.3
+DEB_UPSTREAM_VERSION=0.3b1
 
 PYVERS=$(shell pyversions -vr)
 

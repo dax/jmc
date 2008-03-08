@@ -69,7 +69,8 @@ email accounts.""",
       test_suite='jmc.tests.suite',
       install_requires=["jcl==0.1b1"])
 
-if len(sys.argv) >= 2 and sys.argv[1] == "install":
+if len(sys.argv) >= 2 and sys.argv[1] == "install" \
+        and not "--single-version-externally-managed" in sys.argv:
     os.makedirs(config_dir)
     shutil.copy("conf/jmc.conf", config_dir)
     runner_file = open("src/jmc/runner.py")

@@ -1,13 +1,6 @@
 #! /bin/sh
 #
-# skeleton	example file to build /etc/init.d/ scripts.
-#		This file should be used to construct scripts for /etc/init.d.
-#
-#		Written by Miquel van Smoorenburg <miquels@cistron.nl>.
-#		Modified for Debian 
-#		by Ian Murdock <imurdock@gnu.ai.mit.edu>.
-#
-# Version:	@(#)skeleton  1.9  26-Feb-2001  miquels@cistron.nl
+# Jabber Mail Component startup script
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
