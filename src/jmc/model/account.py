@@ -763,6 +763,16 @@ class SMTPAccount(Account):
         smtp_connection = smtplib.SMTP()
         if self.__logger.getEffectiveLevel() == logging.DEBUG:
             smtp_connection.set_debuglevel(1)
+
+	# It seems there is a bug that set self.port to something that is
+	# not an integer. How ? Here is a temporary workaround.
+        from types import IntType
+        if type(self.port) != IntType:
+            self.__logger.debug("BUG: SMTPAccount.port is not an integer: "
+                                + str(type(self.port)) + ", value: "
+                                + str(self.port))
+            self.port = int(self.port)
+
         smtp_connection.connect(self.host, self.port)
         self.__say_hello(smtp_connection)
         if self.tls:
