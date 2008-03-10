@@ -80,7 +80,7 @@ class MailFeeder(Feeder):
         """Check for new emails for given MailAccount and return a list of
         those emails or a summary.
         """
-	self.__logger.debug("MailFeeder.feed")
+        self.__logger.debug("MailFeeder.feed")
         result = []
         if _account.first_check and _account.live_email_only:
             continue_checking = self.initialize_live_email(_account)
@@ -105,25 +105,20 @@ class MailFeeder(Feeder):
                     mail_list = _account.get_new_mail_list()
                     default_lang_class = _account.default_lang_class
                     if action == MailAccount.RETRIEVE:
-                        # TODO : use generator (yield)
-                        mail_index = _account.get_next_mail_index(mail_list)
-                        while mail_index is not None:
+                        for mail_index in _account.get_next_mail_index(mail_list):
                             (body, email_from) = _account.get_mail(mail_index)
                             result.append((email_from,
                                            default_lang_class.new_mail_subject\
                                                % (email_from),
                                            body))
-                            mail_index = _account.get_next_mail_index(mail_list)
                     elif action == MailAccount.DIGEST:
                         body = ""
                         new_mail_count = 0
-                        mail_index = _account.get_next_mail_index(mail_list)
-                        while mail_index is not None:
+                        for mail_index in _account.get_next_mail_index(mail_list):
                             (tmp_body, from_email) = \
                                        _account.get_mail_summary(mail_index)
                             body += tmp_body
                             body += "\n----------------------------------\n"
-                            mail_index = _account.get_next_mail_index(mail_list)
                             new_mail_count += 1
                         if body != "":
                             result.append((None,
@@ -152,7 +147,7 @@ class MailSender(HeadlineSender):
     def create_full_email_message(self, email_from, email_subject,
                                   email_body, to_account):
         """
-        Create a jabber message with email data and XEP-XXX addresses (TODO)
+        Create a jabber message with email data and XEP-0033 addresses
         """
         message = MessageSender.create_message(self, to_account,
                                                (email_subject, email_body))

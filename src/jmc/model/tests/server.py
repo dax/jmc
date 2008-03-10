@@ -140,12 +140,11 @@ class XMLDummyServer(DummyServer):
                 data = None
                 for idx in range(len(self.responses)):
                     try:
-                        # TODO : this approximation is not clean
+                        # This approximation is not clean
                         # received size is based on the expected size in self.queries
                         data = conn.recv(1024 + len(self.queries[idx]))
 #                        print "receive : " + data
                         if data:
-                            ## TODO : without this log, test_set_register in test_component wait forever
                             #print "-----------RECEIVE1 " + data
                             r = self._reader.feed(data)
                     except:
@@ -153,7 +152,6 @@ class XMLDummyServer(DummyServer):
                         print "".join (traceback.format_exception
                                        (type, value, stack, 5))
                         raise
-                    # TODO verify got all data </stream>
                     if data:
                         self.real_queries.append(data)
                     # if response is a function apply it (it must return a string)

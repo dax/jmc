@@ -53,7 +53,6 @@ class MailCommandManager(JCLCommandManager):
     # Delayed to JMC 0.3.1
     def execute_retrieve_attachment_1(self, info_query, session_context,
                                       command_node, lang_class):
-        # TODO : translate
         self.__logger.debug("Executing command 'retrieve-attachment' step 1")
         self.add_actions(command_node, [command.ACTION_NEXT])
         bare_from_jid = info_query.get_from().bare()
@@ -62,8 +61,8 @@ class MailCommandManager(JCLCommandManager):
                                        MailAccount)
         if _account is not None:
             result_form = Form(xmlnode_or_type="form",
-                               title="TODO:TITLE",
-                               instructions="TODO:INS")
+                               title="TITLE",
+                               instructions="INS")
             field = result_form.add_field(name="attachments",
                                           field_type="list-multi",
                                           label="select attachments")
@@ -75,10 +74,10 @@ class MailCommandManager(JCLCommandManager):
             result_form.as_xml(command_node)
             return (result_form, [])
         else:
-            # TODO Error
+            # ERROR
             return (None, [])
 
-    # TODO: retrieve step2: Delayed to JMC 0.3.1
+    # retrieve step2: Delayed to JMC 0.3.1
 
     def execute_force_check_root_node(self, info_query, session_context,
                                       command_node, lang_class):

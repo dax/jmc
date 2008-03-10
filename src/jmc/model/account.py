@@ -179,7 +179,8 @@ class MailAccount(PresenceAccount):
         self.default_lang_class = Lang.en
 
     def _get_register_fields(cls, real_class=None):
-        """See Account._get_register_fields
+        """
+        See Account._get_register_fields
         """
         def password_post_func(password, default_func, bare_from_jid):
             if password is None or password == "":
@@ -238,6 +239,14 @@ class MailAccount(PresenceAccount):
                                    PresenceAccount.DO_NOTHING)}
 
     get_presence_actions_fields = classmethod(_get_presence_actions_fields)
+
+    def set_status(self, status):
+        """Set current Jabber status"""
+        
+        if status != account.OFFLINE and self._status == account.OFFLINE:
+            PresenceAccount.set_status(self, status)
+            self.first_check = True
+        self._status = status
 
     def get_decoded_header(self, header, charset_hint=None):
         decoded_header = email.Header.decode_header(header)
@@ -461,10 +470,13 @@ class IMAPAccount(MailAccount):
         return u"Error while fetching mail " + str(index)
 
     def get_next_mail_index(self, mail_list):
-        if self.is_mail_list_valid(mail_list):
-            return mail_list.pop(0)
-        else:
-            return None
+        """
+        Mail indexes generator. Return mail_list elements and destroy them
+        when returned.
+        """
+        while self.is_mail_list_valid(mail_list):
+            yield mail_list.pop(0)
+        return
 
     def mark_all_as_read(self):
         self.get_new_mail_list()
@@ -629,16 +641,45 @@ class POP3Account(MailAccount):
         return u"Error while fetching mail " + str(index)
 
     def get_next_mail_index(self, mail_list):
-        if self.is_mail_list_valid(mail_list):
-            if self.nb_mail == self.lastmail:
-                return None
+        """
+        Return next mail index to be read. mail_list is a generated list of
+        mail indexes in the mailbox. If the mailbox has been check by another
+        client, self.nb_mail should be < to self.lastmail (last mail_list
+        index that has been returned), so self.lastmail is set to 0 to return
+        indexes from the begining of the mail_list array. If the mailbox has 
+        not been checked by another client since last check from JMC, then
+        only new email indexes of mail_list should be returned. self.lastmail
+        sill contains old nb_mail value (it has stop at this value in the last
+        check) and self.nb_mail contains the new count of new emails:
+        ex:
+        - First check
+        [1, 2, 3, 4, 5, 6, 7]
+         ^                 ^
+         |                 |
+         self.lastmail     self.nb_mail
+        - end of first check
+        [1, 2, 3, 4, 5, 6, 7]
+                           ^
+                           |
+                           self.nb_mail == self.lastmail
+        - second check (no check by another client)
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+                           ^                     ^
+                           |                     |
+                           self.lastmail         self.nb_mail
+        Only emails indexes form 8 to 13 are returned
+        - a checking done by another client is dectected only if self.nb_mail
+        become < to self.lastmail. If the number of new emails is superior to
+        self.lastmail after another client has check the mailbox, emails 
+        indexes from 0 to self.lastmail are not sent through JMC.
+        """
+        while self.nb_mail != self.lastmail:
             if self.nb_mail < self.lastmail:
                 self.lastmail = 0
             result = int(mail_list[self.lastmail])
             self.lastmail += 1
-            return result
-        else:
-            return None
+            yield result
+        return
 
     def mark_all_as_read(self):
         self.get_new_mail_list()

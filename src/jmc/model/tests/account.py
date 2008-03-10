@@ -290,6 +290,77 @@ class POP3Account_TestCase(InheritableAccount_TestCase):
                                              u"mymessage\n",
                                          u"user@test.com")))
 
+    def test_get_next_mail_index_empty(self):
+        """
+        Test get_next_mail_index with empty mail_list parameter.
+        """
+        mail_list = []
+        self.pop3_account.nb_mail = 0
+        self.pop3_account.lastmail = 0
+        result = []
+        for elt in self.pop3_account.get_next_mail_index(mail_list):
+            result.append(elt)
+        self.assertEquals(result, [])
+
+    def test_get_next_mail_index(self):
+        """
+        Test get_next_mail_index first check.
+        """
+        mail_list = [1, 2, 3, 4]
+        self.pop3_account.nb_mail = 4
+        self.pop3_account.lastmail = 0
+        result = []
+        for elt in self.pop3_account.get_next_mail_index(mail_list):
+            result.append(elt)
+        self.assertEquals(result, [1, 2, 3, 4])
+        self.assertEquals(self.pop3_account.lastmail, 4)
+
+    def test_get_next_mail_index_second_check(self):
+        """
+        Test get_next_mail_index second check (no parallel checking).
+        """
+        mail_list = [1, 2, 3, 4, 5, 6, 7, 8]
+        self.pop3_account.nb_mail = 8
+        self.pop3_account.lastmail = 4
+        result = []
+        for elt in self.pop3_account.get_next_mail_index(mail_list):
+            result.append(elt)
+        self.assertEquals(result, [5, 6, 7, 8])
+        self.assertEquals(self.pop3_account.lastmail, 8)
+
+    def test_get_next_mail_index_second_check_parallel_check(self):
+        """
+        Test get_next_mail_index second check (with parallel checking
+        but not more new emails than last index jmc stopped:
+        3 new emails after another client checked emails).
+        """
+        mail_list = [1, 2, 3]
+        self.pop3_account.nb_mail = 3
+        self.pop3_account.lastmail = 4
+        result = []
+        for elt in self.pop3_account.get_next_mail_index(mail_list):
+            result.append(elt)
+        self.assertEquals(result, [1, 2, 3])
+        self.assertEquals(self.pop3_account.lastmail, 3)
+
+    def test_get_next_mail_index_second_check_bug_parallel_check(self):
+        """
+        Test get_next_mail_index second check (with parallel checking
+        but with more new emails than last index jmc stopped:
+        5 new emails after another client checked emails). Cannot make
+        the difference with one new email since last jmc email check!!
+        """
+        mail_list = [1, 2, 3, 4, 5]
+        self.pop3_account.nb_mail = 5
+        self.pop3_account.lastmail = 4
+        result = []
+        for elt in self.pop3_account.get_next_mail_index(mail_list):
+            result.append(elt)
+        # with no bug it should be:
+        # self.assertEquals(result, [1, 2, 3, 4, 5])
+        self.assertEquals(result, [5])
+        self.assertEquals(self.pop3_account.lastmail, 5)
+
 class IMAPAccount_TestCase(InheritableAccount_TestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, PresenceAccount, User,
@@ -599,6 +670,31 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
             ["^[^ ]* LIST \"?INBOX.dir1.subdir2\"? \*"],
             call_func)
         test_func()
+
+    def check_get_next_mail_index(self, mail_list):
+        """
+        Common tests for get_next_mail_index method.
+        """
+        result = []
+        original_mail_list = [elt for elt in mail_list]
+        for elt in self.imap_account.get_next_mail_index(mail_list):
+            result.append(elt)
+        self.assertEquals(mail_list, [])
+        self.assertEquals(result, original_mail_list)
+        
+    def test_get_next_mail_index_empty(self):
+        """
+        Test get_next_mail_index with empty mail_list parameter.
+        """
+        mail_list = []
+        self.check_get_next_mail_index(mail_list)
+
+    def test_get_next_mail_index(self):
+        """
+        Test get_next_mail_index.
+        """
+        mail_list = [1, 2, 3, 4]
+        self.check_get_next_mail_index(mail_list)
 
 class SMTPAccount_TestCase(Account_TestCase):
     def setUp(self):
