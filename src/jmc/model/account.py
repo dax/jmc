@@ -242,7 +242,7 @@ class MailAccount(PresenceAccount):
 
     def set_status(self, status):
         """Set current Jabber status"""
-        
+
         if status != account.OFFLINE and self._status == account.OFFLINE:
             PresenceAccount.set_status(self, status)
             self.first_check = True
@@ -425,20 +425,21 @@ class IMAPAccount(MailAccount):
         of tuple (email_index, email_subject)
         """
         self.__logger.debug("Getting mail list summary")
-        typ, count = self.connection.select(self._get_real_mailbox(), True)
-        result = []
+        typ, data = self.connection.select(self._get_real_mailbox(), True)
         if typ == "OK":
             typ, data = self.connection.fetch(str(start_index) + ":" +
                                               str(end_index),
                                               "RFC822.header")
             if typ == 'OK':
+                result = []
                 index = start_index
                 for _email in data:
                     if isinstance(_email, types.TupleType) and len(_email) == 2:
                         subject_header = self.get_decoded_header(email.message_from_string(_email[1])["Subject"])[0]
                         result.append((str(index), subject_header))
                         index += 1
-        return result
+                return result
+        raise Exception(data[0])
 
     def get_new_mail_list(self):
         """
@@ -446,28 +447,31 @@ class IMAPAccount(MailAccount):
         """
         self.__logger.debug("Getting mail list")
         typ, data = self.connection.select(self._get_real_mailbox())
-        typ, data = self.connection.search(None, 'RECENT')
         if typ == 'OK':
-            return data[0].split(' ')
-        return None
+            typ, data = self.connection.search(None, 'RECENT')
+            if typ == 'OK':
+                return data[0].split(' ')
+        raise Exception(data[0])
 
     def get_mail(self, index):
         self.__logger.debug("Getting mail " + str(index))
         typ, data = self.connection.select(self._get_real_mailbox(), True)
-        typ, data = self.connection.fetch(index, '(RFC822)')
         if typ == 'OK':
-            return self.format_message(\
-                email.message_from_string(data[0][1]))
-        return u"Error while fetching mail " + str(index)
+            typ, data = self.connection.fetch(index, '(RFC822)')
+            if typ == 'OK':
+                return self.format_message(\
+                    email.message_from_string(data[0][1]))
+        raise Exception(data[0] + " (email " + str(index) + ")")
 
     def get_mail_summary(self, index):
         self.__logger.debug("Getting mail summary " + str(index))
         typ, data = self.connection.select(self._get_real_mailbox(), True)
-        typ, data = self.connection.fetch(index, '(RFC822.header)')
         if typ == 'OK':
-            return self.format_message_summary(\
-                email.message_from_string(data[0][1]))
-        return u"Error while fetching mail " + str(index)
+            typ, data = self.connection.fetch(index, '(RFC822.header)')
+            if typ == 'OK':
+                return self.format_message_summary(\
+                    email.message_from_string(data[0][1]))
+        raise Exception(data[0] + " (email " + str(index) + ")")
 
     def get_next_mail_index(self, mail_list):
         """
@@ -548,7 +552,7 @@ class IMAPAccount(MailAccount):
         # replace any previous delimiter in self.mailbox by "/"
         if self.delimiter != "/":
             self.mailbox = self.mailbox.replace(self.delimiter, "/")
-            
+
 
 class POP3Account(MailAccount):
     nb_mail = IntCol(default=0)
@@ -646,7 +650,7 @@ class POP3Account(MailAccount):
         mail indexes in the mailbox. If the mailbox has been check by another
         client, self.nb_mail should be < to self.lastmail (last mail_list
         index that has been returned), so self.lastmail is set to 0 to return
-        indexes from the begining of the mail_list array. If the mailbox has 
+        indexes from the begining of the mail_list array. If the mailbox has
         not been checked by another client since last check from JMC, then
         only new email indexes of mail_list should be returned. self.lastmail
         sill contains old nb_mail value (it has stop at this value in the last
@@ -670,7 +674,7 @@ class POP3Account(MailAccount):
         Only emails indexes form 8 to 13 are returned
         - a checking done by another client is dectected only if self.nb_mail
         become < to self.lastmail. If the number of new emails is superior to
-        self.lastmail after another client has check the mailbox, emails 
+        self.lastmail after another client has check the mailbox, emails
         indexes from 0 to self.lastmail are not sent through JMC.
         """
         while self.nb_mail != self.lastmail:

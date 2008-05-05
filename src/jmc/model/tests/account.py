@@ -431,6 +431,10 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                                    ('2', 'mail subject 2')]))
         test_func()
 
+    def test_get_mail_list_summary_inbox_does_not_exist(self):
+        self.__test_select_inbox_does_not_exist(\
+            lambda: self.imap_account.get_mail_list_summary(), readonly=True)
+
     def test_get_mail_list_summary_start_index(self):
         test_func = self.make_test(\
             [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" +\
@@ -487,6 +491,30 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                                   ['9', '10']))
         test_func()
 
+    def __test_select_inbox_does_not_exist(self, tested_func,
+                                           exception_message="Mailbox does not exist",
+                                           readonly=False):
+        def check_func(self):
+            try:
+                tested_func()
+            except Exception, e:
+                self.assertEquals(e.message, exception_message)
+                return
+            self.fail("No exception raised when selecting non existing mailbox")
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
+                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+                 data.split()[0] + \
+                 " NO Mailbox does not exist \n"],
+            ["^[^ ]* " + (readonly and "EXAMINE" or "SELECT") + " INBOX"],
+            check_func)
+        test_func()
+
+    def test_get_new_mail_list_inbox_does_not_exist(self):
+        self.__test_select_inbox_does_not_exist(\
+            lambda: self.imap_account_get_new_mail_list())
+
     def test_get_new_mail_list_delimiter1(self):
         self.imap_account.mailbox = "INBOX/dir1/subdir2"
         self.imap_account.delimiter = "."
@@ -541,6 +569,29 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                                    u"None")))
         test_func()
 
+    def test_get_mail_summary_inbox_does_not_exist(self):
+        self.__test_select_inbox_does_not_exist(\
+            lambda: self.imap_account.get_mail_summary(1),
+            "Mailbox does not exist (email 1)", True)
+
+    def test_get_new_mail_list_inbox_does_not_exist(self):
+        def check_func(self):
+            try:
+                self.imap_account.get_new_mail_list()
+            except Exception, e:
+                self.assertEquals(e.message, "Mailbox does not exist")
+                return
+            self.fail("No exception raised when selecting non existing mailbox")
+        test_func = self.make_test(\
+            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
+                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+                 data.split()[0] + \
+                 " NO Mailbox does not exist \n"],
+            ["^[^ ]* SELECT INBOX"],
+            check_func)
+        test_func()
+
     def test_get_mail_summary_delimiter(self):
         self.imap_account.mailbox = "INBOX/dir1/subdir2"
         self.imap_account.delimiter = "."
@@ -578,6 +629,11 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                                   (u"From : None\nSubject : None\n\nbody text\r\n\n",
                                    u"None")))
         test_func()
+
+    def test_get_mail_inbox_does_not_exist(self):
+        self.__test_select_inbox_does_not_exist(\
+            lambda: self.imap_account.get_mail(1),
+            "Mailbox does not exist (email 1)", True)
 
     def test_get_mail_delimiter(self):
         self.imap_account.mailbox = "INBOX/dir1/subdir2"
@@ -681,7 +737,7 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
             result.append(elt)
         self.assertEquals(mail_list, [])
         self.assertEquals(result, original_mail_list)
-        
+
     def test_get_next_mail_index_empty(self):
         """
         Test get_next_mail_index with empty mail_list parameter.
