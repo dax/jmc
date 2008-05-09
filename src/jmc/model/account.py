@@ -142,6 +142,10 @@ class MYPOP3_SSL(poplib.POP3_SSL):
         self._debugging = 0
         self.welcome = self._getresp()
 
+def _get_default_status_msg(self, lang_class):
+    return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
+        unicode(self.port)
+
 class MailAccount(PresenceAccount):
     """ Wrapper to mail connection and action.
     Abstract class, do not represent real mail connection type.
@@ -240,6 +244,8 @@ class MailAccount(PresenceAccount):
 
     get_presence_actions_fields = classmethod(_get_presence_actions_fields)
 
+    get_default_status_msg = _get_default_status_msg
+
     def set_status(self, status):
         """Set current Jabber status"""
 
@@ -322,10 +328,6 @@ class MailAccount(PresenceAccount):
 
     def format_message_summary(self, email_msg):
         return self.format_message(email_msg, False)
-
-    def get_default_status_msg(self, lang_class):
-        return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
-	    unicode(self.port)
 
     def connect(self):
         raise NotImplementedError
@@ -781,6 +783,15 @@ class SMTPAccount(Account):
               default_account_default_func)]
 
     get_register_fields = classmethod(_get_register_fields)
+
+    get_default_status_msg = _get_default_status_msg
+
+    def get_type(self):
+        if self.tls:
+            return "smtps"
+        return "smtp"
+
+    type = property(get_type)
 
     def create_email(self, from_email, to_email, subject, body, other_headers=None):
         """Create new email"""

@@ -28,6 +28,7 @@ from jcl.tests import JCLTestCase
 import jcl.model as model
 from jcl.model.account import Account, PresenceAccount, User
 from jmc.model.account import MailAccount, POP3Account, IMAPAccount, SMTPAccount
+from jmc.lang import Lang
 
 from jcl.model.tests.account import Account_TestCase, \
     PresenceAccount_TestCase, InheritableAccount_TestCase, \
@@ -127,6 +128,18 @@ class MailAccount_TestCase(PresenceAccount_TestCase):
                        u"\nEncoded multipart2 with 'iso-8859-15' charset (éàê)\n" + \
                        u"Encoded multipart3 with no charset (éàê)\n",
                    u"encoded from (éàê)"))
+
+    def test_get_default_status_msg(self):
+        """
+        Get default status message for MailAccount.
+        Should raise NotImplementedError because get_type() method
+        is not implemented
+        """
+        try:
+            self.account.get_default_status_msg(Lang.en)
+        except NotImplementedError:
+            return
+        fail("No NotImplementedError raised")
 
 class POP3Account_TestCase(InheritableAccount_TestCase):
     def setUp(self):
@@ -360,6 +373,21 @@ class POP3Account_TestCase(InheritableAccount_TestCase):
         # self.assertEquals(result, [1, 2, 3, 4, 5])
         self.assertEquals(result, [5])
         self.assertEquals(self.pop3_account.lastmail, 5)
+
+    def test_get_default_status_msg(self):
+        """
+        Get default status message for POP3Account.
+        """
+        status_msg = self.pop3_account.get_default_status_msg(Lang.en)
+        self.assertEquals(status_msg, "pop3://login@localhost:1110")
+
+    def test_get_default_status_msg_ssl(self):
+        """
+        Get default status message for SSL POP3Account.
+        """
+        self.pop3_account.ssl = True
+        status_msg = self.pop3_account.get_default_status_msg(Lang.en)
+        self.assertEquals(status_msg, "pop3s://login@localhost:1110")
 
 class IMAPAccount_TestCase(InheritableAccount_TestCase):
     def setUp(self):
@@ -752,6 +780,21 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
         mail_list = [1, 2, 3, 4]
         self.check_get_next_mail_index(mail_list)
 
+    def test_get_default_status_msg(self):
+        """
+        Get default status message for IMAPAccount.
+        """
+        status_msg = self.imap_account.get_default_status_msg(Lang.en)
+        self.assertEquals(status_msg, "imap://login@localhost:1143")
+
+    def test_get_default_status_msg_ssl(self):
+        """
+        Get default status message for SSL IMAPAccount.
+        """
+        self.imap_account.ssl = True
+        status_msg = self.imap_account.get_default_status_msg(Lang.en)
+        self.assertEquals(status_msg, "imaps://login@localhost:1143")
+
 class SMTPAccount_TestCase(Account_TestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, ExampleAccount, User,
@@ -876,153 +919,181 @@ class SMTPAccount_TestCase(Account_TestCase):
         return inner
 
     def test_send_email_esmtp_no_auth(self):
-       model.db_connect()
-       smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
-                                  name="account11",
-                                  jid="account11@jmc.test.com")
-       smtp_account.host = "localhost"
-       smtp_account.port = 1025
-       model.db_disconnect()
-       email = smtp_account.create_email("from@test.com",
-                                         "to@test.com",
-                                         "subject",
-                                         "body")
-       test_func = self.make_test(["220 localhost ESMTP\r\n",
-                                   "250-localhost Hello 127.0.0.1\r\n"
-                                   + "250-SIZE 52428800\r\n"
-                                   + "250-PIPELINING\r\n"
-                                   + "250 HELP\r\n",
-                                   "250 OK\r\n",
-                                   "250 Accepted\r\n",
-                                   "354 Enter message\r\n",
-                                   None, None, None, None,
-                                   None, None, None, None,
-                                   "250 OK\r\n"],
-                                  ["ehlo \[127.0...1\]\r\n",
-                                   "mail FROM:<" + str(email['From']) + ">.*",
-                                   "rcpt TO:<" + str(email['To']) + ">\r\n",
-                                   "data\r\n"] +
+        model.db_connect()
+        smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
+                                   name="account11",
+                                   jid="account11@jmc.test.com")
+        smtp_account.host = "localhost"
+        smtp_account.port = 1025
+        model.db_disconnect()
+        email = smtp_account.create_email("from@test.com",
+                                          "to@test.com",
+                                          "subject",
+                                          "body")
+        test_func = self.make_test(["220 localhost ESMTP\r\n",
+                                    "250-localhost Hello 127.0.0.1\r\n"
+                                    + "250-SIZE 52428800\r\n"
+                                    + "250-PIPELINING\r\n"
+                                    + "250 HELP\r\n",
+                                    "250 OK\r\n",
+                                    "250 Accepted\r\n",
+                                    "354 Enter message\r\n",
+                                    None, None, None, None,
+                                    None, None, None, None,
+                                    "250 OK\r\n"],
+                                   ["ehlo \[127.0...1\]\r\n",
+                                    "mail FROM:<" + str(email['From']) + ">.*",
+                                    "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                    "data\r\n"] +
                                    email.as_string().split("\n") + [".\r\n"],
-                                  lambda self: \
-                                  smtp_account.send_email(email))
-       test_func()
+                                   lambda self: \
+                                       smtp_account.send_email(email))
+        test_func()
 
     def test_send_email_no_auth(self):
-       model.db_connect()
-       smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
-                                  name="account11",
-                                  jid="account11@jmc.test.com")
-       smtp_account.host = "localhost"
-       smtp_account.port = 1025
-       model.db_disconnect()
-       email = smtp_account.create_email("from@test.com",
-                                         "to@test.com",
-                                         "subject",
-                                         "body")
-       test_func = self.make_test(["220 localhost SMTP\r\n",
-                                   "504 ESMTP not supported\r\n",
-                                   "250-localhost Hello 127.0.0.1\r\n"
-                                   + "250-SIZE 52428800\r\n"
-                                   + "250-PIPELINING\r\n"
-                                   + "250 HELP\r\n",
-                                   "250 OK\r\n",
-                                   "250 Accepted\r\n",
-                                   "354 Enter message\r\n",
-                                   None, None, None, None,
-                                   None, None, None, None,
-                                   "250 OK\r\n"],
-                                  ["ehlo \[127.0...1\]\r\n",
-                                   "helo \[127.0...1\]\r\n",
-                                   "mail FROM:<" + str(email['From']) + ">.*",
-                                   "rcpt TO:<" + str(email['To']) + ">\r\n",
-                                   "data\r\n"] +
+        model.db_connect()
+        smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
+                                   name="account11",
+                                   jid="account11@jmc.test.com")
+        smtp_account.host = "localhost"
+        smtp_account.port = 1025
+        model.db_disconnect()
+        email = smtp_account.create_email("from@test.com",
+                                          "to@test.com",
+                                          "subject",
+                                          "body")
+        test_func = self.make_test(["220 localhost SMTP\r\n",
+                                    "504 ESMTP not supported\r\n",
+                                    "250-localhost Hello 127.0.0.1\r\n"
+                                    + "250-SIZE 52428800\r\n"
+                                    + "250-PIPELINING\r\n"
+                                    + "250 HELP\r\n",
+                                    "250 OK\r\n",
+                                    "250 Accepted\r\n",
+                                    "354 Enter message\r\n",
+                                    None, None, None, None,
+                                    None, None, None, None,
+                                    "250 OK\r\n"],
+                                   ["ehlo \[127.0...1\]\r\n",
+                                    "helo \[127.0...1\]\r\n",
+                                    "mail FROM:<" + str(email['From']) + ">.*",
+                                    "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                    "data\r\n"] +
                                    email.as_string().split("\n") + [".\r\n"],
-                                  lambda self: \
-                                  smtp_account.send_email(email))
-       test_func()
+                                   lambda self: \
+                                       smtp_account.send_email(email))
+        test_func()
 
     def test_send_email_esmtp_auth(self):
-       model.db_connect()
-       smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
-                                  name="account11",
-                                  jid="account11@jmc.test.com")
-       smtp_account.host = "localhost"
-       smtp_account.port = 1025
-       smtp_account.login = "user"
-       smtp_account.password = "pass"
-       model.db_disconnect()
-       email = smtp_account.create_email("from@test.com",
-                                         "to@test.com",
-                                         "subject",
-                                         "body")
-       test_func = self.make_test(["220 localhost ESMTP\r\n",
-                                   "250-localhost Hello 127.0.0.1\r\n"
-                                   + "250-SIZE 52428800\r\n"
-                                   + "250-AUTH PLAIN LOGIN CRAM-MD5\r\n"
-                                   + "250-PIPELINING\r\n"
-                                   + "250 HELP\r\n",
-                                   "334 ZGF4IDNmNDM2NzY0YzBhNjgyMTQ1MzhhZGNiMjE2YTYxZjRm\r\n",
-                                   "235 Authentication succeeded\r\n",
-                                   "250 OK\r\n",
-                                   "250 Accepted\r\n",
-                                   "354 Enter message\r\n",
-                                   None, None, None, None,
-                                   None, None, None, None,
-                                   "250 OK\r\n"],
-                                  ["ehlo \[127.0...1\]\r\n",
-                                   "AUTH CRAM-MD5\r\n",
-                                   ".*\r\n",
-                                   "mail FROM:<" + str(email['From']) + ">.*",
-                                   "rcpt TO:<" + str(email['To']) + ">\r\n",
-                                   "data\r\n"] +
+        model.db_connect()
+        smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
+                                   name="account11",
+                                   jid="account11@jmc.test.com")
+        smtp_account.host = "localhost"
+        smtp_account.port = 1025
+        smtp_account.login = "user"
+        smtp_account.password = "pass"
+        model.db_disconnect()
+        email = smtp_account.create_email("from@test.com",
+                                          "to@test.com",
+                                          "subject",
+                                          "body")
+        test_func = self.make_test(["220 localhost ESMTP\r\n",
+                                    "250-localhost Hello 127.0.0.1\r\n"
+                                    + "250-SIZE 52428800\r\n"
+                                    + "250-AUTH PLAIN LOGIN CRAM-MD5\r\n"
+                                    + "250-PIPELINING\r\n"
+                                    + "250 HELP\r\n",
+                                    "334 ZGF4IDNmNDM2NzY0YzBhNjgyMTQ1MzhhZGNiMjE2YTYxZjRm\r\n",
+                                    "235 Authentication succeeded\r\n",
+                                    "250 OK\r\n",
+                                    "250 Accepted\r\n",
+                                    "354 Enter message\r\n",
+                                    None, None, None, None,
+                                    None, None, None, None,
+                                    "250 OK\r\n"],
+                                   ["ehlo \[127.0...1\]\r\n",
+                                    "AUTH CRAM-MD5\r\n",
+                                    ".*\r\n",
+                                    "mail FROM:<" + str(email['From']) + ">.*",
+                                    "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                    "data\r\n"] +
                                    email.as_string().split("\n") + [".\r\n"],
-                                  lambda self: \
-                                  smtp_account.send_email(email))
-       test_func()
+                                   lambda self: \
+                                       smtp_account.send_email(email))
+        test_func()
 
     def test_send_email_esmtp_auth_method2(self):
-       model.db_connect()
-       smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
-                                  name="account11",
-                                  jid="account11@jmc.test.com")
-       smtp_account.host = "localhost"
-       smtp_account.port = 1025
-       smtp_account.login = "user"
-       smtp_account.password = "pass"
-       model.db_disconnect()
-       email = smtp_account.create_email("from@test.com",
-                                         "to@test.com",
-                                         "subject",
-                                         "body")
-       test_func = self.make_test(["220 localhost ESMTP\r\n",
-                                   "250-localhost Hello 127.0.0.1\r\n"
-                                   + "250-SIZE 52428800\r\n"
-                                   + "250-AUTH PLAIN LOGIN CRAM-MD5\r\n"
-                                   + "250-PIPELINING\r\n"
-                                   + "250 HELP\r\n",
-                                   "334 ZGF4IDNmNDM2NzY0YzBhNjgyMTQ1MzhhZGNiMjE2YTYxZjRm\r\n",
-                                   "535 Incorrect Authentication data\r\n",
-                                   "334 asd235r4\r\n",
-                                   "235 Authentication succeeded\r\n",
-                                   "250 OK\r\n",
-                                   "250 Accepted\r\n",
-                                   "354 Enter message\r\n",
-                                   None, None, None, None,
-                                   None, None, None, None,
-                                   "250 OK\r\n"],
-                                  ["ehlo \[127.0...1\]\r\n",
-                                   "AUTH CRAM-MD5\r\n",
-                                   ".*\r\n",
-                                   "AUTH LOGIN .*\r\n",
-                                   ".*\r\n",
-                                   "mail FROM:<" + str(email['From']) + ">.*",
-                                   "rcpt TO:<" + str(email['To']) + ">\r\n",
-                                   "data\r\n"] +
+        model.db_connect()
+        smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
+                                   name="account11",
+                                   jid="account11@jmc.test.com")
+        smtp_account.host = "localhost"
+        smtp_account.port = 1025
+        smtp_account.login = "user"
+        smtp_account.password = "pass"
+        model.db_disconnect()
+        email = smtp_account.create_email("from@test.com",
+                                          "to@test.com",
+                                          "subject",
+                                          "body")
+        test_func = self.make_test(["220 localhost ESMTP\r\n",
+                                    "250-localhost Hello 127.0.0.1\r\n"
+                                    + "250-SIZE 52428800\r\n"
+                                    + "250-AUTH PLAIN LOGIN CRAM-MD5\r\n"
+                                    + "250-PIPELINING\r\n"
+                                    + "250 HELP\r\n",
+                                    "334 ZGF4IDNmNDM2NzY0YzBhNjgyMTQ1MzhhZGNiMjE2YTYxZjRm\r\n",
+                                    "535 Incorrect Authentication data\r\n",
+                                    "334 asd235r4\r\n",
+                                    "235 Authentication succeeded\r\n",
+                                    "250 OK\r\n",
+                                    "250 Accepted\r\n",
+                                    "354 Enter message\r\n",
+                                    None, None, None, None,
+                                    None, None, None, None,
+                                    "250 OK\r\n"],
+                                   ["ehlo \[127.0...1\]\r\n",
+                                    "AUTH CRAM-MD5\r\n",
+                                    ".*\r\n",
+                                    "AUTH LOGIN .*\r\n",
+                                    ".*\r\n",
+                                    "mail FROM:<" + str(email['From']) + ">.*",
+                                    "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                    "data\r\n"] +
                                    email.as_string().split("\n") + [".\r\n"],
-                                  lambda self: \
-                                  smtp_account.send_email(email))
-       test_func()
+                                   lambda self: \
+                                       smtp_account.send_email(email))
+        test_func()
 
+    def test_get_default_status_msg(self):
+        """
+        Get default status message for IMAPAccount.
+        """
+        smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
+                                   name="account11",
+                                   jid="account11@jmc.test.com")
+        smtp_account.host = "localhost"
+        smtp_account.port = 1025
+        smtp_account.login = "user"
+        smtp_account.password = "pass"
+        status_msg = smtp_account.get_default_status_msg(Lang.en)
+        self.assertEquals(status_msg, "smtp://user@localhost:1025")
+
+    def test_get_default_status_msg_ssl(self):
+        """
+        Get default status message for SSL IMAPAccount.
+        """
+        smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
+                                   name="account11",
+                                   jid="account11@jmc.test.com")
+        smtp_account.host = "localhost"
+        smtp_account.port = 1025
+        smtp_account.login = "user"
+        smtp_account.password = "pass"
+        smtp_account.tls = True
+        status_msg = smtp_account.get_default_status_msg(Lang.en)
+        self.assertEquals(status_msg, "smtps://user@localhost:1025")
 
 def suite():
     suite = unittest.TestSuite()
