@@ -4,18 +4,18 @@
 ## Login : David Rousselie <dax@happycoders.org>
 ## Started on  Wed Mar  5 19:15:04:42 2008 David Rousselie
 ## $Id$
-## 
+##
 ## Copyright (C) 2006 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -64,7 +64,7 @@ class MailFeeder(Feeder):
             _account.mark_all_as_read()
             _account.disconnect()
             _account.first_check = False
-            _account.error = None
+            self.component.account_manager.cancel_account_error(_account)
             return True
         except Exception, e:
             if _account.connected:
@@ -129,7 +129,7 @@ class MailFeeder(Feeder):
                         raise Exception("Unkown action: " + str(action) \
                                             + "\nPlease reconfigure account.")
                     _account.disconnect()
-                    _account.error = None
+                    self.component.account_manager.cancel_account_error(_account)
                     self.__logger.debug("\nCHECK_MAIL ends " + _account.jid)
                 except Exception, e:
                     if _account.connected:
@@ -163,7 +163,7 @@ class MailSender(HeadlineSender):
             + unicode(JID(to_account.jid).domain)
         replyto_address_node.setProp("jid", replyto_jid)
         return message
-        
+
     def create_message(self, to_account, data):
         """Send given emails (in data) as Jabber messages"""
         email_from, subject, body = data

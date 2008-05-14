@@ -24,6 +24,7 @@
 import unittest
 import sys
 import time
+import logging
 
 from sqlobject import *
 from sqlobject.dbconnection import TheURIOpener
@@ -322,7 +323,6 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertTrue(account11.has_connected)
 
     def test_feed_retrieve_no_mail(self):
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -340,7 +340,32 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
-        model.db_disconnect()
+
+    def test_feed_cancel_error(self):
+        account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        account11._action = MailAccount.RETRIEVE
+        account11.status = account.DND
+        account11.error = "An error"
+        account11.first_check = False
+        account11.lastcheck = 1
+        account11.interval = 2
+        account11.password = "password"
+        account11.get_new_mail_list = lambda: []
+        result = self.comp.handler.feeder.feed(account11)
+        self.assertEquals(account11.error, None)
+        self.assertEquals(result, [])
+        self.assertEquals(account11.lastcheck, 0)
+        self.assertFalse(account11.connected)
+        self.assertTrue(account11.has_connected)
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 1)
+        self.assertEquals(sent[0].get_to(), "test1@test.com")
+        self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[0].xmlnode.name, "presence")
+        self.assertEquals(sent[0].xmlnode.children.name, "show")
+        self.assertEquals(sent[0].xmlnode.children.content, "online")
 
     def test_feed_retrieve_mail(self):
         def mock_get_mail(index):
@@ -434,7 +459,6 @@ class MailComponent_TestCase(JCLTestCase):
     # 'initialize_live_email' test methods
     ###########################################################################
     def test_initialize_live_email(self):
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -451,7 +475,6 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
-        model.db_disconnect()
 
     def test_initialize_live_email_connection_error(self):
         def raiser():
@@ -486,7 +509,6 @@ class MailComponent_TestCase(JCLTestCase):
     def test_initialize_live_email_mark_as_read_error(self):
         def raiser():
             raise Exception
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -513,12 +535,10 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        model.db_disconnect()
 
     def test_initialize_live_email_disconnection_error(self):
         def raiser():
             raise Exception
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -546,7 +566,31 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertTrue(account11.marked_all_as_read)
-        model.db_disconnect()
+
+    def test_initialize_live_email_cancel_error(self):
+        account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        account11.status = account.DND
+        account11.error = "An error"
+        self.assertTrue(account11.first_check)
+        account11.live_email_only = True
+        account11.password = "password"
+        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
+        self.assertEquals(continue_checking, True)
+        self.assertFalse(account11.first_check)
+        self.assertFalse(account11.waiting_password_reply)
+        self.assertEquals(account11.error, None)
+        self.assertFalse(account11.connected)
+        self.assertTrue(account11.has_connected)
+        self.assertTrue(account11.marked_all_as_read)
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 1)
+        self.assertEquals(sent[0].get_to(), "test1@test.com")
+        self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[0].xmlnode.name, "presence")
+        self.assertEquals(sent[0].xmlnode.children.name, "show")
+        self.assertEquals(sent[0].xmlnode.children.content, "online")
 
     def test_disco_get_info_imap_node(self):
         self.comp.stream = MockStream()
@@ -1463,4 +1507,8 @@ def suite():
     return test_suite
 
 if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.addHandler(logging.StreamHandler())
+    if '-v' in sys.argv:
+        logger.setLevel(logging.INFO)
     unittest.main(defaultTest='suite')
