@@ -206,7 +206,6 @@ class MailComponent_TestCase(JCLTestCase):
     # 'feed' test methods
     ###########################################################################
     def test_feed_live_email_init_no_password(self):
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -228,10 +227,8 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        model.db_disconnect()
 
     def test_feed_live_email_init_no_password2(self):
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -250,10 +247,8 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
         self.assertEquals(len(self.comp.stream.sent), 0)
-        model.db_disconnect()
 
     def test_feed_interval_no_check(self):
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -264,10 +259,8 @@ class MailComponent_TestCase(JCLTestCase):
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 1)
-        model.db_disconnect()
 
     def test_feed_interval_check(self):
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -278,10 +271,8 @@ class MailComponent_TestCase(JCLTestCase):
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertEquals(account11.lastcheck, 0)
-        model.db_disconnect()
 
     def test_feed_no_password(self):
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -302,10 +293,8 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
-        model.db_disconnect()
 
     def test_feed_unknown_action(self):
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -320,13 +309,17 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertNotEquals(account11.error, None)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
-        self.assertEquals(len(sent), 1)
+        self.assertEquals(len(sent), 2)
         self.assertEquals(sent[0].get_to(), "test1@test.com")
         self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[1].get_to(), "test1@test.com")
+        self.assertEquals(sent[1].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[1].xmlnode.name, "presence")
+        self.assertEquals(sent[1].xmlnode.children.name, "show")
+        self.assertEquals(sent[1].xmlnode.children.content, "dnd")
         self.assertEquals(account11.lastcheck, 0)
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
-        model.db_disconnect()
 
     def test_feed_retrieve_no_mail(self):
         model.db_connect()
@@ -463,7 +456,6 @@ class MailComponent_TestCase(JCLTestCase):
     def test_initialize_live_email_connection_error(self):
         def raiser():
             raise Exception
-        model.db_connect()
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
                                     jid="account11@jmc.test.com")
@@ -476,16 +468,20 @@ class MailComponent_TestCase(JCLTestCase):
         continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, False)
         sent = self.comp.stream.sent
-        self.assertEquals(len(sent), 1)
+        self.assertEquals(len(sent), 2)
         self.assertEquals(sent[0].get_to(), "test1@test.com")
         self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[1].get_to(), "test1@test.com")
+        self.assertEquals(sent[1].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[1].xmlnode.name, "presence")
+        self.assertEquals(sent[1].xmlnode.children.name, "show")
+        self.assertEquals(sent[1].xmlnode.children.content, "dnd")
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertEquals(account11.error, "")
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
         self.assertFalse(account11.marked_all_as_read)
-        model.db_disconnect()
 
     def test_initialize_live_email_mark_as_read_error(self):
         def raiser():
@@ -503,9 +499,14 @@ class MailComponent_TestCase(JCLTestCase):
         continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, False)
         sent = self.comp.stream.sent
-        self.assertEquals(len(sent), 1)
+        self.assertEquals(len(sent), 2)
         self.assertEquals(sent[0].get_to(), "test1@test.com")
         self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[1].get_to(), "test1@test.com")
+        self.assertEquals(sent[1].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[1].xmlnode.name, "presence")
+        self.assertEquals(sent[1].xmlnode.children.name, "show")
+        self.assertEquals(sent[1].xmlnode.children.content, "dnd")
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
         self.assertEquals(account11.error, "")
@@ -530,9 +531,14 @@ class MailComponent_TestCase(JCLTestCase):
         continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
         self.assertFalse(continue_checking)
         sent = self.comp.stream.sent
-        self.assertEquals(len(sent), 1)
+        self.assertEquals(len(sent), 2)
         self.assertEquals(sent[0].get_to(), "test1@test.com")
         self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[1].get_to(), "test1@test.com")
+        self.assertEquals(sent[1].get_from(), "account11@jmc.test.com")
+        self.assertEquals(sent[1].xmlnode.name, "presence")
+        self.assertEquals(sent[1].xmlnode.children.name, "show")
+        self.assertEquals(sent[1].xmlnode.children.content, "dnd")
         self.assertEquals(continue_checking, False)
         self.assertTrue(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
