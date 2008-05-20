@@ -27,7 +27,7 @@ from pyxmpp.message import Message
 
 from jcl.model import account
 from jmc.jabber import MailHandler
-from jmc.model.account import SMTPAccount
+from jmc.model.account import AbstractSMTPAccount
 
 class SendMailMessageHandler(MailHandler):
     def __init__(self, component):
@@ -90,7 +90,7 @@ class SendMailMessageHandler(MailHandler):
           subject,
           cc_email,
           bcc_email)) = self.get_email_headers_from_message(\
-            message.get_body(), 
+            message.get_body(),
             [self.to_regexp,
              self.subject_regexp,
              self.cc_regexp,
@@ -129,14 +129,14 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
         bare_from_jid = unicode(stanza.get_from().bare())
         accounts = account.get_accounts(\
             bare_from_jid,
-            account_class=SMTPAccount,
-            filter=(SMTPAccount.q.default_account == True))
+            account_class=AbstractSMTPAccount,
+            filter=(AbstractSMTPAccount.q.default_account == True))
         if accounts.count() != 1:
             self.__logger.error("No default account found for user " +
                                 str(bare_from_jid))
         if accounts.count() == 0:
             accounts = account.get_accounts(bare_from_jid,
-                                            SMTPAccount)
+                                            AbstractSMTPAccount)
         return accounts
 
     def handle(self, stanza, lang_class, data):
@@ -147,7 +147,7 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
           subject,
           cc_email,
           bcc_email)) = self.get_email_headers_from_message(\
-            message.get_body(), 
+            message.get_body(),
             [self.to_regexp,
              self.subject_regexp,
              self.cc_regexp,
@@ -177,4 +177,3 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
                             stanza_type="error",
                             subject=lang_class.send_mail_error_no_to_header_subject,
                             body=lang_class.send_mail_error_no_to_header_body)]
-

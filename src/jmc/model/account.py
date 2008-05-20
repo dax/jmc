@@ -691,17 +691,8 @@ class POP3Account(MailAccount):
         self.get_new_mail_list()
         self.lastmail = self.nb_mail
 
-
-class SMTPAccount(Account):
-    """Send email account"""
-
-    login = StringCol(default="")
-    password = StringCol(default=None)
-    host = StringCol(default="localhost")
-    port = IntCol(default=110)
-    tls = BoolCol(default=False)
-    store_password = BoolCol(default=True)
-    waiting_password_reply = BoolCol(default=False)
+class AbstractSMTPAccount(Account):
+    """Common SMTP attribut"""
     default_from = StringCol(default="nobody@localhost")
     default_account = BoolCol(default=False)
 
@@ -709,82 +700,7 @@ class SMTPAccount(Account):
         """SMTPAccount init
         Initialize class attributes"""
         Account._init(self, *args, **kw)
-        self.__logger = logging.getLogger("jmc.model.account.SMTPAccount")
-
-    def _get_default_port(cls):
-        """Return default SMTP server port"""
-        return 25
-
-    get_default_port = classmethod(_get_default_port)
-
-    def _get_register_fields(cls, real_class=None):
-        """See Account._get_register_fields
-        """
-        def password_post_func(password, default_func, bare_from_jid):
-            if password is None or password == "":
-                return None
-            return password
-
-        def default_account_default_func(bare_from_jid):
-            accounts = account.get_accounts(bare_from_jid, SMTPAccount,
-                                            (SMTPAccount.q.default_account == True))
-            if accounts.count() == 0:
-                return True
-            else:
-                return False
-
-        def default_account_post_func(value, default_func, bare_from_jid):
-            accounts = account.get_accounts(bare_from_jid, SMTPAccount,
-                                            (SMTPAccount.q.default_account == True))
-            already_default_account = (accounts.count() != 0)
-            if isinstance(value, str):
-                value = value.lower()
-                bool_value = (value == "true" or value == "1")
-            else:
-                bool_value = value
-            if bool_value:
-                if already_default_account:
-                    for _account in accounts:
-                        _account.default_account = False
-                return True
-            else:
-                if not already_default_account:
-                    return True
-                else:
-                    return False
-
-        if real_class is None:
-            real_class = cls
-        return Account.get_register_fields(real_class) + \
-            [("login", "text-single", None,
-              account.default_post_func,
-              lambda bare_from_jid: ""),
-             ("password", "text-private", None, password_post_func,
-              lambda bare_from_jid: ""),
-             ("host", "text-single", None,
-              lambda field_value, default_func, bare_from_jid: \
-                  account.mandatory_field("host", field_value),
-              lambda bare_from_jid: ""),
-             ("port", "text-single", None,
-              account.int_post_func,
-              lambda bare_from_jid: real_class.get_default_port()),
-             ("tls", "boolean", None,
-              account.default_post_func,
-              lambda bare_from_jid: False),
-             ("default_from", "text-single", None,
-              lambda field_value, default_func, bare_from_jid: \
-                  account.mandatory_field("default_from", field_value),
-              lambda bare_from_jid: ""),
-             ("store_password", "boolean", None,
-              account.default_post_func,
-              lambda bare_from_jid: True),
-             ("default_account", "boolean", None,
-              default_account_post_func,
-              default_account_default_func)]
-
-    get_register_fields = classmethod(_get_register_fields)
-
-    get_default_status_msg = _get_default_status_msg
+        self.__logger = logging.getLogger("jmc.model.account.AbstractSMTPAccount")
 
     def get_type(self):
         if self.tls:
@@ -806,6 +722,82 @@ class SMTPAccount(Account):
                 _email[header_name] = Header(other_headers[header_name])
         return _email
 
+    def _get_register_fields (cls, real_class=None):
+        """ """
+        def default_account_default_func(bare_from_jid):
+            accounts = account.get_accounts(bare_from_jid, AbstractSMTPAccount,
+                                            (AbstractSMTPAccount.q.default_account == True))
+            if accounts.count() == 0:
+                return True
+            else:
+                return False
+
+        def default_account_post_func(value, default_func, bare_from_jid):
+            accounts = account.get_accounts(bare_from_jid, AbstractSMTPAccount,
+                                            (AbstractSMTPAccount.q.default_account == True))
+            already_default_account = (accounts.count() != 0)
+            if isinstance(value, str):
+                value = value.lower()
+                bool_value = (value == "true" or value == "1")
+            else:
+                bool_value = value
+            if bool_value:
+                if already_default_account:
+                    for _account in accounts:
+                        _account.default_account = False
+                return True
+            else:
+                if not already_default_account:
+                    return True
+                else:
+                    return False
+
+        if real_class is None:
+            real_class = cls
+        return Account.get_register_fields(real_class) + \
+            [("default_account", "boolean", None,
+              default_account_post_func,
+              default_account_default_func),
+             ("default_from", "text-single", None,
+              lambda field_value, default_func, bare_from_jid: \
+                  account.mandatory_field("default_from", field_value),
+              lambda bare_from_jid: "")]
+
+    get_register_fields = classmethod(_get_register_fields)
+
+smtp_default_login = ''
+smtp_default_password = ''
+smtp_default_host = "localhost"
+smtp_default_port = 25
+smtp_default_tls = False
+
+class GlobalSMTPAccount(AbstractSMTPAccount):
+    """SMTP Account to send email with global settings"""
+    login = StringCol(default=lambda: smtp_default_login)
+    password = StringCol(default=lambda: smtp_default_password)
+    host = StringCol(default=lambda: smtp_default_host)
+    port = IntCol(default=lambda: smtp_default_port)
+    tls = BoolCol(default=lambda: smtp_default_tls)
+    store_password = BoolCol(default=True)
+    waiting_password_reply = BoolCol(default=False)
+
+    def _init(self, *args, **kw):
+        """SMTPAccount init
+        Initialize class attributes"""
+        AbstractSMTPAccount._init(self, *args, **kw)
+        self.__logger = logging.getLogger("jmc.model.account.GlobalSMTPAccount")
+
+    def _get_register_fields(cls, real_class=None):
+        """See Account._get_register_fields
+        """
+        if real_class is None:
+            real_class = cls
+        return AbstractSMTPAccount.get_register_fields(real_class)
+
+    get_register_fields = classmethod(_get_register_fields)
+
+    get_default_status_msg = _get_default_status_msg
+
     def __say_hello(self, connection):
         if not (200 <= connection.ehlo()[0] <= 299):
             (code, resp) = connection.helo()
@@ -819,7 +811,6 @@ class SMTPAccount(Account):
         smtp_connection = smtplib.SMTP()
         if self.__logger.getEffectiveLevel() == logging.DEBUG:
             smtp_connection.set_debuglevel(1)
-
 	# It seems there is a bug that set self.port to something that is
 	# not an integer. How ? Here is a temporary workaround.
         from types import IntType
@@ -828,7 +819,6 @@ class SMTPAccount(Account):
                                 + str(type(self.port)) + ", value: "
                                 + str(self.port))
             self.port = int(self.port)
-
         smtp_connection.connect(self.host, self.port)
         self.__say_hello(smtp_connection)
         if self.tls:
@@ -857,3 +847,44 @@ class SMTPAccount(Account):
         smtp_connection.sendmail(str(_email['From']), str(_email['To']),
                                  _email.as_string())
         smtp_connection.quit()
+
+class SMTPAccount(GlobalSMTPAccount):
+    """Send email account"""
+
+    def _init(self, *args, **kw):
+        """SMTPAccount init
+        Initialize class attributes"""
+        GlobalSMTPAccount._init(self, *args, **kw)
+        self.__logger = logging.getLogger("jmc.model.account.SMTPAccount")
+
+    def _get_register_fields(cls, real_class=None):
+        """See Account._get_register_fields
+        """
+        def password_post_func(password, default_func, bare_from_jid):
+            if password is None or password == "":
+                return None
+            return password
+
+        if real_class is None:
+            real_class = cls
+        return GlobalSMTPAccount.get_register_fields(real_class) + \
+            [("login", "text-single", None,
+              account.default_post_func,
+              lambda bare_from_jid: smtp_default_login),
+             ("password", "text-private", None, password_post_func,
+              lambda bare_from_jid: smtp_default_password),
+             ("host", "text-single", None,
+              lambda field_value, default_func, bare_from_jid: \
+                  account.mandatory_field("host", field_value),
+              lambda bare_from_jid: smtp_default_host),
+             ("port", "text-single", None,
+              account.int_post_func,
+              lambda bare_from_jid: smtp_default_port),
+             ("tls", "boolean", None,
+              account.default_post_func,
+              lambda bare_from_jid: smtp_default_tls),
+             ("store_password", "boolean", None,
+              account.default_post_func,
+              lambda bare_from_jid: True)]
+
+    get_register_fields = classmethod(_get_register_fields)

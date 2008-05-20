@@ -39,7 +39,7 @@ import jcl.jabber.command as command
 import jcl.jabber.tests.command
 
 from jmc.model.account import POP3Account, IMAPAccount, SMTPAccount, \
-    MailAccount
+    MailAccount, GlobalSMTPAccount, AbstractSMTPAccount
 from jmc.jabber.component import MailComponent
 from jmc.lang import Lang
 from jmc.jabber.tests.component import MockIMAPAccount
@@ -47,8 +47,9 @@ from jmc.jabber.command import MailCommandManager
 
 class MailCommandManagerTestCase(JCLCommandManagerTestCase):
     def setUp(self, tables=[]):
-        tables += [POP3Account, IMAPAccount, SMTPAccount, MailAccount,
-                   MockIMAPAccount, User, Account, PresenceAccount]
+        tables += [POP3Account, IMAPAccount, GlobalSMTPAccount,
+                   AbstractSMTPAccount, SMTPAccount,
+                   MailAccount, MockIMAPAccount, User, Account, PresenceAccount]
         JCLTestCase.setUp(self, tables=tables)
         self.config_file = tempfile.mktemp(".conf", "jmctest", jcl.tests.DB_DIR)
         self.config = ConfigParser()
@@ -63,6 +64,8 @@ class MailCommandManagerTestCase(JCLCommandManagerTestCase):
         self.command_manager = MailCommandManager(self.comp,
                                                   self.comp.account_manager)
         self.comp.account_manager.account_classes = (POP3Account, IMAPAccount,
+                                                     GlobalSMTPAccount,
+                                                     AbstractSMTPAccount,
                                                      SMTPAccount, MockIMAPAccount)
         self.user1 = User(jid="test1@test.com")
         self.account11 = MockIMAPAccount(user=self.user1,

@@ -27,7 +27,8 @@ import thread
 from jcl.tests import JCLTestCase
 import jcl.model as model
 from jcl.model.account import Account, PresenceAccount, User
-from jmc.model.account import MailAccount, POP3Account, IMAPAccount, SMTPAccount
+from jmc.model.account import MailAccount, POP3Account, IMAPAccount, \
+    GlobalSMTPAccount, AbstractSMTPAccount, SMTPAccount
 from jmc.lang import Lang
 
 from jcl.model.tests.account import Account_TestCase, \
@@ -795,82 +796,72 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
         status_msg = self.imap_account.get_default_status_msg(Lang.en)
         self.assertEquals(status_msg, "imaps://login@localhost:1143")
 
-class SMTPAccount_TestCase(Account_TestCase):
+class AbstractSMTPAccount_TestCase(Account_TestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, ExampleAccount, User,
-                                        SMTPAccount])
-        self.account_class = SMTPAccount
+                                        GlobalSMTPAccount, AbstractSMTPAccount])
+        self.account_class = AbstractSMTPAccount
 
     def test_default_account_post_func_no_default_true(self):
-        model.db_connect()
         user1 = User(jid="user1@test.com")
-        account11 = SMTPAccount(user=user1,
-                                name="account11",
-                                jid="account11@jmc.test.com")
-        account12 = SMTPAccount(user=user1,
-                                name="account12",
-                                jid="account12@jmc.test.com")
+        account11 = AbstractSMTPAccount(user=user1,
+                                        name="account11",
+                                        jid="account11@jmc.test.com")
+        account12 = AbstractSMTPAccount(user=user1,
+                                        name="account12",
+                                        jid="account12@jmc.test.com")
         (name, field_type, field_options, post_func, default_func) = \
-            SMTPAccount.get_register_fields()[7]
+            AbstractSMTPAccount.get_register_fields()[0]
         value = post_func("True", None, "user1@test.com")
         self.assertTrue(value)
-        model.db_disconnect()
 
     def test_default_account_post_func_no_default_false(self):
-        model.db_connect()
         user1 = User(jid="user1@test.com")
-        account11 = SMTPAccount(user=user1,
-                                name="account11",
-                                jid="account11@jmc.test.com")
-        account12 = SMTPAccount(user=user1,
-                                name="account12",
-                                jid="account12@jmc.test.com")
+        account11 = AbstractSMTPAccount(user=user1,
+                                        name="account11",
+                                        jid="account11@jmc.test.com")
+        account12 = AbstractSMTPAccount(user=user1,
+                                        name="account12",
+                                        jid="account12@jmc.test.com")
         (name, field_type, field_options, post_func, default_func) = \
-            SMTPAccount.get_register_fields()[7]
+            AbstractSMTPAccount.get_register_fields()[0]
         value = post_func("False", None, "user1@test.com")
         self.assertTrue(value)
-        model.db_disconnect()
 
     def test_default_account_post_func_true(self):
-        model.db_connect()
         user1 = User(jid="user1@test.com")
-        account11 = SMTPAccount(user=user1,
-                                name="account11",
-                                jid="account11@jmc.test.com")
-        account12 = SMTPAccount(user=user1,
-                                name="account12",
-                                jid="account12@jmc.test.com")
+        account11 = AbstractSMTPAccount(user=user1,
+                                        name="account11",
+                                        jid="account11@jmc.test.com")
+        account12 = AbstractSMTPAccount(user=user1,
+                                        name="account12",
+                                        jid="account12@jmc.test.com")
         account12.default_account = True
         (name, field_type, field_options, post_func, default_func) = \
-            SMTPAccount.get_register_fields()[7]
+            AbstractSMTPAccount.get_register_fields()[0]
         value = post_func("True", None, "user1@test.com")
         self.assertTrue(value)
         self.assertFalse(account12.default_account)
-        model.db_disconnect()
 
     def test_default_account_post_func_false(self):
-        model.db_connect()
         user1 = User(jid="user1@test.com")
-        account11 = SMTPAccount(user=user1,
-                                name="account11",
-                                jid="account11@jmc.test.com")
-        account12 = SMTPAccount(user=user1,
-                                name="account12",
-                                jid="account12@jmc.test.com")
+        account11 = AbstractSMTPAccount(user=user1,
+                                        name="account11",
+                                        jid="account11@jmc.test.com")
+        account12 = AbstractSMTPAccount(user=user1,
+                                        name="account12",
+                                        jid="account12@jmc.test.com")
         account12.default_account = True
         (name, field_type, field_options, post_func, default_func) = \
-            SMTPAccount.get_register_fields()[7]
+            AbstractSMTPAccount.get_register_fields()[0]
         value = post_func("False", None, "user1@test.com")
         self.assertFalse(value)
         self.assertTrue(account12.default_account)
-        model.db_disconnect()
 
     def test_create_email(self):
-        model.db_connect()
-        account11 = SMTPAccount(user=User(jid="user1@test.com"),
-                                name="account11",
-                                jid="account11@jmc.test.com")
-        model.db_disconnect()
+        account11 = AbstractSMTPAccount(user=User(jid="user1@test.com"),
+                                        name="account11",
+                                        jid="account11@jmc.test.com")
         email = account11.create_email("from@test.com",
                                        "to@test.com",
                                        "subject",
@@ -881,11 +872,9 @@ class SMTPAccount_TestCase(Account_TestCase):
         self.assertEqual(email.get_payload(), "body")
 
     def test_create_email_other_headers(self):
-        model.db_connect()
-        account11 = SMTPAccount(user=User(jid="user1@test.com"),
-                                name="account11",
-                                jid="account11@jmc.test.com")
-        model.db_disconnect()
+        account11 = AbstractSMTPAccount(user=User(jid="user1@test.com"),
+                                        name="account11",
+                                        jid="account11@jmc.test.com")
         email = account11.create_email("from@test.com",
                                        "to@test.com",
                                        "subject",
@@ -898,6 +887,13 @@ class SMTPAccount_TestCase(Account_TestCase):
         self.assertEqual(email['Bcc'], "bcc@test.com")
         self.assertEqual(email['Cc'], "cc@test.com")
         self.assertEqual(email.get_payload(), "body")
+
+class SMTPAccount_TestCase(Account_TestCase):
+    def setUp(self):
+        JCLTestCase.setUp(self, tables=[Account, ExampleAccount, User,
+                                        GlobalSMTPAccount,
+                                        AbstractSMTPAccount, SMTPAccount])
+        self.account_class = SMTPAccount
 
     def make_test(self, responses=None, queries=None, core=None):
         def inner():
@@ -1100,6 +1096,7 @@ def suite():
     suite.addTest(unittest.makeSuite(MailAccount_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(POP3Account_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(IMAPAccount_TestCase, 'test'))
+    suite.addTest(unittest.makeSuite(AbstractSMTPAccount_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(SMTPAccount_TestCase, 'test'))
     return suite
 

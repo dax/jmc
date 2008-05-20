@@ -28,7 +28,8 @@ from pyxmpp.message import Message
 from jcl.tests import JCLTestCase
 from jcl.model.account import Account, User
 
-from jmc.model.account import SMTPAccount
+from jmc.model.account import GlobalSMTPAccount, AbstractSMTPAccount, \
+    SMTPAccount
 from jmc.jabber.message import SendMailMessageHandler, \
     RootSendMailMessageHandler
 from jmc.lang import Lang
@@ -65,7 +66,7 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
         subject_regexp = re.compile("^\s*(?i)subject\s*:\s*(?P<subject_email>.*)")
         (message, headers) = self.handler.get_email_headers_from_message(\
             "To: dest@test.com\nCc: cc@test.com\n"
-            + "Bcc: bcc@test.com\n" 
+            + "Bcc: bcc@test.com\n"
             + "Subject: test subject\ntest body\n",
             [to_regexp, cc_regexp, bcc_regexp, subject_regexp],
             ["to_email", "cc_email", "bcc_email", "subject_email"])
@@ -121,7 +122,9 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
 
 class RootSendMailMessageHandler_TestCase(JCLTestCase):
     def setUp(self):
-        JCLTestCase.setUp(self, tables=[Account, SMTPAccount, User])
+        JCLTestCase.setUp(self, tables=[Account, GlobalSMTPAccount,
+                                        AbstractSMTPAccount,
+                                        SMTPAccount, User])
         self.handler = RootSendMailMessageHandler(None)
 
     def test_filter(self):

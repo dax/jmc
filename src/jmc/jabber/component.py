@@ -33,7 +33,7 @@ from jcl.jabber.feeder import FeederComponent
 from jcl.jabber.command import CommandRootDiscoGetInfoHandler
 from jcl.jabber.component import AccountManager
 from jmc.model.account import IMAPAccount, POP3Account, \
-    SMTPAccount
+    AbstractSMTPAccount, GlobalSMTPAccount, SMTPAccount
 
 from jmc.jabber.disco import MailRootDiscoGetInfoHandler, \
      IMAPAccountDiscoGetItemsHandler, MailAccountTypeDiscoGetInfoHandler, \

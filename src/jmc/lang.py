@@ -64,6 +64,7 @@ class Lang(jcl.lang.Lang):
         type_imap_name = u"IMAP accounts"
         type_pop3_name = u"POP3 accounts"
         type_smtp_name = u"SMTP accounts"
+        type_globalsmtp_name = u"Default SMTP Server"
 
         send_mail_error_no_to_header_subject = u"No header \"TO\" found"
         send_mail_error_no_to_header_body = u"No header \"TO\" found in receive message.\n" \
@@ -87,14 +88,14 @@ class Lang(jcl.lang.Lang):
 
         command_force_check = "Force check for new emails"
         command_force_check_1_description = "Select account(s) to check for new emails."
-        
+
         command_get_email = "Fetch emails"
         command_get_email_1_description = "Select email(s) to fetch"
         command_get_email_2_description = "%i emails have been sent"
         field_email_subject = u"Email Subject"
         field_select_more_emails = u"Select more emails to fetch"
         mail_subject = u"Email from %s"
-        
+
     class fr(en, jcl.lang.Lang.fr):
         component_name = u"Jabber Mail Component"
         register_title = u"Enregistrement d'une nouvelle connexion à un " \

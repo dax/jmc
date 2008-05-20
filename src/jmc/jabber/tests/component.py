@@ -42,7 +42,7 @@ from jcl.jabber.tests.presence import DefaultSubscribeHandler_TestCase, \
 from jcl.jabber.tests.feeder import FeederMock, SenderMock
 
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
-     SMTPAccount, NoAccountError
+     GlobalSMTPAccount, AbstractSMTPAccount, SMTPAccount, NoAccountError
 from jmc.jabber import MailHandler
 from jmc.jabber.message import SendMailMessageHandler
 from jmc.jabber.presence import MailSubscribeHandler, \
@@ -192,8 +192,9 @@ class MailComponent_TestCase(JCLTestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, PresenceAccount, User,
                                         MailAccount, IMAPAccount, POP3Account,
-                                        SMTPAccount, MockIMAPAccount,
-                                        MockPOP3Account])
+                                        GlobalSMTPAccount,
+                                        AbstractSMTPAccount, SMTPAccount,
+                                        MockIMAPAccount, MockPOP3Account])
         self.comp = MailComponent("jmc.test.com",
                                   "password",
                                   "localhost",
@@ -1276,7 +1277,9 @@ class MailSender_TestCase(JCLTestCase):
 class MailHandler_TestCase(JCLTestCase):
     def setUp(self, tables=[]):
         self.handler = MailHandler(None)
-        JCLTestCase.setUp(self, tables=[Account, SMTPAccount, User] + tables)
+        JCLTestCase.setUp(self, tables=[Account, AbstractSMTPAccount,
+                                        GlobalSMTPAccount, SMTPAccount, User] \
+                             + tables)
 
     def test_filter(self):
         model.db_connect()
@@ -1470,7 +1473,8 @@ class MailFeederHandler_TestCase(JCLTestCase):
         self.handler = MailFeederHandler(FeederMock(), SenderMock())
         JCLTestCase.setUp(self, tables=[Account, PresenceAccount, MailAccount,
                                         IMAPAccount, POP3Account, SMTPAccount,
-                                        User])
+                                        GlobalSMTPAccount,
+                                        AbstractSMTPAccount, User])
 
     def test_filter(self):
         model.db_connect()
