@@ -56,7 +56,8 @@ class MailFeeder(Feeder):
             if not _account.waiting_password_reply:
                 account_manager = self.component.account_manager
                 self.component.send_stanzas(\
-                    account_manager.ask_password(_account,
+                    account_manager.ask_password(_account.user.jid,
+                                                 _account,
                                                  _account.default_lang_class))
             return False
         try:
@@ -95,7 +96,8 @@ class MailFeeder(Feeder):
                     if _account.password is None:
                         account_manager = self.component.account_manager
                         self.component.send_stanzas(\
-                            account_manager.ask_password(_account,
+                            account_manager.ask_password(_account.user.jid,
+                                                         _account,
                                                          _account.default_lang_class))
                         return result
                     self.__logger.debug("Checking " + _account.name)
