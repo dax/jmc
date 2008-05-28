@@ -44,7 +44,7 @@ else:
     DB_PATH = "/tmp/test.db"
 DB_URL = "sqlite://" + DB_PATH# + "?debug=1&debugThreading=1"
 
-class JMCRunner_TestCase(JCLRunner_TestCase, JCLTestCase):
+class JMCRunner_TestCase(JCLTestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, PresenceAccount, User,
                                         GlobalSMTPAccount, AbstractSMTPAccount])
