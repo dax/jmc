@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ##
 ## command.py
 ## Login : David Rousselie <dax@happycoders.org>
@@ -26,6 +27,7 @@ from ConfigParser import ConfigParser
 import os
 import sys
 import logging
+import time
 
 from pyxmpp.iq import Iq
 from pyxmpp.jabber.dataforms import Field
@@ -100,7 +102,8 @@ class MailCommandManagerTestCase(JCLCommandManagerTestCase):
 
             def feed(self, _account):
                 self.checked_accounts.append(_account)
-                assert(_account.lastcheck == (_account.interval - 1))
+                assert((int(time.time()) - _account.lastcheck \
+                            >= (_account.interval * self.component.time_unit)))
                 return []
 
         self.comp.handler.feeder = MockFeederHandler(self.comp)

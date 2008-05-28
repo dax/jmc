@@ -28,6 +28,7 @@ FeederComponent with JMC Feeder and Sender implementation
 __revision__ = "$Id: feeder.py,v 1.1 2008/03/05 20:24:07 dax Exp $"
 
 import logging
+import time
 
 from pyxmpp.jid import JID
 
@@ -83,13 +84,15 @@ class MailFeeder(Feeder):
         """
         self.__logger.debug("MailFeeder.feed")
         result = []
-        if _account.first_check and _account.live_email_only:
-            continue_checking = self.initialize_live_email(_account)
-            if not continue_checking:
-                return result
-        _account.lastcheck += 1
-        if _account.lastcheck == _account.interval:
-            _account.lastcheck = 0
+        if _account.first_check:
+            _account.lastcheck = int(time.time())
+            if _account.live_email_only:
+                continue_checking = self.initialize_live_email(_account)
+                if not continue_checking:
+                    return result
+        if (int(time.time()) - _account.lastcheck) \
+                >= (_account.interval * self.component.time_unit):
+            _account.lastcheck = int(time.time())
             action = _account.action
             if action != PresenceAccount.DO_NOTHING:
                 try:

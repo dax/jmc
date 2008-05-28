@@ -25,6 +25,7 @@ import unittest
 import sys
 import time
 import logging
+import time
 
 from sqlobject import *
 from sqlobject.dbconnection import TheURIOpener
@@ -204,6 +205,13 @@ class MailComponent_TestCase(JCLTestCase):
         self.comp.stream = MockStream()
         self.comp.stream_class = MockStream
 
+    def _account_has_been_checked(self, _account, old_value):
+        if old_value == _account.lastcheck:
+           return False
+        else:
+           delta = int(time.time()) - _account.lastcheck
+           return (delta <= 1) and (delta >= 0)
+
     ###########################################################################
     # 'feed' test methods
     ###########################################################################
@@ -256,11 +264,24 @@ class MailComponent_TestCase(JCLTestCase):
                                     jid="account11@jmc.test.com")
         account11._action = PresenceAccount.DO_NOTHING
         account11.first_check = False
-        self.assertEquals(account11.lastcheck, 0)
+        account11.lastcheck = old_value = int(time.time()) - 2
         account11.interval = 2
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
-        self.assertEquals(account11.lastcheck, 1)
+        self.assertFalse(self._account_has_been_checked(account11,
+                                                        old_value))
+
+    def test_feed_interval_first_check(self):
+        account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        account11._action = PresenceAccount.DO_NOTHING
+        account11.first_check = True
+        account11.lastcheck = 0
+        account11.interval = 2
+        result = self.comp.handler.feeder.feed(account11)
+        self.assertEquals(result, [])
+        self.assertTrue(self._account_has_been_checked(account11, 0))
 
     def test_feed_interval_check(self):
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
@@ -268,11 +289,11 @@ class MailComponent_TestCase(JCLTestCase):
                                     jid="account11@jmc.test.com")
         account11._action = PresenceAccount.DO_NOTHING
         account11.first_check = False
-        account11.lastcheck = 1
+        account11.lastcheck = 0
         account11.interval = 2
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(result, [])
-        self.assertEquals(account11.lastcheck, 0)
+        self.assertTrue(self._account_has_been_checked(account11, 0))
 
     def test_feed_no_password(self):
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
@@ -281,7 +302,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11._action = MailAccount.RETRIEVE
         account11.status = account.ONLINE
         account11.first_check = False
-        account11.lastcheck = 1
+        account11.lastcheck = 0
         account11.interval = 2
         account11.password = None
         self.assertFalse(account11.waiting_password_reply)
@@ -292,7 +313,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(len(sent), 1)
         self.assertEquals(sent[0].get_to(), "test1@test.com")
         self.assertEquals(sent[0].get_from(), "account11@jmc.test.com")
-        self.assertEquals(account11.lastcheck, 0)
+        self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
         self.assertFalse(account11.has_connected)
 
@@ -303,7 +324,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11._action = 42 # Unknown action
         account11.status = account.ONLINE
         account11.first_check = False
-        account11.lastcheck = 1
+        account11.lastcheck = 0
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: []
@@ -319,7 +340,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(sent[1].xmlnode.name, "presence")
         self.assertEquals(sent[1].xmlnode.children.name, "show")
         self.assertEquals(sent[1].xmlnode.children.content, "dnd")
-        self.assertEquals(account11.lastcheck, 0)
+        self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
 
@@ -330,14 +351,14 @@ class MailComponent_TestCase(JCLTestCase):
         account11._action = MailAccount.RETRIEVE
         account11.status = account.ONLINE
         account11.first_check = False
-        account11.lastcheck = 1
+        account11.lastcheck = 0
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
-        self.assertEquals(account11.lastcheck, 0)
+        self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
@@ -350,14 +371,14 @@ class MailComponent_TestCase(JCLTestCase):
         account11.status = account.DND
         account11.error = "An error"
         account11.first_check = False
-        account11.lastcheck = 1
+        account11.lastcheck = 0
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
-        self.assertEquals(account11.lastcheck, 0)
+        self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         sent = self.comp.stream.sent
@@ -379,14 +400,14 @@ class MailComponent_TestCase(JCLTestCase):
         account11._action = MailAccount.RETRIEVE
         account11.status = account.ONLINE
         account11.first_check = False
-        account11.lastcheck = 1
+        account11.lastcheck = 0
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: [0, 1]
         account11.get_mail = mock_get_mail
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
-        self.assertEquals(account11.lastcheck, 0)
+        self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
@@ -413,14 +434,14 @@ class MailComponent_TestCase(JCLTestCase):
         account11._action = MailAccount.DIGEST
         account11.status = account.ONLINE
         account11.first_check = False
-        account11.lastcheck = 1
+        account11.lastcheck = 0
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: []
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
-        self.assertEquals(account11.lastcheck, 0)
+        self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)
@@ -437,14 +458,14 @@ class MailComponent_TestCase(JCLTestCase):
         account11._action = MailAccount.DIGEST
         account11.status = account.ONLINE
         account11.first_check = False
-        account11.lastcheck = 1
+        account11.lastcheck = 0
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: [0, 1]
         account11.get_mail_summary = mock_get_mail_summary
         result = self.comp.handler.feeder.feed(account11)
         self.assertEquals(account11.error, None)
-        self.assertEquals(account11.lastcheck, 0)
+        self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
         self.assertTrue(account11.has_connected)
         self.assertEquals(len(self.comp.stream.sent), 0)

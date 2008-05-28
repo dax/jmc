@@ -22,6 +22,7 @@
 
 import logging
 import re
+import time
 
 from pyxmpp.jabber.dataforms import Form
 
@@ -101,7 +102,8 @@ class MailCommandManager(JCLCommandManager):
                 for account_name in session_context["account_names"]:
                     name, user_jid = self.get_name_and_jid(account_name)
                     _account = account.get_account(user_jid, name)
-                    _account.lastcheck = _account.interval - 1
+                    _account.lastcheck = int(time.time()) \
+                        - (_account.interval * self.component.time_unit)
                     accounts.append(_account)
             else:
                 return self.execute_force_check_root_node(info_query,
@@ -111,7 +113,8 @@ class MailCommandManager(JCLCommandManager):
         else:
             _account = account.get_account(bare_from_jid, account_name)
             if _account is not None:
-                _account.lastcheck = _account.interval - 1
+                _account.lastcheck = int(time.time()) \
+                        - (_account.interval * self.component.time_unit)
                 accounts.append(_account)
         command_node.setProp("status", command.STATUS_COMPLETED)
         self.component.check_email_accounts(accounts, lang_class)
