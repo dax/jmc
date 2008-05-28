@@ -80,7 +80,6 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.pid_file, "/var/run/jabber/jmc.pid")
         self.assertFalse(self.runner.debug)
         self.assertEquals(self.runner.mail_default_encoding, "iso-8859-1")
-        self.assertEquals(self.runner.check_interval, 1)
         self.assertEquals(self.runner.smtp_default_login, None)
         self.assertEquals(self.runner.smtp_default_password, None)
         self.assertEquals(self.runner.smtp_default_host, None)
@@ -111,7 +110,6 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.db_url, "test_sqlite://root@localhost/var/spool/jabber/test_jmc.db")
         self.assertEquals(self.runner.pid_file, "/var/run/jabber/test_jmc.pid")
         self.assertFalse(self.runner.debug)
-        self.assertEquals(self.runner.check_interval, 2)
         self.assertEquals(self.runner.mail_default_encoding, "test_iso-8859-1")
         self.assertEquals(self.runner.smtp_default_login, "testlogin")
         self.assertEquals(self.runner.smtp_default_password, "testpassword")
@@ -143,7 +141,6 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.db_url, "test_sqlite://root@localhost/var/spool/jabber/test_jmc.db")
         self.assertEquals(self.runner.pid_file, "/var/run/jabber/test_jmc.pid")
         self.assertFalse(self.runner.debug)
-        self.assertEquals(self.runner.check_interval, 2)
         self.assertEquals(self.runner.mail_default_encoding, "test_iso-8859-1")
         self.assertEquals(self.runner.smtp_default_login, None)
         self.assertEquals(self.runner.smtp_default_password, None)
@@ -174,7 +171,6 @@ class JMCRunner_TestCase(JCLTestCase):
                     "-u", "sqlite:///tmp/test_jmc.db",
                     "-p", "/tmp/test_jmc.pid",
                     "-e", "test2_iso-8859-1",
-                    "-i", "3",
                     "-g", "testlogin",
                     "-a", "testpassword",
                     "-t", "testhost",
@@ -192,7 +188,6 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.pid_file, "/tmp/test_jmc.pid")
         self.assertFalse(self.runner.debug)
         self.assertEquals(self.runner.mail_default_encoding, "test2_iso-8859-1")
-        self.assertEquals(self.runner.check_interval, 3)
         self.assertEquals(self.runner.smtp_default_login, "testlogin")
         self.assertEquals(self.runner.smtp_default_password, "testpassword")
         self.assertEquals(self.runner.smtp_default_host, "testhost")
@@ -222,7 +217,6 @@ class JMCRunner_TestCase(JCLTestCase):
                     "--db-url", "sqlite:///tmp/test_jmc.db",
                     "--pid-file", "/tmp/test_jmc.pid",
                     "--mail-default-encoding", "test2_iso-8859-1",
-                    "--check-interval", "4",
                     "--smtp-default-login", "testlogin",
                     "--smtp-default-password", "testpassword",
                     "--smtp-default-host", "testhost",
@@ -240,7 +234,6 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.pid_file, "/tmp/test_jmc.pid")
         self.assertFalse(self.runner.debug)
         self.assertEquals(self.runner.mail_default_encoding, "test2_iso-8859-1")
-        self.assertEquals(self.runner.check_interval, 4)
         self.assertEquals(self.runner.smtp_default_login, "testlogin")
         self.assertEquals(self.runner.smtp_default_password, "testpassword")
         self.assertEquals(self.runner.smtp_default_host, "testhost")

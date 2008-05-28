@@ -36,7 +36,6 @@ class JMCRunner(JCLRunner):
         JCLRunner.__init__(self, component_name, component_version)
         self.component_short_name = "JMC"
         # define new options
-        self.check_interval = 1
         self.mail_default_encoding = "iso-8859-1"
         self.smtp_default_login = None
         self.smtp_default_password = None
@@ -45,11 +44,7 @@ class JMCRunner(JCLRunner):
         self.smtp_default_tls = False
         self.smtp_default_label = None
         self.enable_smtp_default_account = False
-        self.options += [("i:", "check-interval=", "jmc",
-                          " INTERVAL\t\t\tInterval unit in minutes between mail checks",
-                          lambda arg: self.set_attr("check_interval",
-                                                    int(arg))),
-                         ("e:", "mail-default-encoding=", "jmc",
+        self.options += [("e:", "mail-default-encoding=", "jmc",
                           " ENCODING\t\tDefault encoding of the component",
                           lambda arg: self.set_attr("mail_default_encoding",
                                                     arg)),
@@ -124,7 +119,6 @@ class JMCRunner(JCLRunner):
             if self.enable_smtp_default_account:
                 component.account_manager.account_classes += (GlobalSMTPAccount,)
             MailAccount.default_encoding = self.mail_default_encoding
-            component.check_interval = self.check_interval
             component.disco_identity.set_category("gateway")
             component.disco_identity.set_type("smtp")
             return component.run()
