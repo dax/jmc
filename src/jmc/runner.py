@@ -116,6 +116,7 @@ class JMCRunner(JCLRunner):
                                       lang=Lang(self.language),
                                       config=self.config,
                                       config_file=self.config_file)
+            component.version = self.component_version
             if self.enable_smtp_default_account:
                 component.account_manager.account_classes += (GlobalSMTPAccount,)
             MailAccount.default_encoding = self.mail_default_encoding
