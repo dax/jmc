@@ -1,33 +1,50 @@
+# -*- coding: utf-8 -*-
 ##
 ## presence.py
 ## Login : David Rousselie <dax@happycoders.org>
 ## Started on  Wed Jun 27 22:05:08 2007 David Rousselie
 ## $Id$
-## 
+##
 ## Copyright (C) 2007 David Rousselie
 ## This program is free software; you can redistribute it and/or modify
 ## it under the terms of the GNU General Public License as published by
 ## the Free Software Foundation; either version 2 of the License, or
 ## (at your option) any later version.
-## 
+##
 ## This program is distributed in the hope that it will be useful,
 ## but WITHOUT ANY WARRANTY; without even the implied warranty of
 ## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ## GNU General Public License for more details.
-## 
+##
 ## You should have received a copy of the GNU General Public License
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
 import re
+import time
 
 from jcl.jabber.presence import DefaultPresenceHandler, \
      DefaultSubscribeHandler, DefaultUnsubscribeHandler
 from jcl.model.account import LegacyJID
 
+import jcl.jabber as jabber
 from jcl.jabber import Handler
 from jmc.jabber import MailHandler
+
+class MailAccountIQLastHandler(DefaultPresenceHandler):
+    """Handle jabber:iq:last request for account JID"""
+
+    filter = jabber.get_account_filter
+
+    def handle(self, stanza, lang_class, data):
+        """Return same presence as receive one"""
+        _account = data
+        result = stanza.make_result_response()
+        query = result.new_query("jabber:iq:last")
+        query.setProp("seconds",
+                      unicode(int(time.time()) - _account.lastcheck))
+        return [result]
 
 class MailPresenceHandler(DefaultPresenceHandler):
     """Define filter for legacy JIDs presence handling"""

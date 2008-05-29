@@ -248,7 +248,6 @@ class MailAccount(PresenceAccount):
 
     def set_status(self, status):
         """Set current Jabber status"""
-
         if status != account.OFFLINE and self._status == account.OFFLINE:
             PresenceAccount.set_status(self, status)
             self.first_check = True

@@ -54,6 +54,7 @@ class MailFeeder(Feeder):
         (if waiting for password).
         """
         if _account.password is None:
+            _account.first_check = True
             if not _account.waiting_password_reply:
                 account_manager = self.component.account_manager
                 self.component.send_stanzas(\
@@ -82,9 +83,9 @@ class MailFeeder(Feeder):
         """Check for new emails for given MailAccount and return a list of
         those emails or a summary.
         """
-        self.__logger.debug("MailFeeder.feed")
         result = []
         if _account.first_check:
+            _account.first_check = False
             _account.lastcheck = int(time.time())
             if _account.live_email_only:
                 continue_checking = self.initialize_live_email(_account)

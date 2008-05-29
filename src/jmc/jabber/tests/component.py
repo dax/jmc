@@ -215,6 +215,30 @@ class MailComponent_TestCase(JCLTestCase):
     ###########################################################################
     # 'feed' test methods
     ###########################################################################
+    def test_feed_first_check(self):
+        account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
+                                    name="account11",
+                                    jid="account11@jmc.test.com")
+        account11.status = account.ONLINE
+        self.assertTrue(account11.first_check)
+        self.assertEquals(account11.error, None)
+        self.assertFalse(account11.waiting_password_reply)
+        account11.live_email_only = False
+        account11.lastcheck = 0
+        account11.password = ""
+        result = self.comp.handler.feeder.feed(account11)
+        self.assertEquals(len(result), 0)
+        sent = self.comp.stream.sent
+        self.assertEquals(len(sent), 0)
+        self.assertFalse(account11.first_check)
+        self.assertFalse(account11.waiting_password_reply)
+        self.assertEquals(account11.error, None)
+        self.assertFalse(account11.connected)
+        self.assertFalse(account11.has_connected)
+        self.assertFalse(account11.marked_all_as_read)
+        self.assertTrue(self._account_has_been_checked(account11,
+                                                       0))
+
     def test_feed_live_email_init_no_password(self):
         account11 = MockIMAPAccount(user=User(jid="test1@test.com"),
                                     name="account11",
