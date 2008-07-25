@@ -730,14 +730,30 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
 
     def test_populate_handler(self):
         self.assertEquals(".", self.imap_account.delimiter)
-        self.imap_account.mailbox = "INBOX.dir1.subdir2"
+        self.imap_account.mailbox = "INBOX/dir1/subdir2"
         def call_func(self):
             self.imap_account.populate_handler()
-            self.assertEquals("INBOX/dir1/subdir2", self.imap_account.mailbox)
+            self.assertEquals("INBOX.dir1.subdir2", self.imap_account.mailbox)
         test_func = self.make_test(\
             [lambda data: '* LIST () "." "INBOX.dir1.subdir2"\r\n' + \
                  data.split()[0] + ' OK LIST completed\r\n'],
             ["^[^ ]* LIST \"?INBOX.dir1.subdir2\"? \*"],
+            call_func)
+        test_func()
+
+    def test_populate_handler_wrong_default_delimiter(self):
+        self.imap_account.delimiter = "/"
+        self.imap_account.mailbox = "INBOX/dir1/subdir2"
+        def call_func(self):
+            self.imap_account.populate_handler()
+            self.assertEquals("INBOX.dir1.subdir2", self.imap_account.mailbox)
+            self.assertEquals(".", self.imap_account.delimiter)
+        test_func = self.make_test(\
+            [lambda data: data.split()[0] + ' OK LIST completed\r\n',
+             lambda data: '* LIST () "." "INBOX.dir1.subdir2"\r\n' + \
+                 data.split()[0] + ' OK LIST completed\r\n'],
+            ["^[^ ]* LIST \"?INBOX/dir1/subdir2\"? \*",
+             "^[^ ]* LIST \"?INBOX.dir1.subdir2\"? \*"],
             call_func)
         test_func()
 

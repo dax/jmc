@@ -435,7 +435,7 @@ class IMAPAccount(MailAccount):
                 current_folder = current_folder[folder]
         return current_folder.keys()
 
-    def populate_handler(self):
+    def populate_handler(self, try_other_delimiter=True, testing_delimiter="/"):
         """
         Handler called when populating account
         """
@@ -445,20 +445,31 @@ class IMAPAccount(MailAccount):
         typ, data = self.connection.list(self.mailbox)
         if typ == 'OK':
             line = data[0]
-            match = self._regexp_list.match(line)
-            if match is not None:
-                self.delimiter = match.group(2)
+            if line is None:
+                if try_other_delimiter:
+                    self.mailbox = self.mailbox.replace(testing_delimiter,
+                                                        ".")
+                    self.populate_handler(False, ".")
+                    return
+                else:
+                    self.disconnect()
+                    raise Exception("Cannot find mailbox " + self.mailbox)
             else:
-                self.disconnect()
-                raise Exception("Cannot find delimiter for mailbox "
-                                + self.mailbox)
+                match = self._regexp_list.match(line)
+                if match is not None:
+                    self.delimiter = match.group(2)
+                else:
+                    self.disconnect()
+                    raise Exception("Cannot find delimiter for mailbox "
+                                    + self.mailbox)
         else:
             self.disconnect()
             raise Exception("Cannot find mailbox " + self.mailbox)
         self.disconnect()
         # replace any previous delimiter in self.mailbox by "/"
-        if self.delimiter != "/":
-            self.mailbox = self.mailbox.replace(self.delimiter, "/")
+        if self.delimiter != testing_delimiter:
+            self.mailbox = self.mailbox.replace(testing_delimiter,
+                                                self.delimiter)
 
 
 class POP3Account(MailAccount):
