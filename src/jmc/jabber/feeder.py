@@ -157,17 +157,18 @@ class MailSender(HeadlineSender):
         """
         message = MessageSender.create_message(self, to_account,
                                                (email_subject, email_body))
-        msg_node = message.get_node()
-        addresses_node = msg_node.newChild(None, "addresses", None)
-        address_ns = addresses_node.newNs("http://jabber.org/protocol/address",
-                                          None)
-        addresses_node.setNs(address_ns)
-        replyto_address_node = addresses_node.newChild(address_ns, "address",
-                                                       None)
-        replyto_address_node.setProp("type", "replyto")
-        replyto_jid = email_from.replace('@', '%', 1) + "@" \
-            + unicode(JID(to_account.jid).domain)
-        replyto_address_node.setProp("jid", replyto_jid)
+        if email_from is not None:
+            msg_node = message.get_node()
+            addresses_node = msg_node.newChild(None, "addresses", None)
+            address_ns = addresses_node.newNs("http://jabber.org/protocol/address",
+                                              None)
+            addresses_node.setNs(address_ns)
+            replyto_address_node = addresses_node.newChild(address_ns, "address",
+                                                           None)
+            replyto_address_node.setProp("type", "replyto")
+            replyto_jid = email_from.replace('@', '%', 1) + "@" \
+                + unicode(JID(to_account.jid).domain)
+            replyto_address_node.setProp("jid", replyto_jid)
         return message
 
     def create_message(self, to_account, data):

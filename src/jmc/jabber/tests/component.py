@@ -1,3 +1,5 @@
+
+
 # -*- coding: utf-8 -*-
 ##
 ## test_component.py
@@ -1300,6 +1302,25 @@ class MailSender_TestCase(JCLTestCase):
                           "replyto")
         self.assertEquals(addresses[0].prop("jid"),
                           "from%test.com@jmc.test.com")
+
+    def test_create_message_missing_email_from(self):
+        mail_sender = MailSender()
+        model.db_connect()
+        user1 = User(jid="test1@test.com")
+        account11 = IMAPAccount(user=user1,
+                                name="account11",
+                                jid="account11@jmc.test.com")
+        account11.online_action = MailAccount.RETRIEVE
+        account11.status = account.ONLINE
+        message = mail_sender.create_message(account11, (None,
+                                                         "subject",
+                                                         "message body"))
+        self.assertEquals(message.get_to(), user1.jid)
+        self.assertEquals(message.get_subject(), "subject")
+        self.assertEquals(message.get_body(), "message body")
+        addresses = message.xpath_eval("add:addresses/add:address",
+                                       {"add": "http://jabber.org/protocol/address"})
+        self.assertEquals(addresses, [])
 
     def test_create_message_digest(self):
         mail_sender = MailSender()
