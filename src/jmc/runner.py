@@ -20,6 +20,8 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
+import socket
+
 from jcl.runner import JCLRunner
 
 import jmc.model.account as account
@@ -81,6 +83,8 @@ class JMCRunner(JCLRunner):
         self.db_url = "sqlite:///var/spool/jabber/jmc.db"
         self.pid_file = "/var/run/jabber/jmc.pid"
         self.config_file = "jmc.conf"
+        # set socket connection timeout (for IMAP and POP connections)
+        socket.setdefaulttimeout(10)
 
     def setup_db(self):
         JCLRunner.setup_db(self)

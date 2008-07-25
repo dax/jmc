@@ -44,103 +44,9 @@ from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
 from jmc.lang import Lang
 
-IMAP4_TIMEOUT = 10
-POP3_TIMEOUT = 10
-
 class NoAccountError(Exception):
     """Error raised when no corresponding account is found."""
     pass
-
-## All MY* classes are implemented to add a timeout (settimeout)
-## while connecting
-class MYIMAP4(imaplib.IMAP4):
-    def open(self, host='', port=imaplib.IMAP4_PORT):
-        """Setup connection to remote server on "host:port"
-            (default: localhost:standard IMAP4 port).
-        This connection will be used by the routines:
-            read, readline, send, shutdown.
-        """
-        self.host = host
-        self.port = port
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	self.sock.settimeout(IMAP4_TIMEOUT)
-        self.sock.connect((host, port))
-	self.sock.settimeout(None)
-        self.file = self.sock.makefile('rb')
-
-class MYIMAP4_SSL(imaplib.IMAP4_SSL):
-    def open(self, host='', port=imaplib.IMAP4_SSL_PORT):
-        """Setup connection to remote server on "host:port".
-            (default: localhost:standard IMAP4 SSL port).
-        This connection will be used by the routines:
-            read, readline, send, shutdown.
-        """
-        self.host = host
-        self.port = port
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	self.sock.settimeout(IMAP4_TIMEOUT)
-        self.sock.connect((host, port))
-	self.sock.settimeout(None)
-        self.sslobj = socket.ssl(self.sock, self.keyfile, self.certfile)
-
-class MYPOP3(poplib.POP3):
-    def __init__(self, host, port=poplib.POP3_PORT):
-        self.host = host
-        self.port = port
-        msg = "getaddrinfo returns an empty list"
-        self.sock = None
-        for res in socket.getaddrinfo(self.host,
-                                      self.port,
-                                      0,
-                                      socket.SOCK_STREAM):
-            af, socktype, proto, canonname, sa = res
-            try:
-                self.sock = socket.socket(af, socktype, proto)
-		self.sock.settimeout(POP3_TIMEOUT)
-                self.sock.connect(sa)
-		self.sock.settimeout(None)
-            except socket.error, msg:
-                if self.sock:
-                    self.sock.close()
-                self.sock = None
-                continue
-            break
-        if not self.sock:
-            raise socket.error, msg
-        self.file = self.sock.makefile('rb')
-        self._debugging = 0
-        self.welcome = self._getresp()
-
-class MYPOP3_SSL(poplib.POP3_SSL):
-    def __init__(self, host, port=poplib.POP3_SSL_PORT, keyfile=None,
-                 certfile=None):
-        self.host = host
-        self.port = port
-        self.keyfile = keyfile
-        self.certfile = certfile
-        self.buffer = ""
-        msg = "getaddrinfo returns an empty list"
-        self.sock = None
-        for res in socket.getaddrinfo(self.host, self.port, 0,
-                                      socket.SOCK_STREAM):
-            af, socktype, proto, canonname, sa = res
-            try:
-                self.sock = socket.socket(af, socktype, proto)
-		self.sock.settimeout(POP3_TIMEOUT)
-                self.sock.connect(sa)
-		self.sock.settimeout(None)
-            except socket.error, msg:
-                if self.sock:
-                    self.sock.close()
-                self.sock = None
-                continue
-            break
-        if not self.sock:
-            raise socket.error, msg
-        self.file = self.sock.makefile('rb')
-        self.sslobj = socket.ssl(self.sock, self.keyfile, self.certfile)
-        self._debugging = 0
-        self.welcome = self._getresp()
 
 def _get_default_status_msg(self, lang_class):
     return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
@@ -408,9 +314,9 @@ class IMAPAccount(MailAccount):
                             + " (" + self.mailbox + "). SSL="
                             + str(self.ssl))
         if self.ssl:
-            self.connection = MYIMAP4_SSL(self.host, self.port)
+            self.connection = imaplib.IMAP4_SSL(self.host, self.port)
         else:
-            self.connection = MYIMAP4(self.host, self.port)
+            self.connection = imaplib.IMAP4(self.host, self.port)
         self.connection.login(self.login, self.password)
         self.connected = True
 
@@ -582,9 +488,9 @@ class POP3Account(MailAccount):
                             + self.login + "@" + self.host + ":" +
                             str(self.port) + ". SSL=" + str(self.ssl))
         if self.ssl:
-            self.connection = MYPOP3_SSL(self.host, self.port)
+            self.connection = poplib.POP3_SSL(self.host, self.port)
         else:
-            self.connection = MYPOP3(self.host, self.port)
+            self.connection = poplib.POP3(self.host, self.port)
         try:
             self.connection.apop(self.login, self.password)
         except:
