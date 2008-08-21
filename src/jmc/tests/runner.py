@@ -257,7 +257,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.runner.pid_file = "/tmp/jmc.pid"
         self.runner.db_url = DB_URL
         def do_nothing():
-            pass
+            return (False, 0)
         self.runner._run(do_nothing)
         model.db_connection_str = self.runner.db_url
         model.db_connect()
@@ -280,7 +280,7 @@ class JMCRunner_TestCase(JCLTestCase):
             """ """
             self.assertEquals(mail_component_self.account_manager.account_classes,
                               (IMAPAccount, POP3Account, SMTPAccount))
-            return False
+            return (False, 0)
 
         self.runner.enable_smtp_default_account = False
         self.runner.pid_file = "/tmp/jmc.pid"
@@ -301,7 +301,7 @@ class JMCRunner_TestCase(JCLTestCase):
             self.assertEquals(mail_component_self.account_manager.account_classes,
                               (IMAPAccount, POP3Account, SMTPAccount,
                                GlobalSMTPAccount))
-            return False
+            return (False, 0)
 
         self.runner.enable_smtp_default_account = True
         self.runner.pid_file = "/tmp/jmc.pid"
