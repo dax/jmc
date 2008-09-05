@@ -40,10 +40,10 @@ case "$1" in
 		    --shell /bin/false \
 			jabber 
 	fi
-	chown jabber:daemon /var/spool/jabber
-	chown jabber:daemon /var/run/jabber
-	chown jabber:daemon /var/log/jabber
-	chown jabber:daemon /etc/jabber
+	chown jabber /var/spool/jabber
+	chown jabber /var/run/jabber
+	chown jabber /var/log/jabber
+	chown jabber /etc/jabber
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
