@@ -106,7 +106,7 @@ class MailCommandManagerTestCase(JCLCommandManagerTestCase):
                             >= (_account.interval * self.component.time_unit)))
                 return []
 
-        self.comp.handler.feeder = MockFeederHandler(self.comp)
+        self.comp.tick_handlers[0].feeder = MockFeederHandler(self.comp)
 
     def tearDown(self):
         JCLTestCase.tearDown(self)
@@ -141,7 +141,7 @@ class MailCommandManagerForceCheckCommand_TestCase(MailCommandManagerTestCase):
                 + "status='completed'>"
                 + "</command></iq>",
                 result_iq, True, test_sibling=False))
-        feeder = self.comp.handler.feeder
+        feeder = self.comp.tick_handlers[0].feeder
         self.assertEquals(len(feeder.checked_accounts), 1)
         self.assertEquals(feeder.checked_accounts[0], self.account11)
 
@@ -207,7 +207,7 @@ class MailCommandManagerForceCheckCommand_TestCase(MailCommandManagerTestCase):
         self.assertEquals(context_session["account_names"],
                           ["account11/test1@test.com",
                            "account12/test1@test.com"])
-        feeder = self.comp.handler.feeder
+        feeder = self.comp.tick_handlers[0].feeder
         self.assertEquals(len(feeder.checked_accounts), 2)
         self.assertEquals(feeder.checked_accounts[0], self.account11)
         self.assertEquals(feeder.checked_accounts[1], self.account12)

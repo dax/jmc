@@ -127,7 +127,7 @@ class MailComponent(FeederComponent):
                                  lang=lang,
                                  account_manager_class=account_manager_class,
                                  command_manager_class=command_manager_class)
-        self.handler = MailFeederHandler(MailFeeder(self), MailSender(self))
+        self.tick_handlers = [MailFeederHandler(MailFeeder(self), MailSender(self))]
         self.account_manager.account_classes = (IMAPAccount,
                                                 POP3Account,
                                                 SMTPAccount)
@@ -151,4 +151,5 @@ class MailComponent(FeederComponent):
     def check_email_accounts(self, accounts, lang_class=None):
         if lang_class is None:
             lang_class = self.lang.get_default_lang_class()
-        self.handler.handle(None, lang_class, accounts)
+        for handler in self.tick_handlers:
+            handler.handle(None, lang_class, accounts)

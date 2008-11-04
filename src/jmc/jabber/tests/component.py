@@ -228,7 +228,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.live_email_only = False
         account11.lastcheck = 0
         account11.password = ""
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 0)
@@ -251,7 +251,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertFalse(account11.waiting_password_reply)
         account11.live_email_only = True
         account11.password = None
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 1)
@@ -274,7 +274,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.waiting_password_reply = True
         account11.live_email_only = True
         account11.password = None
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertTrue(account11.first_check)
         self.assertTrue(account11.waiting_password_reply)
@@ -292,7 +292,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.first_check = False
         account11.lastcheck = old_value = int(time.time()) - 2
         account11.interval = 2
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertFalse(self._account_has_been_checked(account11,
                                                         old_value))
@@ -305,7 +305,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.first_check = True
         account11.lastcheck = 0
         account11.interval = 2
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertTrue(self._account_has_been_checked(account11, 0))
 
@@ -317,7 +317,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.first_check = False
         account11.lastcheck = 0
         account11.interval = 2
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(result, [])
         self.assertTrue(self._account_has_been_checked(account11, 0))
 
@@ -332,7 +332,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.interval = 2
         account11.password = None
         self.assertFalse(account11.waiting_password_reply)
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
@@ -354,7 +354,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: []
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertNotEquals(account11.error, None)
         self.assertEquals(len(result), 0)
         sent = self.comp.stream.sent
@@ -381,7 +381,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: []
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
         self.assertTrue(self._account_has_been_checked(account11, 0))
@@ -401,7 +401,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: []
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
         self.assertTrue(self._account_has_been_checked(account11, 0))
@@ -431,7 +431,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.password = "password"
         account11.get_new_mail_list = lambda: [0, 1]
         account11.get_mail = mock_get_mail
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
@@ -464,7 +464,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.interval = 2
         account11.password = "password"
         account11.get_new_mail_list = lambda: []
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertEquals(result, [])
         self.assertTrue(self._account_has_been_checked(account11, 0))
@@ -489,7 +489,7 @@ class MailComponent_TestCase(JCLTestCase):
         account11.password = "password"
         account11.get_new_mail_list = lambda: [0, 1]
         account11.get_mail_summary = mock_get_mail_summary
-        result = self.comp.handler.feeder.feed(account11)
+        result = self.comp.tick_handlers[0].feeder.feed(account11)
         self.assertEquals(account11.error, None)
         self.assertTrue(self._account_has_been_checked(account11, 0))
         self.assertFalse(account11.connected)
@@ -515,7 +515,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(account11.error, None)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.tick_handlers[0].feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, True)
         self.assertFalse(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
@@ -536,7 +536,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(account11.error, None)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.tick_handlers[0].feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, False)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 2)
@@ -566,7 +566,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(account11.error, None)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.tick_handlers[0].feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, False)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 2)
@@ -596,7 +596,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertEquals(account11.error, None)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.tick_handlers[0].feeder.initialize_live_email(account11)
         self.assertFalse(continue_checking)
         sent = self.comp.stream.sent
         self.assertEquals(len(sent), 2)
@@ -624,7 +624,7 @@ class MailComponent_TestCase(JCLTestCase):
         self.assertTrue(account11.first_check)
         account11.live_email_only = True
         account11.password = "password"
-        continue_checking = self.comp.handler.feeder.initialize_live_email(account11)
+        continue_checking = self.comp.tick_handlers[0].feeder.initialize_live_email(account11)
         self.assertEquals(continue_checking, True)
         self.assertFalse(account11.first_check)
         self.assertFalse(account11.waiting_password_reply)
