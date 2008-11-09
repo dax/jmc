@@ -1,52 +1,49 @@
-Installation :
+* Installation
 
-- Get pyxmpp from http://pyxmpp.jabberstudio.org/ (version 1.0)
+** Debian package
 
-- edit jmc.xml to match jabber server configuration :
-	- for jabberd2, port must match router.xml port
-	- for ejabberd, add new listening port :
-	  {5347, ejabberd_service, [{access, all},
-                            {host, "jmc.localhost",
-                             [{password, "secret"}]}]}
+Get JCL and JMC Debian packages from
+http://people.happycoders.org/dax/projects and install them:
 
-- then run (in src directory):
-$ python jmc.py -c jmc.xml (-D to get debug)
+$ sudo apt-get install python-pysqlite2 python-pyxmpp python-sqlobject
+$ sudo dpkg -i python-jcl_0.1b1_all.deb python-jmc_0.3b1_all.deb
 
-Usage :
+** EasyInstall
 
-- Now you can register new mail server connection with your favorite
-jabber client.
-- all connection are then listed under your service browser and you
-can edit mail server parameters by registering on listed connection.
+Get EasyInstall then run:
 
-Feedback :
+$ easy_install jmc
 
-Send me feedback and comments to dax at happycoders dot org
+** Manual installation
 
-Utils (in src/utils directory) :
-- jmc_converter.py convert from one storage type to another.
+Get JCL and JMC sources packages and untar them:
 
-$ python jmc_converter.py 
+$ tar zxvf jcl-0.1b1.tar.gz
+$ cd jcl-0.1
+$ python setup.py install
+$ cd -
+$ tar zxvf jmc-0.3b1.tar.gz
+$ cd jmc-0.3
+$ python setup.py install
 
--> give you the list of supported types.
+* Configuration
 
-Example of usage :
+Edit /etc/jabber/jmc.conf jabber section according to your Jabber
+server configuration. For help on other options, see
+https://people.happycoders.org/dax/projects/jmc/wiki/ConfigDoc.
+Additional parameters (for Debian install) can be passed through
+command line options (see
+https://people.happycoders.org/dax/projects/jmc/wiki/CommandLineOpts)
+defined in /etc/default/python-jmc.
 
-$ python jmc_converter.py \
-  DBM \
-  registered.db \
-  SQLite \
-  registered.sqlite
+* Start/Stop JMC
 
--> converts a DBM file (registered.db) to a SQLite file
-(registered.sqlite). Once converted, the new file copied in
-${spool_dir}/${service}/registered.db where ${spool_dir} and
-${service} are defined in jmc.xml configuration file.
+Debian installation:
 
-- jmc_dump.py dump a db file. example :
+$ /etc/init.d/python-jmc start/stop
 
-$ python jmc_dump.py DBM registered.db
+easyinstall or manual installation (see
+https://people.happycoders.org/dax/projects/jmc/wiki/CommandLineOpts
+for options):
 
-
-
-
+$ /usr/bin/jmc 
