@@ -686,13 +686,13 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
 
     def test_build_folder_cache(self):
         test_func = self.make_test(\
-        [lambda data: '* LIST () "." "INBOX"\r\n' + \
-         '* LIST () "." "INBOX.dir1"\r\n' + \
-         '* LIST () "." "INBOX.dir1.subdir1"\r\n' + \
-         '* LIST () "." "INBOX.dir1.subdir2"\r\n' + \
-         '* LIST () "." "INBOX.dir2"\r\n' + \
-         data.split()[0] + ' OK LIST completed\r\n'],
-        ["^[^ ]* LIST \"\" \*"],
+	    [lambda data: '* LIST () "." "INBOX"\r\n' + \
+		 '* LIST () "." "INBOX.dir1"\r\n' + \
+		 '* LIST () "." "INBOX.dir1.subdir1"\r\n' + \
+		 '* LIST () "." "INBOX.dir1.subdir2"\r\n' + \
+		 '* LIST () "." "INBOX.dir2"\r\n' + \
+		 data.split()[0] + ' OK LIST completed\r\n'],
+	    ["^[^ ]* LIST \"\" \*"],
         lambda self: self.assertEquals(self.imap_account._build_folder_cache(),
                                        {"INBOX":
                                         {"dir1":

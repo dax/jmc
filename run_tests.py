@@ -48,8 +48,7 @@ if __name__ == '__main__':
     class MyTestProgram(unittest.TestProgram):
         def runTests(self):
             """run tests but do not exit after"""
-            if self.testRunner is None:
-                self.testRunner = unittest.TextTestRunner(verbosity=self.verbosity)
+	    self.testRunner = unittest.TextTestRunner(verbosity=self.verbosity)
             self.testRunner.run(self.test)
 
     logger = logging.getLogger()

@@ -53,7 +53,7 @@ def xmldiff(node1, node2):
 
 class DummyServer:
     def __init__(self, host, port, responses = None):
-        for res in socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
+        for res in socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
             af, socktype, proto, canonname, sa = res
             try:
                 s = socket.socket(af, socktype, proto)
@@ -203,5 +203,3 @@ def test():
 
 if __name__ == '__main__':
     test()
-
-
