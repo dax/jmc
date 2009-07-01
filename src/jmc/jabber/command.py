@@ -68,10 +68,10 @@ class MailCommandManager(JCLCommandManager):
                                           field_type="list-multi",
                                           label="select attachments")
             field.add_option(label="Next",
-                             values=["-1"])
+                             value="-1")
             for (mail_id, mail_title) in _account.get_mail_with_attachment_list():
                 field.add_option(label=mail_title,
-                                 values=[mail_id])
+                                 value=mail_id)
             result_form.as_xml(command_node)
             return (result_form, [])
         else:
@@ -154,7 +154,7 @@ class MailCommandManager(JCLCommandManager):
                                               field_type="list-multi",
                                               label=lang_class.field_email_subject)
                 for (email_index, email_subject) in email_list:
-                    field.add_option(label=email_subject, values=[email_index])
+                    field.add_option(label=email_subject, value=email_index)
                 if len(email_list) == 10:
                     result_form.add_field(name="fetch_more",
                                           field_type="boolean",

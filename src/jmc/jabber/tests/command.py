@@ -31,6 +31,7 @@ import time
 
 from pyxmpp.iq import Iq
 from pyxmpp.jabber.dataforms import Field
+import pyxmpp.xmlextra
 
 import jcl.tests
 from jcl.tests import JCLTestCase
@@ -46,6 +47,8 @@ from jmc.jabber.component import MailComponent
 from jmc.lang import Lang
 from jmc.jabber.tests.component import MockIMAPAccount
 from jmc.jabber.command import MailCommandManager
+
+PYXMPP_NS = pyxmpp.xmlextra.COMMON_NS
 
 class MailCommandManagerTestCase(JCLCommandManagerTestCase):
     def setUp(self, tables=[]):
@@ -286,7 +289,7 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
         self.assertTrue(jcl.tests.is_xml_equal(\
                 u"<message from='account11@" + unicode(self.comp.jid)
                 + "' to='test1@test.com' "
-                + "xmlns='http://pyxmpp.jabberstudio.org/xmlns/common'>"
+                + "xmlns='" + PYXMPP_NS + "'>"
                 + "<subject>" + Lang.en.mail_subject \
                     % ("from" + str(index) + "@test.com")
                 + "</subject>"
@@ -570,7 +573,7 @@ class MailCommandManagerGetEmailCommand_TestCase(MailCommandManagerTestCase):
         self.assertTrue(jcl.tests.is_xml_equal(\
                 u"<iq from='unknown@" + unicode(self.comp.jid)
                 + "' to='test1@test.com' type='error' "
-                + "xmlns='http://pyxmpp.jabberstudio.org/xmlns/common'>"
+                + "xmlns='" + PYXMPP_NS + "'>"
                 + "<command xmlns='http://jabber.org/protocol/commands' "
                 + "node='jmc#get-email' />"
                 + "<error type='cancel'>"

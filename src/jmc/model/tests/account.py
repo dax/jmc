@@ -527,7 +527,7 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
             try:
                 tested_func()
             except Exception, e:
-                self.assertEquals(e.message, exception_message)
+                self.assertEquals(str(e), exception_message)
                 return
             self.fail("No exception raised when selecting non existing mailbox")
         test_func = self.make_test(\
@@ -608,7 +608,7 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
             try:
                 self.imap_account.get_new_mail_list()
             except Exception, e:
-                self.assertEquals(e.message, "Mailbox does not exist")
+                self.assertEquals(str(e), "Mailbox does not exist")
                 return
             self.fail("No exception raised when selecting non existing mailbox")
         test_func = self.make_test(\
