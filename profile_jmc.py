@@ -21,7 +21,7 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##
 
-import profile
+import cProfile
 import jmc.runner as runner
 
-profile.run("runner.main()", "jmc.prof")
+cProfile.run("runner.main()", "jmc.prof")
