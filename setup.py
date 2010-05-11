@@ -28,18 +28,25 @@ import shutil
 import os
 
 prefix = "/usr"
+root = "/"
 for arg in sys.argv:
     if arg[0:9] == "--prefix=":
         prefix = arg[9:]
         break
+for arg in sys.argv:
+    if arg[0:7] == "--root=":
+        root = arg[7:]
+        break
 
 if prefix == "/usr":
-    config_dir = "/etc/jabber/"
+    prefix_config_dir = "/etc/jabber/"
 else:
-    config_dir = prefix + "/etc/jabber/"
+    prefix_config_dir = prefix + "/etc/jabber/"
+config_dir = root + "/" + prefix_config_dir
+full_prefix = root + "/" + prefix
 
 setup(name='jmc',
-      version='0.3b1',
+      version='0.3b2',
       description='Jabber Mail Component',
       long_description="""\
 JMC is a jabber service to check email from POP3 and IMAP4 server and retrieve
@@ -68,19 +75,25 @@ email accounts.""",
                                              "tests"]),
       entry_points={'console_scripts': ['jmc=jmc.runner:main']},
       test_suite='jmc.tests.suite',
-      install_requires=["jcl==0.1b1"])
+      install_requires=["jcl==0.1b2"])
 
 if len(sys.argv) >= 2 and sys.argv[1] == "install" \
         and not "--single-version-externally-managed" in sys.argv:
-    os.makedirs(config_dir)
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
     shutil.copy("conf/jmc.conf", config_dir)
-    runner_file = open("src/jmc/runner.py")
-    dest_runner_file = open("build/lib/jmc/runner.py", "w")
+    runner_file_name = full_prefix + "/lib/python2.6/site-packages/jmc/runner.py"
+    runner_file = open(runner_file_name)
+    dest_runner_file_name = runner_file_name + ".tmp"
+    dest_runner_file = open(dest_runner_file_name, "w")
     config_file_re = re.compile("(.*self\.config_file = \")(jmc.conf\")")
     for line in runner_file:
         match = config_file_re.match(line)
         if match is not None:
-            dest_runner_file.write(match.group(1) + config_dir
+            dest_runner_file.write(match.group(1) + prefix_config_dir
                                    + match.group(2) + "\n")
         else:
             dest_runner_file.write(line)
+    dest_runner_file.close()
+    runner_file.close()
+    shutil.move(dest_runner_file_name, runner_file_name)

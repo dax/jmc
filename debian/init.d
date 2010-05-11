@@ -1,7 +1,11 @@
 #! /bin/sh
-#
-# Jabber Mail Component startup script
-#
+### BEGIN INIT INFO
+# Provides:          jmc
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Jabber Mail Component
+# Description:       Start Jabber Mail Component daemon.
+### END INIT INFO
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/bin/jmc
