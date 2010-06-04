@@ -52,6 +52,14 @@ def _get_default_status_msg(self, lang_class):
     return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
         unicode(self.port)
 
+def validate_password(password, default_func, bare_from_jid):
+    if password is None or password == "":
+        return None
+    return password
+
+def validate_login(login, default_func, bare_from_jid):
+    return account.mandatory_field("login", login)
+
 class MailAccount(PresenceAccount):
     """ Wrapper to mail connection and action.
     Abstract class, do not represent real mail connection type.
@@ -92,19 +100,13 @@ class MailAccount(PresenceAccount):
         """
         See Account._get_register_fields
         """
-        def password_post_func(password, default_func, bare_from_jid):
-            if password is None or password == "":
-                return None
-            return password
-
         if real_class is None:
             real_class = cls
         return PresenceAccount.get_register_fields(real_class) + \
             [("login", "text-single", None,
-              lambda field_value, default_func, bare_from_jid: \
-                  account.mandatory_field("login", field_value),
+              validate_login,
               lambda bare_from_jid: ""),
-             ("password", "text-private", None, password_post_func,
+             ("password", "text-private", None, validate_password,
               lambda bare_from_jid: ""),
              ("host", "text-single", None,
               lambda field_value, default_func, bare_from_jid: \
@@ -310,8 +312,8 @@ class IMAPAccount(MailAccount):
 
     def connect(self):
         self.__logger.debug("Connecting to IMAP server "
-                            + self.login + "@" + self.host + ":" + str(self.port)
-                            + " (" + self.mailbox + "). SSL="
+                            + str(self.login) + "@" + str(self.host) + ":" + str(self.port)
+                            + " (" + str(self.mailbox) + "). SSL="
                             + str(self.ssl))
         if self.ssl:
             self.connection = imaplib.IMAP4_SSL(self.host, self.port)

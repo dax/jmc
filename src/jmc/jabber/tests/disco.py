@@ -71,7 +71,7 @@ class IMAPAccountDiscoGetInfoHandler_TestCase(unittest.TestCase):
         disco_infos = handler.handle(None, Lang.en, "account@jmc.test.com/POP3",
                                      None, None)
         self.assertTrue(disco_infos[0].has_feature("jabber:iq:register"))
-        self.assertTrue(disco_infos[0].has_feature("http://jabber.org/protocol/commands"))
+        self.assertFalse(disco_infos[0].has_feature("http://jabber.org/protocol/commands"))
 
 def suite():
     suite = unittest.TestSuite()

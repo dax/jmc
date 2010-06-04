@@ -105,8 +105,8 @@ class MailFeeder(Feeder):
                                                          _account.default_lang_class))
                         return result
                     self.__logger.debug("Checking " + _account.name)
-                    self.__logger.debug("\t" + _account.login \
-                                            + "@" + _account.host)
+                    self.__logger.debug("\t" + str(_account.login) \
+                                            + "@" + str(_account.host))
                     _account.connect()
                     mail_list = _account.get_new_mail_list()
                     default_lang_class = _account.default_lang_class

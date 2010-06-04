@@ -26,7 +26,9 @@ import thread
 
 from jcl.tests import JCLTestCase
 import jcl.model as model
+from jcl.error import FieldError
 from jcl.model.account import Account, PresenceAccount, User
+import jmc.model.account
 from jmc.model.account import MailAccount, POP3Account, IMAPAccount, \
     GlobalSMTPAccount, AbstractSMTPAccount, SMTPAccount
 from jmc.lang import Lang
@@ -35,6 +37,11 @@ from jcl.model.tests.account import Account_TestCase, \
     PresenceAccount_TestCase, InheritableAccount_TestCase, \
     ExampleAccount
 from jmc.model.tests import email_generator, server
+
+class AccountModule_TestCase(unittest.TestCase):
+    def test_validate_login_with_empty_login(self):
+        self.assertRaises(FieldError, jmc.model.account.validate_login,
+                          None, None, None)
 
 class MailAccount_TestCase(PresenceAccount_TestCase):
     def setUp(self):
@@ -409,13 +416,13 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
             self.server = server.DummyServer("localhost", 1143)
             thread.start_new_thread(self.server.serve, ())
             self.server.responses = ["* OK [CAPABILITY IMAP4 LOGIN-REFERRALS " + \
-                                     "AUTH=PLAIN]\n", \
+                                     "AUTH=PLAIN]\r\n", \
                                      lambda data: "* CAPABILITY IMAP4 " + \
-                                     "LOGIN-REFERRALS AUTH=PLAIN\n" + \
+                                     "LOGIN-REFERRALS AUTH=PLAIN\r\n" + \
                                      data.split()[0] + \
-                                     " OK CAPABILITY completed\n", \
+                                     " OK CAPABILITY completed\r\n", \
                                      lambda data: data.split()[0] + \
-                                     " OK LOGIN completed\n"]
+                                     " OK LOGIN completed\r\n"]
             if responses:
                 self.server.responses += responses
             self.server.queries = ["^[^ ]* CAPABILITY", \
@@ -506,13 +513,13 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
 
     def test_get_new_mail_list(self):
         test_func = self.make_test(\
-            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
-                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
-                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" + \
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
                  data.split()[0] + \
-                 " OK [READ-WRITE] SELECT completed\n",
-             lambda data: "* SEARCH 9 10 \n" + \
-                 data.split()[0] + " OK SEARCH completed\n"],
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* SEARCH 9 10\r\n" + \
+                 data.split()[0] + " OK SEARCH completed\r\n"],
             ["^[^ ]* SELECT INBOX",
              "^[^ ]* SEARCH RECENT"],
             lambda self: \
@@ -531,11 +538,11 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                 return
             self.fail("No exception raised when selecting non existing mailbox")
         test_func = self.make_test(\
-            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
-                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
-                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" + \
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
                  data.split()[0] + \
-                 " NO Mailbox does not exist \n"],
+                 " NO Mailbox does not exist\r\n"],
             ["^[^ ]* " + (readonly and "EXAMINE" or "SELECT") + " INBOX"],
             check_func)
         test_func()
@@ -548,13 +555,13 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
         self.imap_account.mailbox = "INBOX/dir1/subdir2"
         self.imap_account.delimiter = "."
         test_func = self.make_test( \
-            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
-                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
-                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" + \
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
                  data.split()[0] + \
-                 " OK [READ-WRITE] SELECT completed\n",
-             lambda data: "* SEARCH 9 10 \n" + \
-                 data.split()[0] + " OK SEARCH completed\n"],
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* SEARCH 9 10\r\n" + \
+                 data.split()[0] + " OK SEARCH completed\r\n"],
             ["^[^ ]* SELECT \"?INBOX\.dir1\.subdir2\"?",
              "^[^ ]* SEARCH RECENT"],
             lambda self: \
@@ -566,13 +573,13 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
         self.imap_account.mailbox = "INBOX/dir1/subdir2"
         self.imap_account.delimiter = "/"
         test_func = self.make_test( \
-            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
-                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
-                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" + \
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
                  data.split()[0] + \
-                 " OK [READ-WRITE] SELECT completed\n",
-             lambda data: "* SEARCH 9 10 \n" + \
-                 data.split()[0] + " OK SEARCH completed\n"],
+                 " OK [READ-WRITE] SELECT completed\r\n",
+             lambda data: "* SEARCH 9 10\r\n" + \
+                 data.split()[0] + " OK SEARCH completed\r\n"],
             ["^[^ ]* SELECT \"?INBOX/dir1/subdir2\"?",
              "^[^ ]* SEARCH RECENT"],
             lambda self: \
@@ -612,11 +619,11 @@ class IMAPAccount_TestCase(InheritableAccount_TestCase):
                 return
             self.fail("No exception raised when selecting non existing mailbox")
         test_func = self.make_test(\
-            [lambda data: "* 42 EXISTS\n* 1 RECENT\n* OK" + \
-                 " [UNSEEN 9]\n* FLAGS (\Deleted \Seen\*)\n*" + \
-                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\n" + \
+            [lambda data: "* 42 EXISTS\r\n* 1 RECENT\r\n* OK" + \
+                 " [UNSEEN 9]\r\n* FLAGS (\Deleted \Seen\*)\r\n*" + \
+                 " OK [PERMANENTFLAGS (\Deleted \Seen\*)\r\n" + \
                  data.split()[0] + \
-                 " NO Mailbox does not exist \n"],
+                 " NO Mailbox does not exist\r\n"],
             ["^[^ ]* SELECT INBOX"],
             check_func)
         test_func()
@@ -1109,6 +1116,7 @@ class SMTPAccount_TestCase(Account_TestCase):
 
 def suite():
     suite = unittest.TestSuite()
+    suite.addTest(unittest.makeSuite(AccountModule_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(MailAccount_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(POP3Account_TestCase, 'test'))
     suite.addTest(unittest.makeSuite(IMAPAccount_TestCase, 'test'))
