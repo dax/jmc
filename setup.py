@@ -46,7 +46,7 @@ config_dir = root + "/" + prefix_config_dir
 full_prefix = root + "/" + prefix
 
 setup(name='jmc',
-      version='0.3b2',
+      version='0.3b3',
       description='Jabber Mail Component',
       long_description="""\
 JMC is a jabber service to check email from POP3 and IMAP4 server and retrieve

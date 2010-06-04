@@ -1,8 +1,8 @@
 PYTHON=`which python`
 DESTDIR=/
-BUILDIR=$(CURDIR)/debian/jcl
-PROJECT=jcl
-VERSION=0.1b2
+BUILDIR=$(CURDIR)/debian/jmc
+PROJECT=jmc
+VERSION=0.3b3
 
 all:
 	@echo "make source - Create source package"
@@ -23,7 +23,7 @@ buildrpm:
 builddeb:
 	$(PYTHON) setup.py sdist $(COMPILE) --dist-dir=../
 	rename -f 's/$(PROJECT)-(.*)\.tar\.gz/$(PROJECT)_$$1\.orig\.tar\.gz/' ../*
-	dpkg-buildpackage -i -I -rfakeroot
+	dpkg-buildpackage -us -uc -i -I -rfakeroot
 
 clean:
 	$(PYTHON) setup.py clean

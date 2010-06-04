@@ -2,3 +2,4 @@
 *flymake.py
 .ropeproject
 *.pyc
+dist
