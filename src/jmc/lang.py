@@ -95,6 +95,7 @@ class Lang(jcl.lang.Lang):
         field_email_subject = u"Email Subject"
         field_select_more_emails = u"Select more emails to fetch"
         mail_subject = u"Email from %s"
+        no_whitespace_in_field = u"There must be no whitespace in field"
 
     class fr(en, jcl.lang.Lang.fr):
         component_name = u"Jabber Mail Component"
@@ -169,6 +170,7 @@ class Lang(jcl.lang.Lang):
         field_email_subject = u"Objet des emails"
         field_select_more_emails = u"Séléctionner plus d'emails à récupérer"
         mail_subject = u"Email de %s"
+        no_whitespace_in_field = u"Le champ ne doit pas contenir d'espace"
 
     class nl(en, jcl.lang.Lang.nl):
         # TODO: when finish, delete this line and uncomment in tests/lang.py the makeSuite(Language_nl_TestCase, 'test') line

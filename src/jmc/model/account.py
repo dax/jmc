@@ -40,6 +40,7 @@ from sqlobject.inheritance import InheritableSQLObject
 from sqlobject.col import StringCol, IntCol, BoolCol
 from sqlobject.sqlbuilder import AND
 
+from jcl.error import FieldError
 from jcl.model import account
 from jcl.model.account import Account, PresenceAccount
 from jmc.lang import Lang
@@ -49,7 +50,7 @@ class NoAccountError(Exception):
     pass
 
 def _get_default_status_msg(self, lang_class):
-    return self.get_type() + "://" + self.login + "@" + self.host + ":" + \
+    return str(self.get_type()) + "://" + str(self.login) + "@" + str(self.host) + ":" + \
         unicode(self.port)
 
 def validate_password(password, default_func, bare_from_jid):
@@ -58,7 +59,10 @@ def validate_password(password, default_func, bare_from_jid):
     return password
 
 def validate_login(login, default_func, bare_from_jid):
-    return account.mandatory_field("login", login)
+    return account.no_whitespace_field("login", account.mandatory_field("login", login))
+
+def validate_host(host, default_func, bare_from_jid):
+    return account.no_whitespace_field("host", account.mandatory_field("host", host))
 
 class MailAccount(PresenceAccount):
     """ Wrapper to mail connection and action.
@@ -104,13 +108,10 @@ class MailAccount(PresenceAccount):
             real_class = cls
         return PresenceAccount.get_register_fields(real_class) + \
             [("login", "text-single", None,
-              validate_login,
-              lambda bare_from_jid: ""),
+              validate_login, lambda bare_from_jid: ""),
              ("password", "text-private", None, validate_password,
               lambda bare_from_jid: ""),
-             ("host", "text-single", None,
-              lambda field_value, default_func, bare_from_jid: \
-                  account.mandatory_field("host", field_value),
+             ("host", "text-single", None, validate_host,
               lambda bare_from_jid: ""),
              ("port", "text-single", None,
               account.int_post_func,
@@ -272,8 +273,7 @@ class IMAPAccount(MailAccount):
     delimiter = StringCol(default=".")
 
     def _get_register_fields(cls, real_class=None):
-        """See Account._get_register_fields
-        """
+        """See Account._get_register_fields"""
         if real_class is None:
             real_class = cls
         return MailAccount.get_register_fields(real_class) + \
@@ -370,7 +370,7 @@ class IMAPAccount(MailAccount):
             if typ == 'OK':
                 return self.format_message(\
                     email.message_from_string(data[0][1]))
-        raise Exception(data[0] + " (email " + str(index) + ")")
+        raise Exception(str(data[0]) + " (email " + str(index) + ")")
 
     def get_mail_summary(self, index):
         self.__logger.debug("Getting mail summary " + str(index))
@@ -380,7 +380,7 @@ class IMAPAccount(MailAccount):
             if typ == 'OK':
                 return self.format_message_summary(\
                     email.message_from_string(data[0][1]))
-        raise Exception(data[0] + " (email " + str(index) + ")")
+        raise Exception(str(data[0]) + " (email " + str(index) + ")")
 
     def get_next_mail_index(self, mail_list):
         """
@@ -455,7 +455,7 @@ class IMAPAccount(MailAccount):
                     return
                 else:
                     self.disconnect()
-                    raise Exception("Cannot find mailbox " + self.mailbox)
+                    raise Exception("Cannot find mailbox " + str(self.mailbox))
             else:
                 match = self._regexp_list.match(line)
                 if match is not None:
@@ -463,10 +463,10 @@ class IMAPAccount(MailAccount):
                 else:
                     self.disconnect()
                     raise Exception("Cannot find delimiter for mailbox "
-                                    + self.mailbox)
+                                    + str(self.mailbox))
         else:
             self.disconnect()
-            raise Exception("Cannot find mailbox " + self.mailbox)
+            raise Exception("Cannot find mailbox " + str(self.mailbox))
         self.disconnect()
         # replace any previous delimiter in self.mailbox by "/"
         if self.delimiter != testing_delimiter:
@@ -498,7 +498,7 @@ class POP3Account(MailAccount):
 
     def connect(self):
         self.__logger.debug("Connecting to POP3 server "
-                            + self.login + "@" + self.host + ":" +
+                            + str(self.login) + "@" + str(self.host) + ":" +
                             str(self.port) + ". SSL=" + str(self.ssl))
         if self.ssl:
             self.connection = poplib.POP3_SSL(self.host, self.port)
@@ -513,7 +513,7 @@ class POP3Account(MailAccount):
 
 
     def disconnect(self):
-        self.__logger.debug("Disconnecting from POP3 server " + self.host)
+        self.__logger.debug("Disconnecting from POP3 server " + str(self.host))
         self.connection.quit()
         self.connected = False
 
@@ -748,17 +748,17 @@ class GlobalSMTPAccount(AbstractSMTPAccount):
             current_error = None
             for auth_method in auth_methods:
                 self.__logger.debug("Trying to authenticate using "
-                                    + auth_method + " method")
+                                    + str(auth_method) + " method")
                 smtp_connection.esmtp_features["auth"] = auth_method
                 try:
                     smtp_connection.login(self.login, self.password)
                     current_error = None
                     self.__logger.debug("Successfuly to authenticate using "
-                                        + auth_method + " method")
+                                        + str(auth_method) + " method")
                     break
                 except smtplib.SMTPAuthenticationError, error:
                     self.__logger.debug("Failed to authenticate using "
-                                        + auth_method + " method")
+                                        + str(auth_method) + " method")
                     current_error = error
             if current_error is not None:
                 raise current_error

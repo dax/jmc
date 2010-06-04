@@ -43,6 +43,18 @@ class AccountModule_TestCase(unittest.TestCase):
         self.assertRaises(FieldError, jmc.model.account.validate_login,
                           None, None, None)
 
+    def test_validate_login_with_login_with_whitespace(self):
+        self.assertRaises(FieldError, jmc.model.account.validate_login,
+                          "login with spaces", None, None)
+
+    def test_validate_host_with_empty_login(self):
+        self.assertRaises(FieldError, jmc.model.account.validate_host,
+                          None, None, None)
+
+    def test_validate_host_with_host_with_whitespace(self):
+        self.assertRaises(FieldError, jmc.model.account.validate_host,
+                          "host with spaces", None, None)
+
 class MailAccount_TestCase(PresenceAccount_TestCase):
     def setUp(self):
         PresenceAccount_TestCase.setUp(self, tables=[MailAccount])
