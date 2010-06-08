@@ -120,6 +120,16 @@ class SendMailMessageHandler_TestCase(unittest.TestCase):
         self.assertEquals(mock_account.email[4], {u"Bcc": "bcc@test.com",
                                                   u"Cc": "cc@test.com"})
 
+    def test_handle_ignore_empty_message_body(self):
+        mock_account = MockSMTPAccount()
+        message = Message(from_jid="user1@test.com",
+                          to_jid="real_dest%test.com@jmc.test.com",
+                          subject="real subject",
+                          body=None)
+        result = self.handler.handle(\
+            message, Lang.en, [mock_account])
+        self.assertEquals(len(result), 0)
+
 class RootSendMailMessageHandler_TestCase(JCLTestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, GlobalSMTPAccount,
@@ -210,6 +220,16 @@ class RootSendMailMessageHandler_TestCase(JCLTestCase):
         self.assertEquals(mock_account.email[3], "test body\n")
         self.assertEquals(mock_account.email[4], {u"Bcc": "bcc@test.com",
                                                   u"Cc": "cc@test.com"})
+
+    def test_handle_ignore_empty_message_body(self):
+        mock_account = MockSMTPAccount()
+        message = Message(from_jid="user1@test.com",
+                          to_jid="jmc.test.com",
+                          subject="real subject",
+                          body=None)
+        result = self.handler.handle(\
+            message, Lang.en, [mock_account])
+        self.assertEquals(len(result), 0)
 
     def test_handle_email_not_found_in_header(self):
         message = Message(from_jid="user1@test.com",

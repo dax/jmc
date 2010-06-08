@@ -82,6 +82,8 @@ class SendMailMessageHandler(MailHandler):
 
     def handle(self, stanza, lang_class, data):
         message = stanza
+        if message.get_body() is None or message.get_body() == "":
+            return []
         accounts = data
         to_node = message.get_to().node
         to_email = to_node.replace('%', '@', 1)
@@ -141,6 +143,8 @@ class RootSendMailMessageHandler(SendMailMessageHandler):
 
     def handle(self, stanza, lang_class, data):
         message = stanza
+        if message.get_body() is None or message.get_body() == "":
+            return []
         accounts = data
         (message_body,
          (to_email,
