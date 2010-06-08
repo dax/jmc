@@ -117,13 +117,13 @@ class MailAccount(PresenceAccount):
               account.int_post_func,
               lambda bare_from_jid: real_class.get_default_port()),
              ("ssl", "boolean", None,
-              account.default_post_func,
+              account.boolean_post_func,
               lambda bare_from_jid: False),
              ("store_password", "boolean", None,
-              account.default_post_func,
+              account.boolean_post_func,
               lambda bare_from_jid: True),
              ("live_email_only", "boolean", None,
-              account.default_post_func,
+              account.boolean_post_func,
               lambda bare_from_jid: False),
              ("interval", "text-single", None,
               account.int_post_func,
@@ -654,7 +654,7 @@ class AbstractSMTPAccount(Account):
             accounts = account.get_accounts(bare_from_jid, AbstractSMTPAccount,
                                             (AbstractSMTPAccount.q.default_account == True))
             already_default_account = (accounts.count() != 0)
-            if isinstance(value, str):
+            if isinstance(value, str) or isinstance(value, unicode):
                 value = value.lower()
                 bool_value = (value == "true" or value == "1")
             else:
@@ -799,10 +799,10 @@ class SMTPAccount(GlobalSMTPAccount):
               account.int_post_func,
               lambda bare_from_jid: smtp_default_port),
              ("tls", "boolean", None,
-              account.default_post_func,
+              account.boolean_post_func,
               lambda bare_from_jid: smtp_default_tls),
              ("store_password", "boolean", None,
-              account.default_post_func,
+              account.boolean_post_func,
               lambda bare_from_jid: True)]
 
     get_register_fields = classmethod(_get_register_fields)
