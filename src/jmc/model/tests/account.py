@@ -1097,6 +1097,45 @@ class SMTPAccount_TestCase(Account_TestCase):
                                        smtp_account.send_email(email))
         test_func()
 
+    def test_send_email_esmtp_auth_method_with_no_suitable_auth_method_error(self):
+        model.db_connect()
+        smtp_account = SMTPAccount(user=User(jid="user1@test.com"),
+                                   name="account11",
+                                   jid="account11@jmc.test.com")
+        smtp_account.host = "localhost"
+        smtp_account.port = 1025
+        smtp_account.login = "user"
+        smtp_account.password = "pass"
+        model.db_disconnect()
+        email = smtp_account.create_email("from@test.com",
+                                          "to@test.com",
+                                          "subject",
+                                          "body")
+        test_func = self.make_test(["220 localhost ESMTP\r\n",
+                                    "250-localhost Hello 127.0.0.1\r\n"
+                                    + "250-SIZE 52428800\r\n"
+                                    + "250-AUTH PLAIN LOGIN DIGEST-MD5\r\n"
+                                    + "250-PIPELINING\r\n"
+                                    + "250 HELP\r\n",
+                                    "334 asd235r4\r\n",
+                                    "235 Authentication succeeded\r\n",
+                                    "250 OK\r\n",
+                                    "250 Accepted\r\n",
+                                    "354 Enter message\r\n",
+                                    None, None, None, None,
+                                    None, None, None, None,
+                                    "250 OK\r\n"],
+                                   ["ehlo .*\r\n",
+                                    "AUTH LOGIN .*\r\n",
+                                    ".*\r\n",
+                                    "mail FROM:<" + str(email['From']) + ">.*",
+                                    "rcpt TO:<" + str(email['To']) + ">\r\n",
+                                    "data\r\n"] +
+                                   email.as_string().split("\n") + [".\r\n"],
+                                   lambda self: \
+                                       smtp_account.send_email(email))
+        test_func()
+
     def test_get_default_status_msg(self):
         """
         Get default status message for IMAPAccount.

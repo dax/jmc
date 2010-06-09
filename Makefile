@@ -28,5 +28,5 @@ builddeb:
 clean:
 	$(PYTHON) setup.py clean
 	fakeroot $(MAKE) -f $(CURDIR)/debian/rules clean
-	rm -rf build/ MANIFEST
+	rm -rf build/ MANIFEST .coverage
 	find . -name '*.pyc' -delete

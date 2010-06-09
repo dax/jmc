@@ -756,7 +756,7 @@ class GlobalSMTPAccount(AbstractSMTPAccount):
                     self.__logger.debug("Successfuly to authenticate using "
                                         + str(auth_method) + " method")
                     break
-                except smtplib.SMTPAuthenticationError, error:
+                except (smtplib.SMTPAuthenticationError, smtplib.SMTPException), error:
                     self.__logger.debug("Failed to authenticate using "
                                         + str(auth_method) + " method")
                     current_error = error
