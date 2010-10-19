@@ -316,9 +316,9 @@ class IMAPAccount(MailAccount):
                             + " (" + str(self.mailbox) + "). SSL="
                             + str(self.ssl))
         if self.ssl:
-            self.connection = imaplib.IMAP4_SSL(self.host, self.port)
+            self.connection = imaplib.IMAP4_SSL(self.host, int(self.port))
         else:
-            self.connection = imaplib.IMAP4(self.host, self.port)
+            self.connection = imaplib.IMAP4(self.host, int(self.port))
         self.connection.login(self.login, self.password)
         self.connected = True
 
@@ -501,9 +501,9 @@ class POP3Account(MailAccount):
                             + str(self.login) + "@" + str(self.host) + ":" +
                             str(self.port) + ". SSL=" + str(self.ssl))
         if self.ssl:
-            self.connection = poplib.POP3_SSL(self.host, self.port)
+            self.connection = poplib.POP3_SSL(self.host, int(self.port))
         else:
-            self.connection = poplib.POP3(self.host, self.port)
+            self.connection = poplib.POP3(self.host, int(self.port))
         try:
             self.connection.apop(self.login, self.password)
         except:
@@ -737,7 +737,7 @@ class GlobalSMTPAccount(AbstractSMTPAccount):
                                 + str(type(self.port)) + ", value: "
                                 + str(self.port))
             self.port = int(self.port)
-        smtp_connection.connect(self.host, self.port)
+        smtp_connection.connect(self.host, int(self.port))
         self.__say_hello(smtp_connection)
         if self.tls:
             smtp_connection.starttls()

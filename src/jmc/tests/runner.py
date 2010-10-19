@@ -38,12 +38,6 @@ import jmc.model.account as account
 from jmc.model.account import MailAccount, IMAPAccount, POP3Account, \
     AbstractSMTPAccount, GlobalSMTPAccount, SMTPAccount
 
-if sys.platform == "win32":
-    DB_PATH = "/c|/temp/test.db"
-else:
-    DB_PATH = "/tmp/test.db"
-DB_URL = "sqlite://" + DB_PATH# + "?debug=1&debugThreading=1"
-
 class JMCRunner_TestCase(JCLTestCase):
     def setUp(self):
         JCLTestCase.setUp(self, tables=[Account, PresenceAccount, User,
@@ -58,6 +52,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.type_globalsmtp_name = Lang.en.type_globalsmtp_name
 
     def tearDown(self):
+        JCLTestCase.tearDown(self)
         self.runner = None
         sys.argv = [""]
         account.smtp_default_login = self.smtp_default_login
@@ -255,7 +250,7 @@ class JMCRunner_TestCase(JCLTestCase):
 
     def test__run(self):
         self.runner.pid_file = "/tmp/jmc.pid"
-        self.runner.db_url = DB_URL
+        self.runner.db_url = self.db_url
         def do_nothing():
             return (False, 0)
         self.runner._run(do_nothing)
@@ -271,7 +266,6 @@ class JMCRunner_TestCase(JCLTestCase):
         POP3Account.dropTable()
         SMTPAccount.dropTable()
         model.db_disconnect()
-        os.unlink(DB_PATH)
         self.assertFalse(os.access("/tmp/jmc.pid", os.F_OK))
 
     def test_run_without_smtp_default_account(self):
@@ -284,7 +278,7 @@ class JMCRunner_TestCase(JCLTestCase):
 
         self.runner.enable_smtp_default_account = False
         self.runner.pid_file = "/tmp/jmc.pid"
-        self.runner.db_url = DB_URL
+        self.runner.db_url = self.db_url
         self.runner.config = None
         old_run_func = MailComponent.run
         MailComponent.run = run_func
@@ -305,7 +299,7 @@ class JMCRunner_TestCase(JCLTestCase):
 
         self.runner.enable_smtp_default_account = True
         self.runner.pid_file = "/tmp/jmc.pid"
-        self.runner.db_url = DB_URL
+        self.runner.db_url = self.db_url
         self.runner.config = None
         old_run_func = MailComponent.run
         MailComponent.run = run_func
