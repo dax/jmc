@@ -846,11 +846,11 @@ class MailComponent_TestCase(JCLTestCase):
                                     name="account21",
                                     jid="account21@jcl.test.com")
         model.db_disconnect()
-        self.comp.handle_get_register(Iq(stanza_type="get",
-                                         from_jid="user1@test.com",
-                                         to_jid="account1@jcl.test.com/IMAP/INBOX/dir1"))
-        self.assertEquals(len(self.comp.stream.sent), 1)
-        iq_sent = self.comp.stream.sent[0]
+        iqs_sent = self.comp.handle_get_register(Iq(stanza_type="get",
+                                                    from_jid="user1@test.com",
+                                                    to_jid="account1@jcl.test.com/IMAP/INBOX/dir1"))
+        self.assertEquals(len(iqs_sent), 1)
+        iq_sent = iqs_sent[0]
         self.assertEquals(iq_sent.get_to(), "user1@test.com")
         titles = iq_sent.xpath_eval("jir:query/jxd:x/jxd:title",
                                     {"jir" : "jabber:iq:register",
@@ -1153,11 +1153,11 @@ class MailComponent_TestCase(JCLTestCase):
                                     name="account21",
                                     jid="account21@jcl.test.com")
         model.db_disconnect()
-        self.comp.handle_get_register(Iq(stanza_type="get",
-                                         from_jid="user1@test.com",
-                                         to_jid="account1@jcl.test.com/IMAP/INBOX/dir1/subdir1"))
-        self.assertEquals(len(self.comp.stream.sent), 1)
-        iq_sent = self.comp.stream.sent[0]
+        iqs_sent = self.comp.handle_get_register(Iq(stanza_type="get",
+                                                    from_jid="user1@test.com",
+                                                    to_jid="account1@jcl.test.com/IMAP/INBOX/dir1/subdir1"))
+        self.assertEquals(len(iqs_sent), 1)
+        iq_sent = iqs_sent[0]
         self.assertEquals(iq_sent.get_to(), "user1@test.com")
         titles = iq_sent.xpath_eval("jir:query/jxd:x/jxd:title",
                                     {"jir" : "jabber:iq:register",
