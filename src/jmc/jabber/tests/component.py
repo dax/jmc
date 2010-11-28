@@ -1,5 +1,3 @@
-
-
 # -*- coding: utf-8 -*-
 ##
 ## test_component.py
@@ -27,7 +25,6 @@ import unittest
 import sys
 import time
 import logging
-import time
 
 from sqlobject import *
 from sqlobject.dbconnection import TheURIOpener
@@ -55,10 +52,11 @@ from jmc.jabber.component import MailComponent, MailFeederHandler, \
 from jmc.lang import Lang
 
 if sys.platform == "win32":
-   DB_PATH = "/c|/temp/jmc_test.db"
+    DB_PATH = "/c|/temp/jmc_test.db"
 else:
-   DB_PATH = "/tmp/jmc_test.db"
-DB_URL = DB_PATH# + "?debug=1&debugThreading=1"
+    DB_PATH = "/tmp/jmc_test.db"
+DB_URL = DB_PATH  # + "?debug=1&debugThreading=1"
+
 
 class MockStream(object):
     def __init__(self,
