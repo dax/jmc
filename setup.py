@@ -77,7 +77,7 @@ email accounts.""",
                                              "tests"]),
       entry_points={'console_scripts': ['jmc=jmc.runner:main']},
       test_suite='jmc.tests.suite',
-      install_requires=["jcl==0.1b3"])
+      install_requires=["jcl==0.1rc2"])
 
 if len(sys.argv) >= 2 and sys.argv[1] == "install" \
         and not "--single-version-externally-managed" in sys.argv:
