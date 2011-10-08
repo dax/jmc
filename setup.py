@@ -26,9 +26,11 @@ import sys
 import re
 import shutil
 import os
+import platform
 
 prefix = "/usr"
 root = "/"
+jmc_version = '0.3rc2'
 for arg in sys.argv:
     if arg[0:9] == "--prefix=":
         prefix = arg[9:]
@@ -42,11 +44,11 @@ if prefix == "/usr":
     prefix_config_dir = "/etc/jabber/"
 else:
     prefix_config_dir = prefix + "/etc/jabber/"
-config_dir = root + "/" + prefix_config_dir
-full_prefix = root + "/" + prefix
+config_dir = root + prefix_config_dir
+full_prefix = root + prefix
 
 setup(name='jmc',
-      version='0.3b3',
+      version=jmc_version,
       description='Jabber Mail Component',
       long_description="""\
 JMC is a jabber service to check email from POP3 and IMAP4 server and retrieve
@@ -82,7 +84,8 @@ if len(sys.argv) >= 2 and sys.argv[1] == "install" \
     if not os.path.exists(config_dir):
         os.makedirs(config_dir)
     shutil.copy("conf/jmc.conf", config_dir)
-    runner_file_name = full_prefix + "/lib/python2.6/site-packages/jmc/runner.py"
+    python_version = ".".join(platform.python_version_tuple()[:2])
+    runner_file_name = full_prefix + "/lib/python" + python_version + "/site-packages/jmc-" + jmc_version + "-py" + python_version + ".egg/jmc/runner.py"
     runner_file = open(runner_file_name)
     dest_runner_file_name = runner_file_name + ".tmp"
     dest_runner_file = open(dest_runner_file_name, "w")

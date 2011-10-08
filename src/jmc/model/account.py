@@ -683,11 +683,12 @@ class AbstractSMTPAccount(Account):
 
     get_register_fields = classmethod(_get_register_fields)
 
-smtp_default_login = ''
-smtp_default_password = ''
+smtp_default_login = None
+smtp_default_password = None
 smtp_default_host = "localhost"
 smtp_default_port = 25
 smtp_default_tls = False
+smtp_default_ssl = False
 
 class GlobalSMTPAccount(AbstractSMTPAccount):
     """SMTP Account to send email with global settings"""
@@ -696,6 +697,7 @@ class GlobalSMTPAccount(AbstractSMTPAccount):
     host = StringCol(default=lambda: smtp_default_host)
     port = IntCol(default=lambda: smtp_default_port)
     tls = BoolCol(default=lambda: smtp_default_tls)
+    ssl = BoolCol(default=lambda: smtp_default_ssl)
     store_password = BoolCol(default=True)
     waiting_password_reply = BoolCol(default=False)
 
@@ -726,7 +728,10 @@ class GlobalSMTPAccount(AbstractSMTPAccount):
         """Send email according to current account parameters"""
         self.__logger.debug("Sending email:\n"
                             + str(_email))
-        smtp_connection = smtplib.SMTP()
+        if self.ssl:
+            smtp_connection = smtplib.SMTP_SSL()
+        else:
+            smtp_connection = smtplib.SMTP()
         if self.__logger.getEffectiveLevel() == logging.DEBUG:
             smtp_connection.set_debuglevel(1)
 	# It seems there is a bug that set self.port to something that is
@@ -801,6 +806,9 @@ class SMTPAccount(GlobalSMTPAccount):
              ("tls", "boolean", None,
               account.boolean_post_func,
               lambda bare_from_jid: smtp_default_tls),
+             ("ssl", "boolean", None,
+              account.boolean_post_func,
+              lambda bare_from_jid: smtp_default_ssl),
              ("store_password", "boolean", None,
               account.boolean_post_func,
               lambda bare_from_jid: True)]

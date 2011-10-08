@@ -1,3 +1,10 @@
+jmc (0.3rc2) unstable; urgency=low
+
+  * JMC version 0.3 RC2
+  * Add SMTP SSL support
+
+ -- David Rousselie <dax@happycoders.org>  Sat, 08 Oct 2011 10:52:46 +0200
+
 jmc (0.3rc1) unstable; urgency=low
 
   * JMC version 0.3 RC1

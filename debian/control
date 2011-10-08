@@ -7,7 +7,7 @@ Standards-Version: 3.8.4
 
 Package: python-jmc
 Architecture: all
-Depends: ${python:Depends}, python-jcl (= 0.1b3)
+Depends: ${python:Depends}, python-jcl (>= 0.1rc1)
 Provides: ${python:Provides}
 Description: JMC is an email gateway for Jabber
  JMC is a jabber service to check email from POP3 and IMAP4 server and

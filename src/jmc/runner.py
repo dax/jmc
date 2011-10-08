@@ -44,6 +44,7 @@ class JMCRunner(JCLRunner):
         self.smtp_default_host = None
         self.smtp_default_port = 0
         self.smtp_default_tls = False
+        self.smtp_default_ssl = False
         self.smtp_default_label = None
         self.enable_smtp_default_account = False
         self.options += [("e:", "mail-default-encoding=", "jmc",
@@ -67,6 +68,11 @@ class JMCRunner(JCLRunner):
                          ("m:", "smtp-default-tls=", "smtp",
                           " True/False\t\tDefault SMTP TLS connexion",
                           lambda arg: self.set_attr("smtp_default_tls",
+                                                    arg.lower() == "true" \
+                                                        or arg == "1")),
+                         ("a:", "smtp-default-ssl=", "smtp",
+                          " True/False\t\tDefault SMTP SSL connexion",
+                          lambda arg: self.set_attr("smtp_default_ssl",
                                                     arg.lower() == "true" \
                                                         or arg == "1")),
                          ("n:", "enable-smtp-default-account=", "smtp",
@@ -107,6 +113,8 @@ class JMCRunner(JCLRunner):
             account.smtp_default_port = self.smtp_default_port
         if self.smtp_default_tls:
             account.smtp_default_tls = self.smtp_default_tls
+        if self.smtp_default_ssl:
+            account.smtp_default_ssl = self.smtp_default_ssl
         if self.smtp_default_label:
             Lang().get_default_lang_class().type_globalsmtp_name = \
                 self.smtp_default_label

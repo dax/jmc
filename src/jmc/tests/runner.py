@@ -48,6 +48,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.smtp_default_host = account.smtp_default_host
         self.smtp_default_port = account.smtp_default_port
         self.smtp_default_tls = account.smtp_default_tls
+        self.smtp_default_ssl = account.smtp_default_ssl
         self.mail_default_encoding = MailAccount.default_encoding
         self.type_globalsmtp_name = Lang.en.type_globalsmtp_name
 
@@ -60,6 +61,7 @@ class JMCRunner_TestCase(JCLTestCase):
         account.smtp_default_host = self.smtp_default_host
         account.smtp_default_port = self.smtp_default_port
         account.smtp_default_tls = self.smtp_default_tls
+        account.smtp_default_ssl = self.smtp_default_ssl
         MailAccount.default_encoding = self.mail_default_encoding
         Lang.en.type_globalsmtp_name = self.type_globalsmtp_name
 
@@ -80,6 +82,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.smtp_default_host, None)
         self.assertEquals(self.runner.smtp_default_port, 0)
         self.assertEquals(self.runner.smtp_default_tls, False)
+        self.assertEquals(self.runner.smtp_default_ssl, False)
         self.assertEquals(self.runner.enable_smtp_default_account, False)
         self.assertEquals(self.runner.smtp_default_label, None)
         self.runner.setup_smtp_default()
@@ -88,11 +91,12 @@ class JMCRunner_TestCase(JCLTestCase):
         _account = GlobalSMTPAccount(user=User(jid="user1@test.com"),
                                      name="account1",
                                      jid="account1@jmc.test.com")
-        self.assertEquals(_account.login, '')
-        self.assertEquals(_account.password, '')
+        self.assertEquals(_account.login, None)
+        self.assertEquals(_account.password, None)
         self.assertEquals(_account.host, 'localhost')
         self.assertEquals(_account.port, 25)
         self.assertEquals(_account.tls, False)
+        self.assertEquals(_account.ssl, False)
 
     def test_configure_configfile(self):
         self.runner.config_file = "src/jmc/tests/jmc.conf"
@@ -111,6 +115,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.smtp_default_host, "testhost")
         self.assertEquals(self.runner.smtp_default_port, 2525)
         self.assertEquals(self.runner.smtp_default_tls, True)
+        self.assertEquals(self.runner.smtp_default_ssl, True)
         self.assertEquals(self.runner.enable_smtp_default_account, True)
         self.assertEquals(self.runner.smtp_default_label, "SMTP Server")
         self.runner.setup_smtp_default()
@@ -124,6 +129,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(_account.host, 'testhost')
         self.assertEquals(_account.port, 2525)
         self.assertEquals(_account.tls, True)
+        self.assertEquals(_account.ssl, True)
 
     def test_configure_uncomplete_configfile(self):
         self.runner.config_file = "src/jmc/tests/uncomplete_jmc.conf"
@@ -142,6 +148,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.smtp_default_host, None)
         self.assertEquals(self.runner.smtp_default_port, 0)
         self.assertEquals(self.runner.smtp_default_tls, False)
+        self.assertEquals(self.runner.smtp_default_ssl, False)
         self.assertEquals(self.runner.enable_smtp_default_account, False)
         self.assertEquals(self.runner.smtp_default_label, None)
         self.runner.setup_smtp_default()
@@ -150,11 +157,12 @@ class JMCRunner_TestCase(JCLTestCase):
         _account = GlobalSMTPAccount(user=User(jid="user1@test.com"),
                                      name="account1",
                                      jid="account1@jmc.test.com")
-        self.assertEquals(_account.login, '')
-        self.assertEquals(_account.password, '')
+        self.assertEquals(_account.login, None)
+        self.assertEquals(_account.password, None)
         self.assertEquals(_account.host, 'localhost')
         self.assertEquals(_account.port, 25)
         self.assertEquals(_account.tls, False)
+        self.assertEquals(_account.ssl, False)
 
     def test_configure_commandline_shortopt(self):
         sys.argv = ["", "-c", "src/jmc/tests/jmc.conf",
@@ -171,6 +179,7 @@ class JMCRunner_TestCase(JCLTestCase):
                     "-t", "testhost",
                     "-r", "2525",
                     "-m", "True",
+                    "-a", "True",
                     "-n", "True",
                     "-b", "My Global SMTP server"]
         self.runner.configure()
@@ -188,6 +197,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.smtp_default_host, "testhost")
         self.assertEquals(self.runner.smtp_default_port, 2525)
         self.assertEquals(self.runner.smtp_default_tls, True)
+        self.assertEquals(self.runner.smtp_default_ssl, True)
         self.assertEquals(self.runner.enable_smtp_default_account, True)
         self.assertEquals(self.runner.smtp_default_label, "My Global SMTP server")
         self.runner.setup_smtp_default()
@@ -201,6 +211,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(_account.host, 'testhost')
         self.assertEquals(_account.port, 2525)
         self.assertEquals(_account.tls, True)
+        self.assertEquals(_account.ssl, True)
 
     def test_configure_commandline_longopt(self):
         sys.argv = ["", "--config-file", "src/jmc/tests/jmc.conf",
@@ -217,6 +228,7 @@ class JMCRunner_TestCase(JCLTestCase):
                     "--smtp-default-host", "testhost",
                     "--smtp-default-port", "2525",
                     "--smtp-default-tls", "True",
+                    "--smtp-default-ssl", "True",
                     "--enable-smtp-default-account", "True",
                     "--smtp-default-label", "My Global SMTP server"]
         self.runner.configure()
@@ -234,6 +246,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(self.runner.smtp_default_host, "testhost")
         self.assertEquals(self.runner.smtp_default_port, 2525)
         self.assertEquals(self.runner.smtp_default_tls, True)
+        self.assertEquals(self.runner.smtp_default_ssl, True)
         self.assertEquals(self.runner.enable_smtp_default_account, True)
         self.assertEquals(self.runner.smtp_default_label, "My Global SMTP server")
         self.runner.setup_smtp_default()
@@ -247,6 +260,7 @@ class JMCRunner_TestCase(JCLTestCase):
         self.assertEquals(_account.host, 'testhost')
         self.assertEquals(_account.port, 2525)
         self.assertEquals(_account.tls, True)
+        self.assertEquals(_account.ssl, True)
 
     def test__run(self):
         self.runner.pid_file = "/tmp/jmc.pid"
