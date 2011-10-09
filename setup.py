@@ -85,7 +85,7 @@ if len(sys.argv) >= 2 and sys.argv[1] == "install" \
         os.makedirs(config_dir)
     shutil.copy("conf/jmc.conf", config_dir)
     python_version = ".".join(platform.python_version_tuple()[:2])
-    runner_file_name = full_prefix + "/lib/python" + python_version + "/site-packages/jmc-" + jmc_version + "-py" + python_version + ".egg/jmc/runner.py"
+    runner_file_name = full_prefix + "/lib/python" + python_version + "/site-packages/jmc/runner.py"
     runner_file = open(runner_file_name)
     dest_runner_file_name = runner_file_name + ".tmp"
     dest_runner_file = open(dest_runner_file_name, "w")
