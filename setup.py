@@ -30,7 +30,7 @@ import platform
 
 prefix = "/usr"
 root = "/"
-jmc_version = '0.3rc2'
+jmc_version = '0.3rc3'
 for arg in sys.argv:
     if arg[0:9] == "--prefix=":
         prefix = arg[9:]

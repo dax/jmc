@@ -7,7 +7,7 @@
 Get [JCL](http://github.com/dax/jcl/download) and [JMC](http://github.com/dax/jmc/download) Debian packages and install them:
 
     sudo apt-get install python-pysqlite2 python-pyxmpp python-sqlobject
-    sudo dpkg -i python-jcl_0.1rc2_all.deb python-jmc_0.3rc2_all.deb
+    sudo dpkg -i python-jcl_0.1rc2_all.deb python-jmc_0.3rc3_all.deb
 
 ### EasyInstall
 

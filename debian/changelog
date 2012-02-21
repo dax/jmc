@@ -1,3 +1,10 @@
+jmc (0.3rc3) unstable; urgency=low
+
+  * JMC version 0.3 RC3
+  * Fix SSL column name
+
+ -- David Rousselie <dax@happycoders.org>  Sat, 08 Oct 2011 10:52:46 +0200
+
 jmc (0.3rc2) unstable; urgency=low
 
   * JMC version 0.3 RC2
