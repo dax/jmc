@@ -697,7 +697,7 @@ class GlobalSMTPAccount(AbstractSMTPAccount):
     host = StringCol(default=lambda: smtp_default_host)
     port = IntCol(default=lambda: smtp_default_port)
     tls = BoolCol(default=lambda: smtp_default_tls)
-    ssl = BoolCol(default=lambda: smtp_default_ssl)
+    ssl = BoolCol(default=lambda: smtp_default_ssl, dbName="_ssl")
     store_password = BoolCol(default=True)
     waiting_password_reply = BoolCol(default=False)
 
